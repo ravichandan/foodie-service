@@ -1,0 +1,945 @@
+openapi: 3.0.3
+info:
+  title: Tangypeel
+  description: |-
+    Set of APIs for FoodieMate
+  termsOfService: http://foodiemate.com/terms/
+  contact:
+    email: apiteam@foodiemate.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 0.0.2
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: https://foodiemate.com/api/v1
+tags:
+  - name: reviews
+    description: Reviews of Food 'Item's in Food 'Place's
+    externalDocs:
+      description: Find out more
+      url: https://www.foodiemate.com
+  - name: items
+    description: Food 'Item's in a Food 'Place'
+    externalDocs:
+      description: Find out more
+      url: https://www.foodiemate.com
+  - name: places
+    description: Places or restaurants that provide Food 'Item's
+    externalDocs:
+      description: Find out more
+      url: https://www.foodiemate.com
+paths:
+  /items/{itemName}:
+    get:
+      tags:
+        - items
+      summary: Get all Places where this item is available (TODO outdated?)
+      description: Get a list of places that serves an item with the given name sorted in order of highest taste rating first. In the response data, there would also be the item's average rating for 'taste', 'presentation'. All 'Place's info would also have 'service' and 'ambience' ratings. It will also have around ~10 reviews (sampled from latest 50 reviews) with images (small). The response data will be as simple and lean as possible. Every 'Place' in the returned list will have only the Place's name, location, average service rating, average ambience rating, the Item's average taste rating in that Place, the Item's average Presentation rating in that Place.
+      operationId: getPlacesForItemByName
+      parameters:
+        - name: itemName
+          in: path
+          description: Name of the item
+          required: true
+          schema:
+            type: string
+        - name: page_number
+          in: query
+          description: Page number in the pagination
+          required: true
+          explode: true
+          schema:
+            type: string
+            default: 1
+        - name: page_size
+          in: query
+          description: Page size in the pagination
+          required: true
+          explode: true
+          schema:
+            type: string
+            default: 10
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Paginated'
+                  - type: object
+                    properties:
+                      places:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Place'
+        '404':
+          description: Item not found anywhere
+        '422':
+          description: Validation exception
+  /items/{itemId}:
+    get:
+      tags:
+        - items
+      summary: Get all Places where this item is available
+      description: Get a list of places that serves an item with the given id sorted in order of highest taste rating first. In the response data, there would also be the item's average rating for 'taste', 'presentation'. All 'Place's info would also have 'service' and 'ambience' ratings. It will also have around ~10 reviews (sampled from latest 50 reviews) with images (small). The response data will be as simple and lean as possible. Every 'Place' in the returned list will have only the Place's name, location, average service rating, average ambience rating, the Item's average taste rating in that Place, the Item's average Presentation rating in that Place.
+      operationId: getPlacesForItemById
+      parameters:
+        - name: itemId
+          in: path
+          description: Id of the item, not placeItem but just Item.
+          required: true
+          schema:
+            type: string
+        - name: page_number
+          in: query
+          description: Page number in the pagination
+          required: true
+          explode: true
+          schema:
+            type: string
+            default: 1
+        - name: page_size
+          in: query
+          description: Page size in the pagination
+          required: true
+          explode: true
+          schema:
+            type: string
+            default: 10
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Paginated'
+                  - type: object
+                    properties:
+                      places:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Place'
+        '404':
+          description: Item not found anywhere
+        '422':
+          description: Validation exception
+  /cuisines:
+    get:
+      tags:
+        - cuisines
+      summary: Get all cuisines
+      description: Get all available cuisines
+      operationId: getAllCuisines
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cuisine'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+  /cuisines/items:
+    get:
+      tags:
+        - cuisines
+        - items
+      summary: Get all items of cuisine(s)
+      description: Get all available items of the given cuisines.
+      operationId: getItemsOfCuisines
+      parameters:
+        - name: cuisineNames
+          in: header
+          description: Name of the Cuisines
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CuisineItemResponse'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+  /items:
+    post:
+      tags:
+        - items
+      summary: Add a new Item or Items to inventory
+      description: Add a new food item or dish to our inventory
+      operationId: createItem
+      parameters:
+        - name: correlationId
+          in: header
+          description: correlationId to match requests in a session.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Create a new Item in the inventory
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Item'
+        required: true
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+  /places/{placeName}:
+    get:
+      tags:
+        - places
+      summary: Gets a Place by name
+      description: Gets a place by the given name. The returned data will have the details about the Place that includes its location, any images of the place, service, ambience ratings, and a paginated list of 'Item's. The Item will have item name, around 10 medias, reviews from latest 50, taste & presentation ratings.
+      operationId: getPlaceByName
+      parameters:
+        - name: placeName
+          in: path
+          description: Name of a Place
+          required: true
+          schema:
+            type: string
+        - name: page_number
+          in: query
+          description: Page number in the pagination for the list of items in the response.
+          required: true
+          explode: true
+          schema:
+            type: string
+            default: 1
+        - name: page_size
+          in: query
+          description: Page size in the pagination for the list of items in the response.
+          required: true
+          explode: true
+          schema:
+            type: string
+            default: 10
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Paginated'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Place'
+        '404':
+          description: Place not found
+  /places/:
+    post:
+      tags:
+        - places
+      summary: Add a new Place
+      description: Add a new Place and optionally with its food items
+      operationId: addPlace
+      parameters:
+        - name: correlationId
+          in: header
+          description: correlationId to match requests in a session.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Create a new Place
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Place'
+        required: true
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Place'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+  /places/{placeId}/items:
+    post:
+      tags:
+        - places
+      summary: Add a new item to the given place
+      description: Add a new item to a place
+      operationId: addItem
+      parameters:
+        - name: placeId
+          in: path
+          description: id of the place to which the item will be added to
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Add a new item to a Place
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaceItem'
+        required: true
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Place'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+  /places/{placeName}/items/{itemName}:
+    get:
+      tags:
+        - places
+        - items
+      summary: Get an item in a Place by name
+      description: Get an item with a given 'item' name in a place with the given place name. The returned data will have the details about the Place that includes its location, any images of the place, service, ambience ratings and the single selected 'Item' with given itemName. The Item object will have item name, price, around 30 medias, reviews from latest 50, taste & presentation ratings.
+      operationId: getItemInPlaceByName
+      parameters:
+        - name: page_number
+          in: query
+          description: Page number in the pagination for the list of items in the response.
+          required: true
+          explode: true
+          schema:
+            type: string
+            default: 1
+        - name: page_size
+          in: query
+          description: Page size in the pagination for the list of items in the response.
+          required: true
+          explode: true
+          schema:
+            type: string
+            default: 10
+        - name: placeName
+          in: path
+          description: Name of the Place
+          required: true
+          schema:
+            type: string
+        - name: itemName
+          in: path
+          description: Name of the item
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Place'
+        '404':
+          description: Place not found
+  /medias/upload:
+    post:
+      tags:
+        - medias
+      summary: Add a new Media of a place or item
+      description: Add a new Media of a place or item
+      operationId: addMedia
+      requestBody:
+        description: Add a new Media of a place or item or as part of a review
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                correlationId:
+                  type: integer
+                customerId:
+                  type: integer
+                placeId:
+                  type: integer
+                itemId:
+                  type: integer
+                reviewId:
+                  type: integer
+                media:
+                  type: string
+                  format: binary
+        required: true
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Media'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+  /reviews/:reviewId:
+    get:
+      tags:
+        - reviews
+      summary: Get review by id
+      description: Get a review by id
+      operationId: getReviews
+      parameters:
+        - name: reviewId
+          in: path
+          description: review id
+          required: true
+          explode: true
+          schema:
+            type: string
+            default: 1
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+        '400':
+          description: Invalid placeName or itemName
+  /reviews:
+    post:
+      tags:
+        - places
+      summary: Add a new Review of a Place or Item
+      description: Add a new Review to a Place or to an Item in a Place
+      operationId: addReview
+      parameters:
+        - name: correlationId
+          in: header
+          description: correlationId to match requests in a session.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Create a new Review
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Review'
+        required: true
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+    put:
+      tags:
+        - places
+      summary: Update a Review
+      description: Update a Review
+      operationId: updateReview
+      requestBody:
+        description: Update a Review
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Review'
+        required: true
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+  /user:
+    post:
+      tags:
+        - user
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: createUser
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        default:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/User'
+  /user/login:
+    get:
+      tags:
+        - user
+      summary: Logs user into the system
+      description: ''
+      operationId: loginUser
+      parameters:
+        - name: username
+          in: query
+          description: The user name for login
+          required: false
+          schema:
+            type: string
+        - name: password
+          in: query
+          description: The password for login in clear text
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          headers:
+            X-Rate-Limit:
+              description: calls per hour allowed by the user
+              schema:
+                type: integer
+                format: int32
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/xml:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: string
+        '400':
+          description: Invalid username/password supplied
+  /user/logout:
+    get:
+      tags:
+        - user
+      summary: Logs out current logged in user session
+      description: ''
+      operationId: logoutUser
+      parameters: []
+      responses:
+        default:
+          description: successful operation
+  /manager/login:
+    get:
+      tags:
+        - user
+      summary: Logs manager into the system
+      description: 'Logs manager into the system. This manager login would be used to feed data into the database'
+      operationId: loginManager
+      parameters:
+        - name: username
+          in: query
+          description: The user name for login
+          required: false
+          schema:
+            type: string
+        - name: password
+          in: query
+          description: The password for login in clear text
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          headers:
+            X-Rate-Limit:
+              description: calls per hour allowed by the user
+              schema:
+                type: integer
+                format: int32
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/xml:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: string
+        '400':
+          description: Invalid username/password supplied
+  /manager/logout:
+    get:
+      tags:
+        - user
+      summary: Logs out current logged in user session
+      description: ''
+      operationId: logoutManager
+      parameters: []
+      responses:
+        default:
+          description: successful operation
+components:
+  schemas:
+    Cuisine:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        name:
+          type: string
+          example: 'INDIAN'
+          enum:
+            - 'ITALIAN'
+            - 'INDIAN'
+            - 'CHINESE'
+            - 'JAPANESE'
+            - 'ASIAN'
+            - 'INDO_CHINESE'
+            - 'INDO_ITALIAN'
+            - 'MIDDLE_EAST'
+            - 'MEXICAN'
+            - 'GREEK'
+            - 'AFRICAN'
+    Place:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        name:
+          type: string
+          example: 'ABC Tasty Foods'
+        address:
+          $ref: '#/components/schemas/Address'
+        description:
+          type: string
+        service:
+          type: integer
+          format: int64
+          example: 4.5
+        ambience:
+          type: integer
+          format: int64
+          example: 4.3
+        reviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+    Item:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        name:
+          type: string
+          example: 'Cheese Burger'
+        category:
+          type: string
+          enum:
+            - 'MAINS'
+            - 'STARTER'
+            - 'DRINKS'
+          example: 'MAINS'
+        cuisine:
+          type: string
+          enum:
+            - 'ITALIAN'
+            - 'INDIAN'
+            - 'CHINESE'
+            - 'JAPANESE'
+            - 'ASIAN'
+            - 'INDO_CHINESE'
+            - 'INDO_ITALIAN'
+            - 'MIDDLE_EAST'
+            - 'MEXICAN'
+            - 'GREEK'
+            - 'AFRICAN'
+          example: 'INDIAN'
+        description:
+          type: string
+        taste:
+          type: integer
+          format: int64
+          example: 4.5
+        presentation:
+          type: integer
+          format: int64
+          example: 4.3
+        reviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+    PlaceItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Item'
+      properties:
+        itemReferenceId:
+          type: string
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        description:
+          type: string
+          example: 'I like the taste and texture of this item'
+        service:
+          type: integer
+          format: int64
+          example: 4.5
+        ambience:
+          type: integer
+          format: int64
+          example: 4.3
+        taste:
+          type: integer
+          format: int64
+          example: 4.5
+        presentation:
+          type: integer
+          format: int64
+          example: 4.3
+        medias:
+          type: array
+          items:
+            $ref: '#/components/schemas/Media'
+        customerInfo:
+          $ref: '#/components/schemas/Customer'
+        placeId:
+          type: string
+          example: '12'
+        itemId:
+          type: string
+          example: 'Cheese Burger'
+        helpful:
+          type: integer
+          format: int64
+          example: 10
+        notHelpful:
+          type: integer
+          format: int64
+          example: 5
+        likedBy:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+        parent:
+          $ref: '#/components/schemas/Review'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+    Media:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: 'picture 1'
+        type:
+          type: string
+          example: 'image|video'
+          default: 'image'
+          enum:
+            - 'image'
+            - 'video'
+        url:
+          type: string
+          example: '\ttps://url-from-s3-bucket.com'
+    CustomersResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int64
+          example: 100000
+        size:
+          type: string
+          example: fehguy
+        customers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 100000
+        username:
+          type: string
+          example: fehguy
+        name:
+          type: string
+          example: fehguy
+        email:
+          type: string
+          example: fehguy@tangypeel.com
+        phone:
+          type: string
+          example: 04323432343
+        interestedIn:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cuisine'
+        reviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+        liked:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+        picture:
+          $ref: '#/components/schemas/Media'
+        address:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+          example: 437 Lytton
+        city:
+          type: string
+          example: Sydney
+        suburb:
+          type: string
+          example: 'Parramatta'
+        state:
+          type: string
+          example: NSW
+        zip:
+          type: string
+          example: '2000'
+    CuisineItemResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/CuisineItem'
+    CuisineItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 12
+        cuisine:
+          type: string
+          example: INDIAN
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        username:
+          type: string
+          example: theUser
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: James
+        email:
+          type: string
+          example: john@email.com
+        password:
+          type: string
+          example: '12345'
+        phone:
+          type: string
+          example: '12345'
+        userStatus:
+          type: integer
+          description: User Status
+          format: int32
+          example: 1
+    Paginated:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+          example: 1
+        size:
+          type: integer
+          format: int32
+          example: 10
+  securitySchemes:
+    facebook_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://petstore3.swagger.io/oauth/authorize
+          scopes:
+            write:pets: modify pets in your account
+            read:pets: read your pets
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
