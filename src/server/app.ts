@@ -16,13 +16,13 @@ const socketTimeout = process.env.SOCKET_TIMEOUT;
 // logger.debug("Some debug messages");
 
 process.on('uncaughtException', (e) => {
-	logger.error('uncaughtException: ', e);
-	// process.exit(1);
+  logger.error('uncaughtException: ', e);
+  // process.exit(1);
 });
 
 process.on('unhandledRejection', (e) => {
-	logger.error('unhandledRejection: ', e);
-	// process.exit(1);
+  logger.error('unhandledRejection: ', e);
+  // process.exit(1);
 });
 
 const router = express();
@@ -33,26 +33,26 @@ applyMiddleware(errorHandlers, router);
 
 const { PORT = 3000 } = process.env;
 const server = http.createServer(router).on('connection', function (socket: any) {
-	if (!socket.errorFunctionTagged) {
-		socket.on('error', function (exc: any) {
-			logger.error('Exception in socket: ' + exc);
-		});
-	}
-	socket.errorFunctionTagged = true;
+  if (!socket.errorFunctionTagged) {
+    socket.on('error', function (exc: any) {
+      logger.error('Exception in socket: ' + exc);
+    });
+  }
+  socket.errorFunctionTagged = true;
 });
 
 //db connection then server connection
 db.then(() => {
-	const runningServer = server.listen(PORT, () => logger.info(`Server is running http://localhost:${PORT}`));
+  const runningServer = server.listen(PORT, () => logger.info(`Server is running http://localhost:${PORT}`));
 
-	logger.trace('Before setting runningServer.keepAliveTimeout:: ', runningServer.keepAliveTimeout);
-	logger.trace('Before setting runningServer.headersTimeout:: ', runningServer.headersTimeout);
+  logger.trace('Before setting runningServer.keepAliveTimeout:: ', runningServer.keepAliveTimeout);
+  logger.trace('Before setting runningServer.headersTimeout:: ', runningServer.headersTimeout);
 
-	if (socketTimeout) {
-		runningServer.keepAliveTimeout = +socketTimeout;
-		runningServer.headersTimeout = runningServer.keepAliveTimeout + 10 * 1000;
-	}
+  if (socketTimeout) {
+    runningServer.keepAliveTimeout = +socketTimeout;
+    runningServer.headersTimeout = runningServer.keepAliveTimeout + 10 * 1000;
+  }
 
-	logger.trace('After setting runningServer.keepAliveTimeout:: ', runningServer.keepAliveTimeout);
-	logger.trace('After setting runningServer.headersTimeout:: ', runningServer.headersTimeout);
+  logger.trace('After setting runningServer.keepAliveTimeout:: ', runningServer.keepAliveTimeout);
+  logger.trace('After setting runningServer.headersTimeout:: ', runningServer.headersTimeout);
 });

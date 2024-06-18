@@ -5,108 +5,108 @@ import { IPlace } from './place';
 
 const uc = <T extends string>(x: T) => x.toUpperCase() as Uppercase<T>;
 
-let x: 'FOO' = uc('foo'); // okay
+const x: 'FOO' = uc('foo'); // okay
 type ItemCategoryKeys = keyof typeof ItemCategory;
 type CuisineKeys = keyof typeof Cuisine;
 
 const getCategory = (key: string) => {
-	const c: ItemCategory = ItemCategory[key.toUpperCase() as ItemCategory];
+  const c: ItemCategory = ItemCategory[key.toUpperCase() as ItemCategory];
 };
 
 export enum ItemCategory {
-	MAINS = 'MAINS',
-	STARTER = 'STARTER',
-	DRINKS = 'DRINKS',
+  MAINS = 'MAINS',
+  STARTER = 'STARTER',
+  DRINKS = 'DRINKS',
 }
 
 export enum Cuisine {
-	ITALIAN = 'ITALIAN',
-	INDIAN = 'INDIAN',
-	CHINESE = 'CHINESE',
-	JAPANESE = 'JAPANESE',
-	ASIAN = 'ASIAN',
-	INDO_CHINESE = 'INDO_CHINESE',
-	INDO_ITALIAN = 'INDO_ITALIAN',
-	MIDDLE_EAST = 'MIDDLE_EAST',
-	MEXICAN = 'MEXICAN',
-	GREEK = 'GREEK',
-	AFRICAN = 'AFRICAN',
+  ITALIAN = 'ITALIAN',
+  INDIAN = 'INDIAN',
+  CHINESE = 'CHINESE',
+  JAPANESE = 'JAPANESE',
+  ASIAN = 'ASIAN',
+  INDO_CHINESE = 'INDO_CHINESE',
+  INDO_ITALIAN = 'INDO_ITALIAN',
+  MIDDLE_EAST = 'MIDDLE_EAST',
+  MEXICAN = 'MEXICAN',
+  GREEK = 'GREEK',
+  AFRICAN = 'AFRICAN',
 }
 
 // creating interfaces for entities
 export type IItem = Document & {
-	_id: number;
-	correlationId: string;
+  _id: number;
+  correlationId: string;
 
-	// under which cuisines this item falls in
-	cuisines: Cuisine[];
+  // under which cuisines this item falls in
+  cuisines: Cuisine[];
 
-	aliases: string[];
-	/**
-	 * Indicates whether is a starter or drinks or main course, etc
-	 */
-	category: ItemCategory;
+  aliases: string[];
+  /**
+   * Indicates whether is a starter or drinks or main course, etc
+   */
+  category: ItemCategory;
 
-	// name of the item
-	name: string; // max 100 chars
+  // name of the item
+  name: string; // max 100 chars
 
-	// general description of the item like how its made or its origin, etc
-	description: string;
+  // general description of the item like how its made or its origin, etc
+  description: string;
 
-	// medias of the place given by that Place
-	media: IMedia;
+  // medias of the place given by that Place
+  media: IMedia;
 
-	createdAt: Date;
-	modifiedAt: Date;
+  createdAt: Date;
+  modifiedAt: Date;
 };
 
 // Model schemas
 const itemSchema: Schema<IItem> = new Schema<IItem>(
-	{
-		_id: Number,
+  {
+    _id: Number,
 
-		// correlationId: {
-		// 	type: String,
-		// },
+    // correlationId: {
+    // 	type: String,
+    // },
 
-		name: {
-			type: String,
-			required: true,
-		},
+    name: {
+      type: String,
+      required: true,
+    },
 
-		aliases: {
-			type: [String],
-			required: false,
-		},
-		description: {
-			type: String,
-			required: true,
-		},
-		cuisines: {
-			type: [String],
-			enum: Object.values(Cuisine),
-			validate: (c: Cuisine) => Array.isArray(c) && c.length > 0,
-		},
-		category: {
-			type: String,
-			enum: Object.values(ItemCategory), //['MAINS', 'STARTER', 'DRINKS'],
-			required: true,
-		},
-		media: {
-			type: mediaSchema,
-		},
+    aliases: {
+      type: [String],
+      required: false,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    cuisines: {
+      type: [String],
+      enum: Object.values(Cuisine),
+      validate: (c: Cuisine) => Array.isArray(c) && c.length > 0,
+    },
+    category: {
+      type: String,
+      enum: Object.values(ItemCategory), //['MAINS', 'STARTER', 'DRINKS'],
+      required: true,
+    },
+    media: {
+      type: mediaSchema,
+    },
 
-		createdAt: {
-			type: Date,
-			required: true,
-		},
+    createdAt: {
+      type: Date,
+      required: true,
+    },
 
-		modifiedAt: {
-			type: Date,
-			required: true,
-		},
-	},
-	{ _id: false }
+    modifiedAt: {
+      type: Date,
+      required: true,
+    },
+  },
+  { _id: false },
 );
 
 // @ts-ignore

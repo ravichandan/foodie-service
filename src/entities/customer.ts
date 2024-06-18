@@ -10,116 +10,112 @@ const uc = <T extends string>(x: T) => x.toUpperCase() as Uppercase<T>;
 
 type CuisineKeys = keyof typeof Cuisine;
 
-
-
 // creating interfaces for entities
 export type ICustomer = Document & {
-	_id: number;
-	correlationId: string;
+  _id: number;
+  correlationId: string;
 
-	/**
-	 * Cuisines that this customer is interested in
-	 */
-	interestedIn: Cuisine[];
+  /**
+   * Cuisines that this customer is interested in
+   */
+  interestedIn: Cuisine[];
 
-	// name of the customer
-	name: string; // max 100 chars
+  // name of the customer
+  name: string; // max 100 chars
 
-	// email of the customer
-	email: string;
+  // email of the customer
+  email: string;
 
-	// phone of the customer
-	phone: string;
+  // phone of the customer
+  phone: string;
 
-	// Address of the customer
-	address: IAddress;
+  // Address of the customer
+  address: IAddress;
 
-	// medias of the place given by that Place
-	picture: IMedia;
+  // medias of the place given by that Place
+  picture: IMedia;
 
-	// reviews given by this Customer
-	reviews: IReview[];
+  // reviews given by this Customer
+  reviews: IReview[];
 
-	// reviews liked by this Customer
-	liked: IReview[];
+  // reviews liked by this Customer
+  liked: IReview[];
 
-	// Total points earned in their lifetime
-	totalPointsEarned: number;
+  // Total points earned in their lifetime
+  totalPointsEarned: number;
 
-	// Current active points that they can claim.
-	claimablePoints: number;
+  // Current active points that they can claim.
+  claimablePoints: number;
 
-	// The current activity level of the user
-	level: ActivityLevel;
+  // The current activity level of the user
+  level: ActivityLevel;
 
-
-	createdAt: Date;
-	modifiedAt: Date;
+  createdAt: Date;
+  modifiedAt: Date;
 };
 
 // Model schemas
 export const customerSchema: Schema<ICustomer> = new Schema<ICustomer>(
-	{
-		_id: Number,
+  {
+    _id: Number,
 
-		correlationId: {
-			type: String,
-		},
+    correlationId: {
+      type: String,
+    },
 
-		name: {
-			type: String,
-			required: true,
-		},
+    name: {
+      type: String,
+      required: true,
+    },
 
-		email: {
-			type: String,
-			required: true,
-		},
+    email: {
+      type: String,
+      required: true,
+    },
 
-		phone: {
-			type: String,
-			required: true,
-		},
-		interestedIn: {
-			type: [String],
-			enum: Object.values(Cuisine),
-			validate: (c: Cuisine) => Array.isArray(c) && c.length > 0,
-		},
-		picture: {
-			type: mediaSchema,
-			// validate: (v: IMedia) => Array.isArray(v), // && v.length > 0,
-		},
-		address: {
-			type: addressSchema,
-			required: false,
-		},
-		reviews: {
-			type: [reviewSchema],
-			validate: (v: IReview) => Array.isArray(v), // && v.length > 0,
-		},
-		// liked: {
-		// 	type: [reviewSchema],
-		// 	validate: (v: IReview) => Array.isArray(v), // && v.length > 0,
-		// },
+    phone: {
+      type: String,
+      required: true,
+    },
+    interestedIn: {
+      type: [String],
+      enum: Object.values(Cuisine),
+      validate: (c: Cuisine) => Array.isArray(c) && c.length > 0,
+    },
+    picture: {
+      type: mediaSchema,
+      // validate: (v: IMedia) => Array.isArray(v), // && v.length > 0,
+    },
+    address: {
+      type: addressSchema,
+      required: false,
+    },
+    reviews: {
+      type: [reviewSchema],
+      validate: (v: IReview) => Array.isArray(v), // && v.length > 0,
+    },
+    // liked: {
+    // 	type: [reviewSchema],
+    // 	validate: (v: IReview) => Array.isArray(v), // && v.length > 0,
+    // },
 
-		createdAt: {
-			type: Date,
-			required: true,
-		},
+    createdAt: {
+      type: Date,
+      required: true,
+    },
 
-		modifiedAt: {
-			type: Date,
-			required: true,
-		},
-	},
-	{ _id: false },
+    modifiedAt: {
+      type: Date,
+      required: true,
+    },
+  },
+  { _id: false },
 );
 
 customerSchema.virtual('info', {
-	ref: 'ReviewThread',
-	localField: '_id',
-	foreignField: 'likedBy',
-
+  ref: 'ReviewThread',
+  localField: '_id',
+  foreignField: 'likedBy',
 });
 
 // @ts-ignore
