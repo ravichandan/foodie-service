@@ -45,6 +45,7 @@ const server = http.createServer(router).on('connection', function (socket: any)
 db.then(() => {
   const runningServer = server.listen(PORT, () => logger.info(`Server is running http://localhost:${PORT}`));
 
+  console.log('Before setting runningServer.keepAliveTimeout:: ', runningServer.keepAliveTimeout);
   logger.trace('Before setting runningServer.keepAliveTimeout:: ', runningServer.keepAliveTimeout);
   logger.trace('Before setting runningServer.headersTimeout:: ', runningServer.headersTimeout);
 

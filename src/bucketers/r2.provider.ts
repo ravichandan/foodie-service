@@ -10,6 +10,8 @@ import * as Utils from '../utils/Utils';
 import { Upload } from '@aws-sdk/lib-storage';
 
 import { readFileSync } from 'node:fs';
+import { Stream } from 'node:stream';
+import { Readable } from 'stream';
 // import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const log: Logger = Utils.getLogger('r2.provider');
@@ -102,7 +104,7 @@ export class R2Provider {
     return uploadedResult;
   }
 
-  async uploadV3(key: any, fileStream: any) {
+  async uploadV3(key: any, fileStream: ReadableStream) {
     log.trace('in uploadv3');
     const target = {
       Bucket: this.S3_BUCKET_NAME,

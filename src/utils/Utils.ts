@@ -12,6 +12,10 @@ import { CustomerModel } from '../models/customerModel';
 import { ICustomer } from '../entities/customer';
 import { IActivity } from '../entities/activity';
 import { ActivityModel } from '../models/activityModel';
+import { Hono } from 'hono';
+import { MiddlewareHandler } from 'hono';
+import { env } from 'hono/adapter'
+// import { Bindings } from '../index';
 
 log4js.configure({
   appenders: {
@@ -40,9 +44,15 @@ type Route = {
   validators: any | undefined;
   handler: Handler | Handler[];
 };
+type HonoRoute = {
+  path: string;
+  method: string;
+  validators: any | undefined;
+  handler: MiddlewareHandler;
+};
 export const applyMiddleware = (middleware: Wrapper[], router: Router) => {
   for (const f of middleware) {
-    logger.debug('In applyMiddleware, f = ' + f);
+    // logger.debug('In applyMiddleware, f = ' + f);
     f(router);
   }
 };
@@ -50,9 +60,21 @@ export const applyMiddleware = (middleware: Wrapper[], router: Router) => {
 export const applyRoutes = (routes: Route[], router: Router): void => {
   for (const route of routes) {
     const { method, path, validators = undefined, handler } = route;
-    logger.debug('In applyRoutes, router = ' + router);
+    // logger.debug('In applyRoutes, router = ' + router);
 
     if (validators) {
+      (router as any)[method](path, [...validators], handler);
+    } else {
+      (router as any)[method](path, handler);
+    }
+  }
+};
+export const applyHonoRoutes = (routes: HonoRoute[], router: Hono<any>): void => {
+  for (const route of routes) {
+    const { method, path, validators = undefined, handler } = route;
+    logger.debug('In applyHonoRoutes, router = ', router);
+
+    if (validators?.length>0) {
       (router as any)[method](path, [...validators], handler);
     } else {
       (router as any)[method](path, handler);
