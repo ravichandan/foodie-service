@@ -40,16 +40,16 @@ export class MediaService {
     );
   }
 
-  async removeMediaFromR2(files: any) {
-    log.info('In removeMediaFromR2');
-    if (!files) {
+  async removeMediaFromR2(keys: { key?: string }[]) {
+    log.info('In removeMediaFromR2, ', keys);
+    if (keys?.length<1) {
       return;
     }
 
     return await Promise.all(
-      (files as any).map(async (file: any) => {
-        // Write your buffer
-        return await r2Provider.removeFile(file.Key);
+      keys.filter(x=> !!x?.key).map(async (o: { key?: string }) => {
+        log.info('in o:',o);
+        return o.key ? await r2Provider.removeFile(o.key) : undefined;
       }),
     );
   }

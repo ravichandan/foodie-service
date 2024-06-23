@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 import { Document, Schema, Model, model } from 'mongoose';
-import Inc from 'mongoose-sequence';
+// import Inc from 'mongoose-sequence';
 
 export type IMedia = Document & {
   url: string;
@@ -79,13 +79,13 @@ export const mediaSchema: Schema<IMedia> = new mongoose.Schema<IMedia>(
 );
 
 // @ts-ignore
-const AutoIncrement = Inc(mongoose);
+// const AutoIncrement = Inc(mongoose);
 // @ts-ignore
-mediaSchema.plugin(AutoIncrement, {
-  id: 'media_id_counter',
-  inc_field: '_id',
-  seq: 1,
-});
+// mediaSchema.plugin(AutoIncrement, {
+//   id: 'media_id_counter',
+//   inc_field: '_id',
+//   seq: 1,
+// });
 
 //creating the Place model by passing placeSchema
 export const Media: Model<IMedia> = model<IMedia>('Media', mediaSchema);

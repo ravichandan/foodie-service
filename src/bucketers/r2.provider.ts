@@ -12,7 +12,7 @@ import { Upload } from '@aws-sdk/lib-storage';
 import { readFileSync } from 'node:fs';
 import { Stream } from 'node:stream';
 import { Readable } from 'stream';
-// import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const log: Logger = Utils.getLogger('r2.provider');
 
@@ -56,12 +56,22 @@ export class R2Provider {
   }
 
   async removeFile(key: string) {
-    const deleteObjectCommand = new DeleteObjectCommand({
-      Bucket: this.S3_BUCKET_NAME,
-      Key: key,
+    log.info(' in r2.provider, removeFile(), key:: ', key);
+    const url = await getSignedUrl(
+      this.client,
+      new DeleteObjectCommand({ Bucket: this.S3_BUCKET_NAME, Key: key }),
+      { expiresIn: 3600 }
+    );
+    await fetch(url, {
+      method: 'DELETE',
     });
 
-    this.client.send(deleteObjectCommand);
+    // const deleteObjectCommand = new DeleteObjectCommand({
+    //   Bucket: this.S3_BUCKET_NAME,
+    //   Key: key,
+    // });
+
+    // await this.client.send(deleteObjectCommand);
   }
 
   async uploadToR2(passThroughStream: any) {
