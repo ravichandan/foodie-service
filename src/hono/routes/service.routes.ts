@@ -1,176 +1,151 @@
-import { Context, HonoRequest as Request } from 'hono';
+import { Context } from 'hono';
 import { getLogger } from '../../utils/Utils';
 import { placeController } from '../../controllers/place.controller';
 // import { checkSchema, validationResult } from 'express-validator';
-import * as FieldConfigs from '../../config/field.config';
-import { handleSingleUploadFile } from '../../utils/LocalFileStorage';
-import { mediaController } from '../../controllers/media.controller';
-import { itemController } from '../../controllers/item.controller';
-import { lastValueFrom, of, tap } from 'rxjs';
-import { reviewController } from '../../controllers/review.controller';
-import { customerController } from '../../controllers/customer.controller';
-import { getOrPutCustomerByIdSchemaConfig } from '../../config/field.config';
 import { r2Provider } from '../../bucketers/r2.provider';
 import { mediaService } from '../../services/media.service';
-import multer from 'multer';
-import { createFileBuffer } from '../../utils/MemoryFileStorage';
 import { nanoid } from 'nanoid';
+import { HTTP404Error } from '../../utils/error4xx';
 
 const log = getLogger('hono-> service.routes');
 export type UploadedFile = {
-  fieldname: string; // file
-  originalname: string; // myPicture.png
-  encoding: string; // 7bit
-  mimetype: string; // image/png
-  destination: string; // ./public/uploads
-  filename: string; // 1571575008566-myPicture.png
-  path: string; // public/uploads/1571575008566-myPicture.png
-  size: number; // 1255
+	fieldname: string; // file
+	originalname: string; // myPicture.png
+	encoding: string; // 7bit
+	mimetype: string; // image/png
+	destination: string; // ./public/uploads
+	filename: string; // 1571575008566-myPicture.png
+	path: string; // public/uploads/1571575008566-myPicture.png
+	size: number; // 1255
 };
 export default [
-  {
-    path: '/pulse',
-    method: 'get',
-    validators: [],
-    handler: async (c: Context) => {
-      return new Response('Hello, I am working fine');
-    },
-  },
-  // {
-  //   path: '/',
-  //   method: 'get',
-  //   validators: [],
-  //   handler: (_: Request, res: Response): Promise<any> => {
-  //     log.trace('Server is up and running');
-  //     // of({ id, name: 'username' })
-  //     // return
-  //     res.status(200);
-  //
-  //     return lastValueFrom(of('hello').pipe(tap((x) => res.send(x))));
-  //     /* return the Rx stream as promise to express, so it traces its lifecycle */
-  //     // .then(
-  //     // 	user => res.send(user),
-  //     // 	err => res.status(500).send(err.message)
-  //     // );
-  //     // res.send('Up and running!!');
-  //   },
-  // },
-  {
-    path: '/r2buckets',
-    method: 'get',
-    validators: [],
-    handler: async (c: Context) => {
-      log.info('In GET /r2buckets');
-      const result = await r2Provider.listBuckets();
-      log.trace('In GET /r2buckets, result: ', result);
-      return c.json(result);
-    },
-  },
-  {
-    path: '/delete-test',
-    method: 'delete',
-    validators: [],
-    handler: async (c: Context) => {
-      log.info('In DELETE /delete-test, c.req.param(\'key\')', c.req.query('key'));
-      const result = await mediaService.removeMediaFromR2([{ key: c.req.query('key') }]);
-      log.debug('In DELETE /delete-test, result', result);
-      return c.body (null,204);
-    },
-  },
-  {
-    path: '/upload-test',
-    method: 'post',
-    validators: [],
-    handler: async (c: Context) => {
-      log.info('In POST /upload-test');
+	{
+		path: '/pulse',
+		method: 'get',
+		validators: [],
+		handler: async (c: Context) => {
+			return new Response('Hello, I am working fine');
+		},
+	},
+	// {
+	//   path: '/',
+	//   method: 'get',
+	//   validators: [],
+	//   handler: (_: Request, res: Response): Promise<any> => {
+	//     log.trace('Server is up and running');
+	//     // of({ id, name: 'username' })
+	//     // return
+	//     res.status(200);
+	//
+	//     return lastValueFrom(of('hello').pipe(tap((x) => res.send(x))));
+	//     /* return the Rx stream as promise to express, so it traces its lifecycle */
+	//     // .then(
+	//     // 	user => res.send(user),
+	//     // 	err => res.status(500).send(err.message)
+	//     // );
+	//     // res.send('Up and running!!');
+	//   },
+	// },
+	{
+		path: '/r2buckets',
+		method: 'get',
+		validators: [],
+		handler: async (c: Context) => {
+			log.info('In GET /r2buckets');
+			const result = await r2Provider.listBuckets();
+			log.trace('In GET /r2buckets, result: ', result);
+			return c.json(result);
+		},
+	},
+	{
+		path: '/delete-test',
+		method: 'delete',
+		validators: [],
+		handler: async (c: Context) => {
+			log.info('In DELETE /delete-test, c.req.param(\'key\')', c.req.query('key'));
+			const result = await mediaService.removeMediaFromR2([{ key: c.req.query('key') }]);
+			log.debug('In DELETE /delete-test, result', result);
+			return c.body(null, 204);
+		},
+	},
+	{
+		path: '/upload-test',
+		method: 'post',
+		validators: [],
+		handler: async (c: Context) => {
+			log.info('In POST /upload-test');
 
-      const key = nanoid(10)
-      const formData = await c.req.parseBody()
-      const file = formData['file']
-      console.log('in http://localhost:8787/api/v1/upload')
-      if (file instanceof File) {
-        const fileBuffer: ReadableStream = await file.stream();
-        console.log('in http://localhost:8787/api/v1/upload')
-        let result = await r2Provider.uploadV3(key+'ss', fileBuffer);
-        const fullName = file.name
-        const ext = fullName.split('.').pop()
-        const path = `images/${key}.${ext}`
-        // let result = await c.env.MY_BUCKET.put(path, fileBuffer)
-        console.log('hono file upload result:: ', result);
-        return c.json({
-          'image': {
-            // 'url': `${HOST}${path}`
-            'url': result?.Location
+			const key = nanoid(10);
+			const formData = await c.req.parseBody();
+			const file = formData['file'];
+			console.log('in POST /upload-test');
+			if (file instanceof File) {
+				const fileBuffer: ReadableStream = await file.stream();
+				console.log('in http://localhost:8787/api/v1/upload');
+				let result = await r2Provider.uploadV3(key + 'ss', fileBuffer);
+				const fullName = file.name;
+				const ext = fullName.split('.').pop();
+				const path = `images/${key}.${ext}`;
+				// let result = await c.env.MY_BUCKET.put(path, fileBuffer)
+				console.log('hono file upload result:: ', result);
+				return c.json({
+					'image': {
+						// 'url': `${HOST}${path}`
+						'url': result?.Location,
 
-          }
-        })
-      } else {
-        return c.text('Invalid file', 400)
-      }
+					},
+				});
+			} else {
+				return c.text('Invalid file', 400);
+			}
 
 
-      const result = await mediaController.uploadMultipleMedias(req, res);
-      // add the media file url into database
-      if (Array.isArray(result)) {
-        try {
-          await mediaController.addMultipleMedias(req, res, result);
-        } catch (e: any) {
-          await mediaController.removeUploadedMedias(req);
-          return res.status(422).json({ errors: [e.message] });
-        }
-        ` `; // 	await mediaController.addMedia(req, res, uploadedFile.path);
-      }
+			// const result = await mediaController.uploadMultipleMedias(req, res);
+			// // add the media file url into database
+			// if (Array.isArray(result)) {
+			//   try {
+			//     await mediaController.addMultipleMedias(req, res, result);
+			//   } catch (e: any) {
+			//     await mediaController.removeUploadedMedias(req);
+			//     return res.status(422).json({ errors: [e.message] });
+			//   }
+			//   ` `; // 	await mediaController.addMedia(req, res, uploadedFile.path);
+			// }
 
-      res.status(200).send(result);
-    },
-  },
+			// res.status(200).send(result);
+		},
+	},
 
-  /* {
-		 path: '/verify-token',
-		 method: 'post',
-		 validators: [checkSchema(FieldConfigs.validateAuth)],
-		 handler: (req: Request, res: Response) => {
-			 log.trace('POST /verify-token is up and running', req.body);
-			 // const data:{token: string,clientId: string } = req.body as any;
-			 // log.debug('token: ', data.token);
-			 // const {OAuth2Client} = require('google-auth-library');
-			 // const isAuthenticated = await googleJwtValidator(data.token);
-			 const err = validationResult(req);
-			 if (!err.isEmpty()) {
-				 log.error('res.code', res.statusCode);
-				 log.error('Bad Request', err.mapped());
-				 const e = err.mapped();
-				 if (e.token) res.status(401).send({ token: { ...e.token, value: undefined } });
-				 else res.status(400).send(e);
-			 } else {
-				 // No errors, pass req and res on to your controller
-				 res.sendStatus(200);
-			 }
-		 },
-	 },
+	// place routes
+	{
+		path: '/places/:placeId', // get place by id
+		method: 'get',
+		validators: [
+			// checkSchema(FieldConfigs.getPlaceByIdSchemaConfig),
+			// checkSchema(FieldConfigs.getPlaceSchemaConfig)
+		],
+		handler: async (c: Context) => {
 
-	 // place routes
-	 {
-		 path: '/places/:placeId', // get place by id
-		 method: 'get',
-		 validators: [
-			 checkSchema(FieldConfigs.getPlaceByIdSchemaConfig),
-			 // checkSchema(FieldConfigs.getPlaceSchemaConfig)
-		 ],
-		 handler: async (req: Request, res: Response) => {
-			 const err = validationResult(req);
-			 if (!err.isEmpty()) {
-				 log.error('Bad Request', err.mapped());
-				 res.status(401).send(err.mapped());
-			 } else {
-				 // No errors, pass req and res on to your controller
-				 log.debug('in get /places/:placeId route handler, processing request, req.params:', req.params);
-				 await placeController.getAPlace(req, res);
-				 // res.send({...req.params,...req.query});
-				 log.debug('Returning the fetched Place');
-			 }
-		 },
-	 },
+			const placeId = c.req.param('placeId');
+			if (!placeId) {
+				return c.text('a place id has to be provided as a path param in the url .../places/:placeId', 401);
+			}
+			// No errors, pass context on to your controller
+			log.debug('in get /places/:placeId route handler, processing request, placeId :', placeId);
+			try {
+				const placeModel = await placeController.getAPlace(placeId);
+				return c.json(placeModel);
+			} catch (error: any) {
+				log.error('getting a place() -> Error while querying for a place with id: ' + placeId, error);
+				if (error instanceof HTTP404Error) {
+					return c.notFound();
+				}else {
+					return c.json(error, 500);
+				}
+			}
+			// res.send({...req.params,...req.query});
+		},
+	},
 	 {
 		 path: '/places/', // get places by name or part of a name, takes name in query param
 		 method: 'get',
@@ -192,7 +167,7 @@ export default [
 			 }
 		 },
 	 },
-	 {
+	 /*{
 		 path: '/places/:placeId/items', // adds an item/dish to a place.
 		 method: 'post',
 		 validators: [checkSchema(FieldConfigs.addItemSchemaConfig), checkSchema(FieldConfigs.validateAuth)],

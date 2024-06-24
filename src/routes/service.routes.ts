@@ -14,6 +14,7 @@ import { r2Provider } from '../bucketers/r2.provider';
 import { mediaService } from '../services/media.service';
 import multer from 'multer';
 import { createFileBuffer } from '../utils/MemoryFileStorage';
+import { HTTP404Error } from '../utils/error4xx';
 
 const log = getLogger('service.routes');
 export type UploadedFile = {
@@ -83,7 +84,7 @@ export default [
     method: 'delete',
     validators: [],
     handler: async (req: Request, res: Response) => {
-      await mediaService.removeMediaFromR2([{ Key: '123-4010-1718378740461' }]);
+      await mediaService.removeMediaFromR2([{ key: '123-4010-1718378740461' }]);
       res.status(204);
     },
   },
@@ -155,7 +156,19 @@ export default [
       } else {
         // No errors, pass req and res on to your controller
         log.debug('in get /places/:placeId route handler, processing request, req.params:', req.params);
-        await placeController.getAPlace(req, res);
+        const placeId = req.params.placeId;
+        try {
+          const placeModel = await placeController.getAPlace(placeId);
+          res.send(placeModel);
+        }catch (error: any) {
+          log.error('getting a place() -> Error while querying for a place with id: ' + placeId, error);
+          if(error  instanceof HTTP404Error) {
+            res.status(401).send(err.mapped());
+          }else {
+            log.error('getting a place() -> Error while querying for a place with id: ' + placeId, error);
+            res.status(500).send(error);
+          }
+        }
         // res.send({...req.params,...req.query});
         log.debug('Returning the fetched Place');
       }

@@ -46,7 +46,7 @@ class MediaController {
 
     if (config.bucket_provider === 'R2') {
       log.trace('Removing files in R2 file buffers');
-      await mediaService.removeMediaFromR2(req.files);
+      await mediaService.removeMediaFromR2([{ key: req.params.key}]);
     } else {
       log.trace('Removing files in local file storage');
       // result = await handleSingleUploadFile(req, res);

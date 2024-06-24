@@ -12,6 +12,7 @@ import { itemService } from '../services/item.service';
 import { IPlaceItem } from '../entities/placeItem';
 import { placeItemService } from '../services/placeItem.service';
 import { placeToPlaceModel } from '../utils/Utils';
+import { HTTP404Error } from '../utils/error4xx';
 
 const log: Logger = Utils.getLogger('place.controller');
 
@@ -123,23 +124,26 @@ class PlaceController {
   };
 
   //get a single place
-  getAPlace = async (req: Request, res: Response) => {
+  getAPlace = async (placeId: string) => {
     //get id from the parameter
-    const id = req.params.placeId;
+    const id = placeId;
     log.debug('Querying for a place with id: ', id);
-    try {
+    // try {
       const place = await placeService.getPlace(id);
-      log.trace('Place found with given id, place: ', place);
       if (!place) {
-        res.sendStatus(404);
-        return;
+      log.trace('Place not found with given id');
+        throw new HTTP404Error('Place not found with given id');
+        // res.sendStatus(404);
+        // return;
       }
+      log.trace('Place found with given id, place: ', place);
       const placeModel: PlaceModel = placeToPlaceModel(place);
-      res.send(placeModel);
-    } catch (error: any) {
-      log.error('getting a place() -> Error while querying for a place with id: ' + id, error);
-      res.status(500).send(error);
-    }
+      return placeModel;
+      // res.send(placeModel);
+    // } catch (error: any) {
+    //   log.error('getting a place() -> Error while querying for a place with id: ' + id, error);
+    //   res.status(500).send(error);
+    // }
   };
 
   //update place

@@ -11,7 +11,7 @@ export const notFoundError = (err: Error, res: Response, next: NextFunction) => 
     log.error('Error:', err);
     res.status(err.statusCode).send(err.message);
   } else {
-    throw new HTTP404Error('Method not found');
+    throw new HTTP404Error('Requested resource not found');
   }
 };
 
