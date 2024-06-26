@@ -2,7 +2,7 @@ import { IItem, Item } from '../entities/item';
 import { Logger } from 'log4js';
 import { getLogger } from '../utils/Utils';
 import { IPlaceItem, PlaceItem } from '../entities/placeItem';
-import { Query } from 'mongoose';
+// import { Query } from 'mongoose';
 
 const log: Logger = getLogger('item.service');
 
@@ -70,6 +70,8 @@ export class ItemService {
   async getAPlaceItem(params: { placeId: string; itemId: string }): Promise<IPlaceItem | undefined> {
     log.debug('Received request to get a item with params: ', params);
     try {
+      log.debug('PlaceITem:: ', PlaceItem);
+      log.debug('PlaceITem:: ', PlaceItem.find);
       const item = await PlaceItem.findOne({ place: { _id: params.placeId }, item: { _id: params.itemId } }).populate({
         path: 'reviews ratings medias',
         options: { sort: { createdAt: -1 }, limit: 20 },

@@ -1,5 +1,5 @@
 import mongoose, { Document, Model, model, Schema } from 'mongoose';
-import Inc from 'mongoose-sequence';
+// import Inc from 'mongoose-sequence';
 import { IMedia, mediaSchema } from './media';
 import { IPlace } from './place';
 
@@ -110,9 +110,9 @@ const itemSchema: Schema<IItem> = new Schema<IItem>(
 );
 
 // @ts-ignore
-const AutoIncrement = Inc(mongoose);
+// const AutoIncrement = Inc(mongoose);
 // @ts-ignore
-itemSchema.plugin(AutoIncrement, { id: 'item_id_counter', inc_field: '_id' });
+// itemSchema.plugin(AutoIncrement, { id: 'item_id_counter', inc_field: '_id' });
 
 //creating the Place model by passing placeSchema
 export const Item: Model<IItem> = model<IItem>('Item', itemSchema);

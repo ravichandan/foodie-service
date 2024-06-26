@@ -3,7 +3,7 @@ import mongoose, { Document, Model, model, Schema } from 'mongoose';
 import { IPlace } from './place';
 import { IMedia, mediaSchema } from './media';
 import { IItem } from './item';
-import Inc from 'mongoose-sequence';
+// import Inc from 'mongoose-sequence';
 import { IReview } from './review';
 import { IPlaceItemRating } from './placeItemRating';
 
@@ -139,8 +139,8 @@ placeItemSchema.virtual('ratings', {
 });
 
 // @ts-ignore
-const AutoIncrement = Inc(mongoose);
+// const AutoIncrement = Inc(mongoose);
 
 // @ts-ignore
-placeItemSchema.plugin(AutoIncrement, { id: 'place_item_id_counter', inc_field: '_id' });
+// placeItemSchema.plugin(AutoIncrement, { id: 'place_item_id_counter', inc_field: '_id' });
 export const PlaceItem: Model<IPlaceItem> = model<IPlaceItem>('Place_Item', placeItemSchema);

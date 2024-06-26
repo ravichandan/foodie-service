@@ -61,16 +61,17 @@ class ItemController {
   };
 
   //get a single item
-  getAItemInAPlace = async (req: Request, res: Response) => {
+  getAItemInAPlace = async (args : {placeId: string, itemId: string}) => {
     //get id from the parameter
     // TODO take pagination params and return the data accordingly.
-    const placeId = req.params.placeId;
-    const itemId = req.params.itemId;
+    const { placeId, itemId } = { ...args };
     try {
       const item = await itemService.getAPlaceItem({ placeId, itemId });
-      res.send(item);
+      return item;
+      // res.send(item);
     } catch (error: any) {
-      res.status(500).send(error);
+      throw error;
+      // res.status(500).send(error);
     }
   };
 

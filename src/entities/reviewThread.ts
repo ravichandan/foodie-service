@@ -121,9 +121,9 @@ export const reviewThreadSchema: Schema<IReviewThread> = new Schema<IReviewThrea
 );
 
 // @ts-ignore
-const AutoIncrement = Inc(mongoose);
+// const AutoIncrement = Inc(mongoose);
 // @ts-ignore
-reviewThreadSchema.plugin(AutoIncrement, { id: 'review_thread_id_counter', inc_field: '_id' });
+// reviewThreadSchema.plugin(AutoIncrement, { id: 'review_thread_id_counter', inc_field: '_id' });
 
 //creating the Review model by passing reviewSchema
 export const ReviewThread: Model<IReviewThread> = model<IReviewThread>('ReviewThread', reviewThreadSchema);

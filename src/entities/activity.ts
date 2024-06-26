@@ -123,9 +123,9 @@ export const activitySchema: Schema<IActivity> = new Schema<IActivity>(
 // });
 
 // @ts-ignore
-const AutoIncrement = Inc(mongoose);
+// const AutoIncrement = Inc(mongoose);
 // @ts-ignore
-activitySchema.plugin(AutoIncrement, { id: 'activity_id_counter', inc_field: '_id' });
+// activitySchema.plugin(AutoIncrement, { id: 'activity_id_counter', inc_field: '_id' });
 
 //creating the Place model by passing placeSchema
 export const Activity: Model<IActivity> = model<IActivity>('Activity', activitySchema);

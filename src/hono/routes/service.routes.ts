@@ -5,7 +5,8 @@ import { placeController } from '../../controllers/place.controller';
 import { r2Provider } from '../../bucketers/r2.provider';
 import { mediaService } from '../../services/media.service';
 import { nanoid } from 'nanoid';
-import { HTTP404Error } from '../../utils/error4xx';
+import { HTTP400Error, HTTP404Error } from '../../utils/error4xx';
+import { itemController } from '../../controllers/item.controller';
 
 const log = getLogger('hono-> service.routes');
 export type UploadedFile = {
@@ -131,7 +132,7 @@ export default [
 				return c.text('a place id has to be provided as a path param in the url .../places/:placeId', 401);
 			}
 			// No errors, pass context on to your controller
-			log.debug('in get /places/:placeId route handler, processing request, placeId :', placeId);
+			log.debug('in GET /places/:placeId hono route handler, processing request, placeId :', placeId);
 			try {
 				const placeModel = await placeController.getAPlace(placeId);
 				return c.json(placeModel);
@@ -146,62 +147,111 @@ export default [
 			// res.send({...req.params,...req.query});
 		},
 	},
-	 {
+	 /*{
 		 path: '/places/', // get places by name or part of a name, takes name in query param
 		 method: 'get',
 		 validators: [
-			 checkSchema(FieldConfigs.getPlaceByNameSchemaConfig),
+			 // checkSchema(FieldConfigs.getPlaceByNameSchemaConfig),
 			 // checkSchema(FieldConfigs.getPlaceSchemaConfig)
 		 ],
-		 handler: async (req: Request, res: Response) => {
-			 const err = validationResult(req);
-			 if (!err.isEmpty()) {
-				 log.error('Bad Request', err.mapped());
-				 res.status(401).send(err.mapped());
+		 handler: async (c: Context) => {
+			 // const err = validationResult(req);
+			 log.debug('in GET /places/?placeName=xxx hono route handler, processing request, req.queries:', c.req.queries());
+			 const placeName = c.req.param('placeName');
+			 const itemName = c.req.param('itemName');
+			 const postcode = c.req.param('postcode');
+			 if (!placeName) {
+				 log.error('a place id has to be provided as a path param in the url .../places/:placeId');
+				 return c.text('a place id has to be provided as a path param in the url .../places/:placeId', 401);
 			 } else {
-				 // No errors, pass req and res on to your controller
-				 log.debug('in get /places/?placeName=<xyz> route handler, processing request, req.params:', req.params);
-				 await placeController.getPlaces(req, res);
-				 // res.send({...req.params,...req.query});
-				 log.debug('Returning the fetched Place');
+				 // No errors, pass args to your controller
+				 try {
+					 const placeResponse = await placeController.getPlaces({ placeName: placeName, itemName:itemName, postcode: postcode });
+					 // res.send({...req.params,...req.query});
+					 log.debug('Returning the fetched placeResponse: ',placeResponse);
+					 return c.json(placeResponse);} catch (error: any) {
+					 log.error('getting place() -> Error while querying for a place with name: ' + placeName, error);
+					 if (error instanceof HTTP404Error) {
+						 return c.notFound();
+					 }else {
+						 return c.json(error, 500);
+					 }
+				 }
+
 			 }
 		 },
 	 },
-	 /*{
+	 {
 		 path: '/places/:placeId/items', // adds an item/dish to a place.
 		 method: 'post',
-		 validators: [checkSchema(FieldConfigs.addItemSchemaConfig), checkSchema(FieldConfigs.validateAuth)],
-		 handler: async (req: Request, res: Response) => {
-			 const err = validationResult(req);
-			 if (!err.isEmpty()) {
-				 log.error('Bad Request', err.mapped());
-				 res.status(400).send(err.mapped());
-			 } else {
-				 // No errors, pass req and res on to your controller
-				 log.debug('in post /items/ route handler, processing request, req.body:: ', req.body);
-				 await placeController.addItem(req, res);
-				 log.debug('Done adding Place');
+		 validators: [
+			 // checkSchema(FieldConfigs.addItemSchemaConfig),
+			 // checkSchema(FieldConfigs.validateAuth)
+		 ],
+		 handler: async (c: Context) => {
+			 // const err = validationResult(req);
+			 // if (!err.isEmpty()) {
+				//  log.error('Bad Request', err.mapped());
+				//  res.status(400).send(err.mapped());
+			 // } else {
+			 const  placeItem = await c.req.json();
+			 if (!placeItem) {
+				 return c.text('a place id has to be provided as a path param in the url .../places/:placeId', 401);
 			 }
+			 // No errors, pass context on to your controller
+			 log.debug('in POST /places/:placeId/items hono route handler, processing request.');
+			 try {
+				 log.debug('Done adding Place');
+				 const item = await placeController.addItem(placeItem);
+				 // res.send({...req.params,...req.query});
+				 log.debug('Returning the fetched placeResponse: ',item);
+				 return c.json(item);
+			 } catch (error: any) {
+				 log.error('creating an item in place resulted in Error', error);
+				 if (error instanceof HTTP404Error) {
+					 return c.notFound();
+				 } else if (error instanceof HTTP400Error) {
+					 return c.notFound();
+				 } else {
+					 return c.json(error, 500);
+				 }
+			 }
+
+			 // }
 		 },
 	 },
 	 {
 		 path: '/places/:placeId/items/:itemId', // get a single item details from a given place // TODO change item/placeName's to ids
 		 method: 'get',
-		 validators: [checkSchema(FieldConfigs.getItemInPlaceByIdSchemaConfig)],
-		 handler: async (req: Request, res: Response) => {
-			 const err = validationResult(req);
-			 if (!err.isEmpty()) {
-				 log.error('Bad Request', err.mapped());
-				 res.status(401).send(err.mapped());
-			 } else {
-				 // No errors, pass req and res on to your controller
-				 log.debug('in get /places/:placeId/items/:itemId route handler, processing request, req.params:', req.params);
-				 await itemController.getAItemInAPlace(req, res);
-				 log.debug('Returning the fetched Place');
+		 validators: [
+			 // checkSchema(FieldConfigs.getItemInPlaceByIdSchemaConfig)
+		 ],
+		 handler: async (c:Context) => {
+			 // const err = validationResult(req);
+			 // if (!err.isEmpty()) {
+				//  log.error('Bad Request', err.mapped());
+				//  res.status(401).send(err.mapped());
+			 // } else {
+			 log.debug('in GET /places/:placeId/items/:itemId hono route handler, processing request');
+			 const placeId = c.req.param('placeId');
+			 const itemId = c.req.param('itemId');
+			 if(!placeId || !itemId){
+				 log.trace('Both placeId & itemId have to be provided like /places/:placeId/items/:itemId');
+				 return c.json(new HTTP400Error('Both placeId & itemId have to be provided like /places/:placeId/items/:itemId'), 400);
 			 }
+			 // No errors, pass req and res on to your controller
+			 try{
+				 const item = await itemController.getAItemInAPlace({ placeId, itemId });
+				 log.debug('Returning the fetched Item in a Place');
+				 return c.json(item);
+			 }catch (error: any) {
+				 log.error('Fetching an item in place resulted in Error', error);
+				 return c.json(error, 500);
+			 }
+			 // }
 		 },
 	 },
-	 {
+	 /*{
 		 path: '/places/:placeId/reviews', // get reviews of a place
 		 method: 'get',
 		 validators: [

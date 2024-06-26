@@ -13,6 +13,8 @@ import serviceRoutes from './hono/routes/service.routes';
 import { env } from 'hono/adapter'
 import { nanoid } from "nanoid";
 import { r2Provider } from './bucketers/r2.provider';
+import { Media } from './entities/media';
+import mongoose from 'mongoose';
 
 
 const log = getLogger('service.routes');
@@ -23,13 +25,16 @@ export type Bindings = {
 	MY_BUCKET: R2Bucket
 }
 
-
+mongoose.connect('https://ap-southeast-2.aws.data.mongodb-api.com/app/data-ttagxfs/endpoint/data/v1')
+	.then(()=> console.log('db connected fine'))
+	.catch(e => console.log('Error in db connection',e));
 console.log('in index.ts, process.env:: ', process.env);
 
 // Create a new Hono app
 const app = new Hono<{
 	Bindings: Bindings
 }>()
+console.log('in index.ts, process.env:: ', app);
 
 // app.use(compress());
 app.use(cors());
@@ -82,6 +87,7 @@ app.get('/', async (c: Context< any>) => {
 
 	console.log('S3_BUCKET:: ,', S3_BUCKET);
 	log.debug('resulttt:: ,', result);
+	console.log('in Media.find();', db.collection('media').find({}));
 	return c.text('Hello, Cloudflare Workers with Hono!')
 });
 

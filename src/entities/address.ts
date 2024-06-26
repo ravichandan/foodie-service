@@ -80,9 +80,9 @@ export const addressSchema: Schema<IAddress> = new mongoose.Schema<IAddress>(
 );
 
 // @ts-ignore
-const AutoIncrement = Inc(mongoose);
+// const AutoIncrement = Inc(mongoose);
 // @ts-ignore
-addressSchema.plugin(AutoIncrement, { id: 'address_id_counter' });
+// addressSchema.plugin(AutoIncrement, { id: 'address_id_counter' });
 
 //creating the Place model by passing placeSchema
 export const Address: Model<IAddress> = model<IAddress>('Address', addressSchema);

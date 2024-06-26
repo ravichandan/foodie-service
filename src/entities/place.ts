@@ -1,8 +1,8 @@
 import mongoose, { Model, ObjectId } from 'mongoose';
 
-import { Document, Schema, model } from 'mongoose';
+import { Document, Schema } from 'mongoose';
 // @ts-ignore
-import Inc from 'mongoose-sequence';
+// import Inc from 'mongoose-sequence';
 import { addressSchema, IAddress } from './address';
 import { IMedia, mediaSchema } from './media';
 import { IPlaceItem } from './placeItem';
@@ -145,9 +145,9 @@ placeSchema.virtual('ratings', {
 });
 
 // @ts-ignore
-const AutoIncrement = Inc(mongoose);
+// const AutoIncrement = Inc(mongoose);
 // @ts-ignore
-placeSchema.plugin(AutoIncrement, { id: 'place_id_counter', inc_field: '_id' });
+// placeSchema.plugin(AutoIncrement, { id: 'place_id_counter', inc_field: '_id' });
 
 //creating the Place model by passing placeSchema
-export const Place: Model<IPlace> = model<IPlace>('Place', placeSchema);
+export const Place: Model<IPlace> = mongoose.model<IPlace>('Place', placeSchema);

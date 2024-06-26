@@ -119,9 +119,9 @@ customerSchema.virtual('info', {
 });
 
 // @ts-ignore
-const AutoIncrement = Inc(mongoose);
+// const AutoIncrement = Inc(mongoose);
 // @ts-ignore
-customerSchema.plugin(AutoIncrement, { id: 'customer_id_counter', inc_field: '_id' });
+// customerSchema.plugin(AutoIncrement, { id: 'customer_id_counter', inc_field: '_id' });
 
 //creating the Place model by passing placeSchema
 export const Customer: Model<ICustomer> = model<ICustomer>('Customer', customerSchema);

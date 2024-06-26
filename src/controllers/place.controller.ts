@@ -12,7 +12,7 @@ import { itemService } from '../services/item.service';
 import { IPlaceItem } from '../entities/placeItem';
 import { placeItemService } from '../services/placeItem.service';
 import { placeToPlaceModel } from '../utils/Utils';
-import { HTTP404Error } from '../utils/error4xx';
+import { HTTP400Error, HTTP404Error } from '../utils/error4xx';
 
 const log: Logger = Utils.getLogger('place.controller');
 
@@ -76,19 +76,21 @@ class PlaceController {
   /**
    * API Controller method for 'get all places'. This takes atleast one of placeName or postcode, with pagination params
    */
-  getPlaces = async (req: Request, res: Response) => {
+  getPlaces = async (args: { placeName: string; itemName?: string; postcode: string }) => {
     log.info('Received request in getPlaces');
-    const { placeName, itemName, postcode }: { placeName: string; itemName?: string; postcode: string } = {
-      ...req.params,
-      ...req.query,
+    const { placeName, itemName, postcode }  = {
+      // ...req.params,
+      // ...req.query,
+      ...args
     } as any;
 
     log.trace('Params to getPlaces: ', { placeName, itemName, postcode });
     const places: IPlace[] | undefined = await placeService.getPlaces({ placeName, postcode });
     log.trace('Found the following places with given params', places);
     if (!places) {
-      res.status(404).send('No places found with given criteria');
-      return;
+      throw new HTTP404Error('Place not found with given id');
+      // res.status(404).send('No places found with given criteria');
+      // return;
     }
     if (places.length > 2) {
       const placeResponse: PlaceResponse = {
@@ -120,8 +122,10 @@ class PlaceController {
       page: 1,
     };
     console.log('placeResponse:: ', placeResponse);
-    res.send(placeResponse);
+    // res.send(placeResponse);
+    return placeResponse;
   };
+
 
   //get a single place
   getAPlace = async (placeId: string) => {
@@ -160,14 +164,15 @@ class PlaceController {
     res.send('place deleted');
   };
 
-  addItem = async (req: Request, res: Response) => {
+  addItem = async (data: IPlaceItem) => {
     log.info('Received request in PlaceController->addItem() to add the given Item to the given place');
     //data to be saved in database
     // log.debug('Adding correlationId into the request body');
-    const data: IPlaceItem = req.body;
+
     if (!data.item) {
       log.error('Item reference is mandatory');
-      res.status(400).send('Item reference is mandatory');
+      throw new HTTP400Error('Item reference is mandatory');
+      // res.status(400).send('Item reference is mandatory');
     }
     // data.category= ItemCategory[req.body.category.toUpperCase() as ItemCategory];
     // data.cuisines= [...req.body.cuisines.map((c: any) => Cuisine[c.toUpperCase() as Cuisine])];
@@ -207,14 +212,17 @@ class PlaceController {
 
       if (!item) {
         log.info('Item not created due to previous errors, returning 404');
-        res.status(404).send('Item not found');
+        throw new HTTP404Error('Item not found');
+        // res.status(404).send('Item not found');
       } else {
         log.info('Item created successfully, returning the new object');
-        res.status(201).send(item);
+        return item;
+        // res.status(201).send(item);
       }
     } catch (error: any) {
       log.error('Error while adding Item to Place with given data. Error: ', error);
-      res.send(error.message);
+      throw error;
+      // res.send(error.message);
     }
   };
 }

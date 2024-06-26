@@ -1,5 +1,5 @@
 //importing modules
-import { initClient } from 'mongo-http';
+ import { initClient } from 'mongo-http';
 
 
 const client = initClient({

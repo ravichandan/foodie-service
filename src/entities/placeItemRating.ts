@@ -50,9 +50,9 @@ const placeItemRatingSchema: Schema<IPlaceItemRating> = new Schema<IPlaceItemRat
 );
 
 // @ts-ignore
-const AutoIncrement = Inc(mongoose);
+// const AutoIncrement = Inc(mongoose);
 // @ts-ignore
-placeItemRatingSchema.plugin(AutoIncrement, { id: 'place_item_rating_id_counter', inc_field: '_id' });
+// placeItemRatingSchema.plugin(AutoIncrement, { id: 'place_item_rating_id_counter', inc_field: '_id' });
 
 //creating the Place model by passing placeSchema
 export const PlaceItemRating: Model<IPlaceItemRating> = model<IPlaceItemRating>(

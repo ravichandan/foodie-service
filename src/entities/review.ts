@@ -1,5 +1,5 @@
 import mongoose, { Document, Model, model, Schema } from 'mongoose';
-import Inc from 'mongoose-sequence';
+// import Inc from 'mongoose-sequence';
 import { IMedia, mediaSchema } from './media';
 import { customerSchema, ICustomer } from './customer';
 
@@ -166,9 +166,9 @@ reviewSchema.virtual('info', {
 });
 
 // @ts-ignore
-const AutoIncrement = Inc(mongoose);
+// const AutoIncrement = Inc(mongoose);
 // @ts-ignore
-reviewSchema.plugin(AutoIncrement, { id: 'review_id_counter', inc_field: '_id' });
+// reviewSchema.plugin(AutoIncrement, { id: 'review_id_counter', inc_field: '_id' });
 
 //creating the Review model by passing reviewSchema
 export const Review: Model<IReview> = model<IReview>('Review', reviewSchema);

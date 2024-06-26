@@ -27,14 +27,14 @@ log4js.configure({
 
 export const getLogger = (name?: string) => {
   const logger = log4js.getLogger(name);
-
+console.log('in getLogger, LOG_LEVEL:: ', )
   // logger.setLevel('DEBUG');
-  logger.level = process.env.LOG_LEVEL || 'info';
+  logger.level = process.env.LOG_LEVEL || 'trace';
   return logger;
 };
 
 const logger = getLogger('Utils');
-logger.level = process.env.LOG_LEVEL || 'info';
+logger.level = process.env.LOG_LEVEL || 'trace';
 
 type Wrapper = (router: Router) => void;
 type Handler = (req: Request, res: Response, next: NextFunction) => Promise<void> | void;
@@ -72,7 +72,7 @@ export const applyRoutes = (routes: Route[], router: Router): void => {
 export const applyHonoRoutes = (routes: HonoRoute[], router: Hono<any>): void => {
   for (const route of routes) {
     const { method, path, validators = undefined, handler } = route;
-    logger.debug('In applyHonoRoutes, router = ', router);
+    // logger.debug('In applyHonoRoutes, router = ', router);
 
     if (validators?.length>0) {
       (router as any)[method](path, [...validators], handler);
