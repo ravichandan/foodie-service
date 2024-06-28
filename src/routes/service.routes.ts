@@ -13,6 +13,7 @@ import { r2Provider } from '../bucketers/r2.provider';
 import { mediaService } from '../services/media.service';
 import { HTTP400Error, HTTP404Error } from '../utils/error4xx';
 import { IPlaceItem } from '../entities/placeItem';
+import { getPopularPlacesAndItems } from '../config/field.config';
 
 const log = getLogger('service.routes');
 export type UploadedFile = {
@@ -113,7 +114,6 @@ export default [
 			res.status(200).send(result);
 		},
 	},
-
 	{
 		path: '/verify-token',
 		method: 'post',
@@ -135,6 +135,46 @@ export default [
 				// No errors, pass req and res on to your controller
 				res.sendStatus(200);
 			}
+		},
+	},
+
+
+	// popular items
+	{
+		path: '/popular-searches', // get place by id
+		method: 'get',
+		validators: [
+			checkSchema(FieldConfigs.getPopularPlacesAndItems),
+			// checkSchema(FieldConfigs.getPlaceSchemaConfig)
+		],
+		handler: async (req: Request, res: Response) => {
+			// const err = validationResult(req);
+			// if (!err.isEmpty()) {
+			// 	log.error('Bad Request', err.mapped());
+			// 	res.status(401).send(err.mapped());
+			// } else {
+				// No errors, pass req and res on to your controller
+				log.info('in GET /popular-searches route handler');
+				const args = {
+					city:req.query.city as string,
+					postcode:  req.query.postcode as string
+				};
+				// const city: string| undefined =
+				// const
+				try {
+					const placeModel = await placeController.getTopPlaces(args);
+					res.send(placeModel);
+				} catch (error: any) {
+					log.error('getting a popular places and items with args %s resulted in Error: ' ,args , error);
+					if (error instanceof HTTP404Error) {
+						res.status(404).send(error);
+					} else {
+						res.status(500).send(error);
+					}
+				}
+				// res.send({...req.params,...req.query});
+				// log.debug('Returning the fetched Place');
+			// }
 		},
 	},
 
@@ -234,7 +274,7 @@ export default [
 		},
 	},
 	{
-		path: '/places/:placeId/items/:itemId', // get a single item details from a given place // TODO change item/placeName's to ids
+		path: '/places/:placeId/items/:itemId', // get a single item details from a given place
 		method: 'get',
 		validators: [checkSchema(FieldConfigs.getItemInPlaceByIdSchemaConfig)],
 		handler: async (req: Request, res: Response) => {
@@ -250,8 +290,14 @@ export default [
 				try {
 					const result: IPlaceItem | undefined = await itemController.getAItemInAPlace({ placeId, itemId });
 					res.send(result);
-				}  catch (error: any) {
-					res.status(500).send(error);
+				}  catch (error: unknown) {
+					console.log('error::: ', error);
+					if(error instanceof HTTP404Error) {
+						log.error('Not found error:: ', error);
+						res.status(404).send(error);
+					} else {
+						res.status(500).send(error);
+					}
 				}
 				log.debug('Returning the fetched Place');
 			}

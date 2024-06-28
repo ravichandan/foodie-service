@@ -79,6 +79,38 @@ export class PlaceService {
     }
   }
 
+  async getTopPlaces(args?: {
+    city?: string;
+    postcode?: string;
+  }): Promise<IPlace[] | undefined> {
+    log.info('Received request to getTopPlaces, args: ', args);
+
+    const { city, postcode } = { ...args, };
+
+    try {
+      let places;
+      if (!!postcode) {
+        places = await Place.find({
+          'address.postcode': postcode,
+        })
+          .populate('address')
+          .limit(10)
+          .lean()
+          .exec();
+      } else if (!!city) {
+        places = await Place.find({ 'address.city': city })
+          .populate('address')
+          .limit(10)
+          .lean()
+          .exec();
+      }
+      log.trace('Returning fetched places');
+      return places;
+    } catch (error) {
+      log.error('Error while doing getPlaces', error);
+    }
+  }
+
   //get a single place
   async getPlace(id: string): Promise<IPlace | undefined> {
     log.debug('Received request to get a place with id: ', id);

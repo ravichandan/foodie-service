@@ -9,6 +9,7 @@ import { IPlaceItem } from '../entities/placeItem';
 import { placeService } from '../services/place.service';
 import { IPlace } from '../entities/place';
 import { placeItemService } from '../services/placeItem.service';
+import { HTTP404Error } from '../utils/error4xx';
 
 const log: Logger = getLogger('item.controller');
 
@@ -65,14 +66,12 @@ class ItemController {
     //get id from the parameter
     // TODO take pagination params and return the data accordingly.
     const { placeId, itemId } = { ...args };
-    try {
-      const item = await itemService.getAPlaceItem({ placeId, itemId });
-      return item;
-      // res.send(item);
-    } catch (error: any) {
-      throw error;
-      // res.status(500).send(error);
+    const item = await itemService.getAPlaceItem({ placeId, itemId });
+    if(!item){
+      log.trace('Item not found');
+      throw new HTTP404Error(`Item not found in given place`);//: ${placeId}, item: ${itemId} `);
     }
+    return item;
   };
 
   //update item

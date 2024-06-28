@@ -30,6 +30,20 @@ const queryParamsHasPostcodeOrSuburb = (_: any, { req }: any) => {
   }
   return true;
 };
+
+const queryParamsHasPostcodeOrCity = (_: any, { req }: any) => {
+  if (!req.query?.postcode && !req.query?.city) {
+    throw new Error('Either postcode or city has to be provided in the query parameters');
+  }
+  if (req.query?.postcode < 2000 || req.query?.postcode > 2899) {
+    throw new Error('Not a valid postcode in this state');
+  }
+  if (req.query?.city?.length < 3 || req.query?.city?.length > 50) {
+    throw new Error('Not a valid city in this country');
+  }
+  return true;
+};
+
 export const getItemInPlaceByIdSchemaConfig: Schema = {
   placeId: {
     in: ['params'],
@@ -49,7 +63,14 @@ export const getPlaceByIdSchemaConfig: Schema = {
     errorMessage: 'a place id has to be provided as a path param in the url .../places/:placeId',
   },
 };
-
+export const getPopularPlacesAndItems: Schema = {
+  postcode: {
+    custom: { options: queryParamsHasPostcodeOrCity }
+  },
+  city: {
+    custom: { options: queryParamsHasPostcodeOrCity }
+  }
+}
 export const getPlaceByNameSchemaConfig: Schema = {
   placeName: {
     in: ['query'],

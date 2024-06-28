@@ -11,6 +11,7 @@ const correlationIdHeaderName = process.env.CORRELATION_ID_HEADER_NAME;
 export const handleCors = (router: Router) => {
   log.trace('Adding cors() to router');
   router.use(cors({ credentials: true, origin: true }));
+  router.options('*', cors());
 };
 
 export const handleBodyRequestParsing = (router: Router) => {

@@ -126,6 +126,31 @@ class PlaceController {
     return placeResponse;
   };
 
+/**
+   * API Controller method for 'get top 10 searched places'. This takes one of city or postcode, with pagination params
+   */
+  getTopPlaces = async (args: { city?: string; postcode?: string }) => {
+    log.info('Received request in getTopPlaces');
+    const { city, postcode }  = {
+      // ...req.params,
+      // ...req.query,
+      ...args
+    } as any;
+
+    log.trace('Params to getTopPlaces: ', { city, postcode });
+    const places: IPlace[] | undefined = await placeService.getTopPlaces({ city, postcode });
+    log.trace('Found the following top searched places with given params', places);
+    if (!!places) {
+      const placeResponse: PlaceResponse = {
+        places: Utils.placesToPlaceModels(places),
+        size: places.length,
+        page: 0,
+      };
+      return placeResponse; // TODO
+    }
+    return [];
+  };
+
 
   //get a single place
   getAPlace = async (placeId: string) => {

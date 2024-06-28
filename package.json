@@ -2,7 +2,6 @@
   "name": "foodie-service",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "dev": "LOG_LEVEL=trace tsc-watch --onSuccess \"node ./dist/server/app.js\"",
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
