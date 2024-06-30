@@ -35,7 +35,7 @@ export enum Cuisine {
 
 // creating interfaces for entities
 export type IItem = Document & {
-  _id: number;
+  // _id: number;
   correlationId: string;
 
   // under which cuisines this item falls in
@@ -63,7 +63,7 @@ export type IItem = Document & {
 // Model schemas
 const itemSchema: Schema<IItem> = new Schema<IItem>(
   {
-    _id: Number,
+    // _id: Number,
 
     // correlationId: {
     // 	type: String,
@@ -80,7 +80,7 @@ const itemSchema: Schema<IItem> = new Schema<IItem>(
     },
     description: {
       type: String,
-      required: true,
+      required: false,
     },
     cuisines: {
       type: [String],
@@ -106,7 +106,7 @@ const itemSchema: Schema<IItem> = new Schema<IItem>(
       required: true,
     },
   },
-  { _id: false },
+  {},
 );
 
 // @ts-ignore

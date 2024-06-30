@@ -3,7 +3,7 @@ import { ReviewModel } from './reviewModel';
 import { CalorieInfo, FoodAllergens } from '../entities/placeItem';
 
 export type ItemModel = {
-  id: number;
+  id: any;
   name: string;
   category: string;
   cuisine: string;
@@ -15,5 +15,6 @@ export type ItemModel = {
   ingredients: string[];
   allergens: FoodAllergens[];
   price: number;
+  aliases: string[];
   reviews: ReviewModel[];
 };

@@ -9,7 +9,7 @@ const log: Logger = getLogger('item.service');
 export class ItemService {
   //create an item
   async createItem(itemData: IItem): Promise<IItem> {
-    log.debug('In Item.Service-> createItem(), received request to create a Item');
+    log.trace('In Item.Service-> createItem(), received request to create a Item: ', itemData);
     try {
       log.debug('In Item.Service-> createItem(), check if the item already exists in the inventory');
       const existing = await Item.findOne({ name: itemData.name, cuisines: itemData.cuisines });
@@ -63,6 +63,22 @@ export class ItemService {
       return item;
     } catch (error) {
       log.error('Error while doing getItem with id: ' + id + '. Error: ', error);
+    }
+  }
+
+  //get a single item
+  async getItemByAliases(aliases: string[]): Promise<IItem | undefined> {
+    log.debug('Received request to get an item with aliases: ',aliases);
+    try {
+      const item = await Item.findOne({ aliases: { $in: aliases } });
+      if (!item) {
+        log.trace('Item not found by given aliases');
+        return undefined;
+      }
+      return item;
+    } catch (error) {
+      log.error('Error while doing getItem with given aliases: %s. Error: ', aliases, error);
+      throw error;
     }
   }
 

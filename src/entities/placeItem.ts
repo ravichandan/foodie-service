@@ -2,7 +2,7 @@
 import mongoose, { Document, Model, model, Schema } from 'mongoose';
 import { IPlace } from './place';
 import { IMedia, mediaSchema } from './media';
-import { IItem } from './item';
+import { Cuisine, IItem, ItemCategory } from './item';
 // import Inc from 'mongoose-sequence';
 import { IReview } from './review';
 import { IPlaceItemRating } from './placeItemRating';
@@ -43,15 +43,17 @@ export type CalorieInfo = {
   unit: CalorieUnit;
 };
 export type IPlaceItem = Document & {
-  _id: number;
+  // _id: number;
   correlationId: string;
   // itemReferenceId: string;
   place: IPlace;
   item: IItem;
-
+  aliases:string[];
   // customised name of the Item in this Place
   name: string;
 
+  category: ItemCategory;
+  cuisines: Cuisine[];
   // contains calorie related info
   calorieInfo: CalorieInfo;
 
@@ -78,14 +80,14 @@ export type IPlaceItem = Document & {
 
 const placeItemSchema: Schema<IPlaceItem> = new Schema<IPlaceItem>(
   {
-    _id: Number,
+    // _id: Number,
     correlationId: {
       type: String,
     },
     place: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Place',
     },
     item: {
@@ -116,7 +118,7 @@ const placeItemSchema: Schema<IPlaceItem> = new Schema<IPlaceItem>(
     },
   },
   {
-    _id: false,
+    // _id: false,
     toJSON: { virtuals: true }, // So `res.json()` and other `JSON.stringify()` functions include virtuals
     toObject: { virtuals: true },
   },

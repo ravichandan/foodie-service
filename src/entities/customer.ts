@@ -12,7 +12,7 @@ type CuisineKeys = keyof typeof Cuisine;
 
 // creating interfaces for entities
 export type ICustomer = Document & {
-  _id: number;
+  // _id: number;
   correlationId: string;
 
   /**
@@ -57,7 +57,7 @@ export type ICustomer = Document & {
 // Model schemas
 export const customerSchema: Schema<ICustomer> = new Schema<ICustomer>(
   {
-    _id: Number,
+    // _id: Number,
 
     correlationId: {
       type: String,
@@ -109,7 +109,7 @@ export const customerSchema: Schema<ICustomer> = new Schema<ICustomer>(
       required: true,
     },
   },
-  { _id: false },
+  { },
 );
 
 customerSchema.virtual('info', {

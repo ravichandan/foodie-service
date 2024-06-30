@@ -36,7 +36,7 @@ export type OpeningTimes = {
 // creating interfaces for entities
 export type IPlace = Document & {
   // placeId: string;
-  _id: number;
+  _id: string;
   correlationId: string;
   customerId: string;
   // name of the place
@@ -67,7 +67,7 @@ const timesSchema: Schema = new Schema({
 // Model schemas
 const placeSchema: Schema<IPlace> = new Schema<IPlace>(
   {
-    _id: Number,
+    // _id: Number,
 
     placeName: {
       type: String,
@@ -91,13 +91,13 @@ const placeSchema: Schema<IPlace> = new Schema<IPlace>(
     },
     openingTimes: {
       type: new Schema<OpeningTimes>({
-        SUNDAY: timesSchema,
-        MONDAY: timesSchema,
-        TUESDAY: timesSchema,
-        WEDNESDAY: timesSchema,
-        THURSDAY: timesSchema,
-        FRIDAY: timesSchema,
-        SATURDAY: timesSchema,
+        SUNDAY: [timesSchema],
+        MONDAY: [timesSchema],
+        TUESDAY: [timesSchema],
+        WEDNESDAY: [timesSchema],
+        THURSDAY: [timesSchema],
+        FRIDAY: [timesSchema],
+        SATURDAY: [timesSchema],
       }),
     },
     medias: {
@@ -116,7 +116,7 @@ const placeSchema: Schema<IPlace> = new Schema<IPlace>(
     },
   },
   {
-    _id: false,
+    // _id: false,
     toJSON: { virtuals: true }, // So `res.json()` and other `JSON.stringify()` functions include virtuals
     toObject: { virtuals: true },
   },

@@ -1,4 +1,4 @@
-import mongoose, { Document, Model, model, Schema } from 'mongoose';
+import mongoose, { Document, Model, model, ObjectId, Schema } from 'mongoose';
 import Inc from 'mongoose-sequence';
 import { IMedia } from './media';
 import { customerSchema, ICustomer } from './customer';
@@ -6,7 +6,7 @@ import { IReview, reviewSchema } from './review';
 
 // creating interfaces for entities
 export type IReviewThread = Document & {
-  _id: number;
+  // _id: number;
 
   /**
    * correlationId to match requests
@@ -16,7 +16,7 @@ export type IReviewThread = Document & {
   /**
    * Reference of Review entity
    */
-  review: number;
+  review: ObjectId;
   // IReview;
 
   /**
@@ -32,7 +32,7 @@ export type IReviewThread = Document & {
   /**
    * Reference of Customer entity
    */
-  customer: number;
+  customer: ObjectId;
   //ICustomer;
 
   /**
@@ -57,7 +57,7 @@ export type IReviewThread = Document & {
 // Model schemas
 export const reviewThreadSchema: Schema<IReviewThread> = new Schema<IReviewThread>(
   {
-    _id: Number,
+    // _id: Number,
 
     correlationId: {
       type: String,
@@ -65,8 +65,8 @@ export const reviewThreadSchema: Schema<IReviewThread> = new Schema<IReviewThrea
 
     review: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       // reviewSchema
       ref: 'Review',
     },
@@ -84,8 +84,8 @@ export const reviewThreadSchema: Schema<IReviewThread> = new Schema<IReviewThrea
 
     customer: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       // customerSchema
       ref: 'Customer',
     },
@@ -117,7 +117,7 @@ export const reviewThreadSchema: Schema<IReviewThread> = new Schema<IReviewThrea
       required: true,
     },
   },
-  { _id: false },
+  { },
 );
 
 // @ts-ignore

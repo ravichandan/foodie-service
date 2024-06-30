@@ -40,16 +40,16 @@ export class MediaService {
     );
   }
 
-  async removeMediaFromR2(keys: { key?: string }[]) {
+  async removeMediaFromR2(keys: string[]) {
     log.info('In removeMediaFromR2, ', keys);
     if (keys?.length<1) {
       return;
     }
 
     return await Promise.all(
-      keys.filter(x=> !!x?.key).map(async (o: { key?: string }) => {
-        log.info('in o:',o);
-        return o.key ? await r2Provider.removeFile(o.key) : undefined;
+      keys.filter(Boolean).map(async (key: string) => {
+        // log.info('in key: ',key);
+        return r2Provider.removeFile(key);
       }),
     );
   }
@@ -65,7 +65,7 @@ export class MediaService {
       return newMedia;
     } catch (error) {
       log.error('Error while adding a media. Error: ', error);
-      return error;
+      throw error;
     }
   }
 

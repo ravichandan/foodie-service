@@ -12,7 +12,7 @@ export type PlaceResponse = {
 
 // Place model, a View Object to return in API response
 export type PlaceModel = {
-  id: number;
+  id: string;
   name: string;
   address: AddressModel;
   description: string;

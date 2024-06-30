@@ -13,7 +13,8 @@ import { r2Provider } from '../bucketers/r2.provider';
 import { mediaService } from '../services/media.service';
 import { HTTP400Error, HTTP404Error } from '../utils/error4xx';
 import { IPlaceItem } from '../entities/placeItem';
-import { getPopularPlacesAndItems } from '../config/field.config';
+// import { getPopularPlacesAndItems } from '../config/field.config';
+import { HTTPClientError } from '../utils/errorHttp';
 
 const log = getLogger('service.routes');
 export type UploadedFile = {
@@ -83,7 +84,7 @@ export default [
 		method: 'delete',
 		validators: [],
 		handler: async (req: Request, res: Response) => {
-			await mediaService.removeMediaFromR2([{ key: '123-4010-1718378740461' }]);
+			await mediaService.removeMediaFromR2(['123-4010-1718378740461']);
 			res.status(204);
 		},
 	},
@@ -92,20 +93,27 @@ export default [
 		method: 'post',
 		validators: [],
 		handler: async (req: Request, res: Response) => {
-			log.trace('Server is up and running');
+			log.trace('In POST /upload-test');
 
 			// const result = await r2Provider.listBuckets()
 			/*let result = await r2FileUpload(req, res);
 			result = await mediaService.addMultipleMedias(req,res);
 			*/
-
-			const result = await mediaController.uploadMultipleMedias(req, res);
+			let result;
+			try {
+				result = await mediaController.uploadMultipleMedias(req, res);
+			} catch (error: any){
+				log.error('Uploading multiple medias resulted in error', error);
+				return res.status(400).json(error);
+			}
 			// add the media file url into database
 			if (Array.isArray(result)) {
 				try {
 					await mediaController.addMultipleMedias(req, res, result);
 				} catch (e: any) {
-					await mediaController.removeUploadedMedias(req);
+					log.error('in service.routes, caught result: ', result);
+					log.error('in service.routes, caught error: ', e);
+					mediaController.removeUploadedMedias(result.map(o => o.Key)).then();
 					return res.status(422).json({ errors: [e.message] });
 				}
 				` `; // 	await mediaController.addMedia(req, res, uploadedFile.path);
@@ -174,7 +182,6 @@ export default [
 				}
 				// res.send({...req.params,...req.query});
 				// log.debug('Returning the fetched Place');
-			// }
 		},
 	},
 
@@ -248,24 +255,26 @@ export default [
 				res.status(400).send(err.mapped());
 			} else {
 				// No errors, pass req and res on to your controller
-				log.debug('in post /items/ route handler, processing request, req.body:: ', req.body);
+				log.debug('in POST /places/:placeId/items route handler, processing request, req.body:: ', req.body);
+				log.trace('Populate the placeId in the request body');
+				req.body.place={
+					id: req.params.placeId
+				}
 				try {
-					log.debug('Done adding Place');
 					const item = await placeController.addItem(req.body);
 					// res.send({...req.params,...req.query});
 					log.debug('Returning the fetched placeResponse: ', item);
 					res.send(item);
 				} catch (error: any) {
 					log.error('creating an item in place resulted in Error', error);
-					if (error instanceof HTTP404Error) {
-						// return c.notFound();
-						res.status(404).send('Item not found');
-						// res.status(201).send(item);
-					} else if (error instanceof HTTP400Error) {
-						res.status(400).send('Item reference is mandatory');
+					if (error instanceof HTTPClientError) {
+						// res.sendStatus(404);//.send('Item not found');
+						res.status(error.statusCode).send(error);
+
+					// } else if (error instanceof HTTP400Error) {
+					// 	res.status(400).send(error);
 					} else {
-						res.status(500).send(error.message);
-						// return c.json(error, 500);
+						res.status(500).send({ message: error.message });
 					}
 				}
 				// await placeController.addItem(req, res);
@@ -374,8 +383,21 @@ export default [
 				res.status(400).send(err.mapped());
 			} else {
 				// No errors, pass req and res on to your controller
-				log.debug('in post /items/ route handler, processing request, req.body:: ', req.body);
-				await itemController.createItem(req, res);
+				log.info('in POST /items/ route handler, processing request, req.body:: ', req.body);
+				try {
+					await itemController.createItem(req, res);
+				} catch (error: any) {
+					log.error('POST /items/ resulted in Error', error);
+					if (error instanceof HTTP404Error) {
+						// return c.notFound();
+						res.sendStatus(404);//.send('Item not found');
+						// res.status(201).send(item);
+					} else if (error instanceof HTTP400Error) {
+						res.sendStatus(400);//.send('Item reference is mandatory');
+					} else {
+						res.status(500).send({message: error.message });
+					}
+				}
 				log.debug('Done adding Place');
 			}
 		},
@@ -465,16 +487,24 @@ export default [
 			result = await mediaService.addMultipleMedias(req,res);
 			*/
 
-			let result = await mediaController.uploadMultipleMedias(req, res);
+			let result;
+			try {
+				result = await mediaController.uploadMultipleMedias(req, res);
+			} catch (error: any){
+				log.error('Uploading multiple medias resulted in error', error);
+				return res.status(400).json(error);
+			}
 			// add the media file url into database
 			if (Array.isArray(result)) {
 				try {
 					result = await mediaController.addMultipleMedias(req, res, result);
 				} catch (e: any) {
-					await mediaController.removeUploadedMedias(req);
+					log.error('in service.routes, caught result: ', result);
+					log.error('in service.routes, caught error: ', e);
+					mediaController.removeUploadedMedias(result.map(o => o.Key)).then();
 					return res.status(422).json({ errors: [e.message] });
 				}
-				` `; // 	await mediaController.addMedia(req, res, uploadedFile.path);
+				// await mediaController.addMedia(req, res, uploadedFile.path);
 			}
 
 			res.status(200).send(result);

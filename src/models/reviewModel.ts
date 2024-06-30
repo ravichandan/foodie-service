@@ -13,7 +13,7 @@ export type ReviewModel = {
   // "placeName": string;
   // "itemName": string;
 
-  id: number;
+  id: any;
   description: string;
   service: number;
   ambience: number;
@@ -21,8 +21,8 @@ export type ReviewModel = {
   presentation: number;
   medias: MediaModel[];
   customerInfo: CustomerModel;
-  placeId: string;
-  itemId: string;
+  placeId: any;
+  itemId: any;
   helpful: number;
   notHelpful: number;
   likedBy: CustomerModel[];

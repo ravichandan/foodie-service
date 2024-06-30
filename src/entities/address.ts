@@ -30,7 +30,7 @@ export type IAddress = Document & {
 // Model schemas
 export const addressSchema: Schema<IAddress> = new mongoose.Schema<IAddress>(
   {
-    _id: Number,
+    // _id: Number,
 
     // includes door no, street name, etc
     line: {
@@ -76,7 +76,7 @@ export const addressSchema: Schema<IAddress> = new mongoose.Schema<IAddress>(
     //   required: true,
     // },
   },
-  { _id: false },
+  { },
 );
 
 // @ts-ignore

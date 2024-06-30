@@ -42,7 +42,8 @@ class ItemController {
       }
     } catch (error: any) {
       log.error('Error while creating item with given data. Error: ', error);
-      res.send(error.message);
+      // res.send(error.message);
+      throw error;
     }
   };
 

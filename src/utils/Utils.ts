@@ -12,9 +12,7 @@ import { CustomerModel } from '../models/customerModel';
 import { ICustomer } from '../entities/customer';
 import { IActivity } from '../entities/activity';
 import { ActivityModel } from '../models/activityModel';
-import { Hono } from 'hono';
-import { MiddlewareHandler } from 'hono';
-import { env } from 'hono/adapter'
+import { Hono, MiddlewareHandler } from 'hono';
 // import { Bindings } from '../index';
 
 log4js.configure({
@@ -168,7 +166,8 @@ export const placesToPlaceModels = (places: IPlace[]): PlaceModel[] => {
 
 export const itemToItemModel = (pi: IPlaceItem): ItemModel | undefined => {
   if (!pi) return undefined;
-  const model: ItemModel = {
+  return {
+    aliases: pi.item.aliases,
     name: pi.name ?? pi.item?.name,
     description: pi.description || pi.item.description,
     id: pi._id,
@@ -183,7 +182,6 @@ export const itemToItemModel = (pi: IPlaceItem): ItemModel | undefined => {
     presentation: pi.ratings ? pi.ratings[0]?.presentation : 0,
     noOfReviews: pi.ratings ? pi.ratings[0]?.noOfReviews : 0,
   };
-  return model;
 };
 
 export const itemsToItemModels = (items: IPlaceItem[]): ItemModel[] => {
@@ -274,6 +272,7 @@ export const customersToCustomerModels = (customers: ICustomer[]): CustomerModel
 export const mediaToMediaModel = (pi: IMedia): MediaModel => {
   const model: MediaModel = {
     type: pi.type,
+    key: pi.key,
     url: pi.url,
     id: pi.id,
   };
@@ -309,7 +308,7 @@ export const activityToActivityModel = (pi: IActivity): ActivityModel => {
 };
 
 export class ArrayWrapper<T> {
-  private items: T[];
+  private readonly items: T[];
 
   constructor(items: T[]) {
     this.items = items;

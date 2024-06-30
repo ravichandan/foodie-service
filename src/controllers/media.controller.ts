@@ -38,15 +38,16 @@ class MediaController {
 
     log.trace('In media.controller-> uploadMultipleMedias(), result:: ', result);
 
-    res.status(201).send(result);
+    // res.status(201).send(result);
+    return result;
   };
 
-  removeUploadedMedias = async (req: Request) => {
+  removeUploadedMedias = async (keys: string[]) => {
     log.info('media.controller->removeUploadedMedias');
-
+    // [{ key: req.params.key}]
     if (config.bucket_provider === 'R2') {
       log.trace('Removing files in R2 file buffers');
-      await mediaService.removeMediaFromR2([{ key: req.params.key}]);
+      await mediaService.removeMediaFromR2(keys);
     } else {
       log.trace('Removing files in local file storage');
       // result = await handleSingleUploadFile(req, res);
@@ -54,14 +55,15 @@ class MediaController {
     }
   };
   // middleware to add a media
-  addMultipleMedias = async (req: Request, res: Response, files: UploadedFile[]) => {
+  addMultipleMedias = async (req: Request, res: Response, files: any[]) => {
     //data to be saved in database
-    log.trace('Creating multiple media objects with given data');
+    log.debug('In media.controller -> addMultipleMedias()');
     // uploadedResult.
     const medias = [];
     for (const file of files) {
       const data = {
-        url: file.path,
+        url: file.Location,
+        key: file.Key,
         createdAt: new Date(),
         modifiedAt: new Date(),
         ...req.body,
@@ -76,7 +78,8 @@ class MediaController {
       media && medias.push(media);
     }
 
-    res.status(201).send(medias);
+    // res.status(201).send(medias);
+    return medias;
     // }
   };
   // middleware to add a media

@@ -1,11 +1,11 @@
-import mongoose, { Document, Model, model, Schema } from 'mongoose';
+import mongoose, { Document, Model, model, ObjectId, Schema } from 'mongoose';
 // import Inc from 'mongoose-sequence';
 import { IMedia, mediaSchema } from './media';
 import { customerSchema, ICustomer } from './customer';
 
 // creating interfaces for entities
 export type IReview = Document & {
-  _id: number;
+  // _id: number;
 
   /**
    * correlationId to match requests
@@ -15,17 +15,17 @@ export type IReview = Document & {
   /**
    * Reference of Place entity
    */
-  place: number;
+  place: ObjectId;
 
   /**
    * Reference of Item entity
    */
-  item: number;
+  item: ObjectId;
 
   /**
    * Reference of Customer entity
    */
-  customer: number;
+  customer: ObjectId;
 
   /**
    * The review description given by the customer
@@ -93,7 +93,7 @@ export type IReview = Document & {
 // Model schemas
 export const reviewSchema: Schema<IReview> = new Schema<IReview>(
   {
-    _id: Number,
+    // _id: Number,
 
     correlationId: {
       type: String,
@@ -101,20 +101,20 @@ export const reviewSchema: Schema<IReview> = new Schema<IReview>(
 
     place: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Place',
     },
     item: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Place_Item',
     },
     customer: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Customer',
     },
 
@@ -153,7 +153,7 @@ export const reviewSchema: Schema<IReview> = new Schema<IReview>(
     },
   },
   {
-    _id: false,
+    // _id: false,
     toJSON: { virtuals: true }, // So `res.json()` and other `JSON.stringify()` functions include virtuals
     toObject: { virtuals: true },
   },

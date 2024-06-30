@@ -113,6 +113,7 @@ export class PlaceService {
 
   //get a single place
   async getPlace(id: string): Promise<IPlace | undefined> {
+    if (!id) return undefined;
     log.debug('Received request to get a place with id: ', id);
     try {
       const place = await Place.findById({ _id: id })
@@ -135,7 +136,7 @@ export class PlaceService {
   }
 
   //update a place
-  async updatePlaceMedias(id: number, media: IMedia): Promise<IPlace | null | undefined> {
+  async updatePlaceMedias(id: string, media: IMedia): Promise<IPlace | null | undefined> {
     log.debug('Received request to add a media a place with id: ', id);
 
     try {

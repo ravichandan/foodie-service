@@ -1,4 +1,4 @@
-import mongoose, { Document, Model, model, Schema } from 'mongoose';
+import mongoose, { Document, Model, model, ObjectId, Schema } from 'mongoose';
 import Inc from 'mongoose-sequence';
 import { IReview, reviewSchema } from './review';
 import { customerSchema, ICustomer } from './customer';
@@ -13,17 +13,17 @@ export enum ActivityLevel {
 
 // creating interfaces for entities
 export type IActivity = Document & {
-  _id?: number;
+  // _id?: number;
 
   /**
    * Customer id doing the activity
    */
-  customer: number;
+  customer: ObjectId;
 
   /**
    * 	 review given by this Customer
    */
-  review?: number;
+  review?: ObjectId;
 
   /**
    * 	 review thread - shows a comment to a review given by this Customer
@@ -52,23 +52,29 @@ export type IActivity = Document & {
 // Model schemas
 export const activitySchema: Schema<IActivity> = new Schema<IActivity>(
   {
-    _id: Number,
+    // _id: Number,
 
     customer: {
-      type: Number,
+      type:
+      Schema.Types.ObjectId,
+      // Number,
       ref: 'Customer',
       required: true,
     },
 
     review: {
-      type: Number,
+      type:
+      Schema.Types.ObjectId,
+      // Number,
       ref: 'Review',
       // type: reviewSchema,
       // validate: (v: IReview) => Array.isArray(v), // && v.length > 0,
     },
 
     thread: {
-      type: Number,
+      type:
+      Schema.Types.ObjectId,
+      // Number,,
       ref: 'ReviewThread',
       // type: reviewThreadSchema
     },
@@ -112,7 +118,7 @@ export const activitySchema: Schema<IActivity> = new Schema<IActivity>(
       required: true,
     },
   },
-  { _id: false },
+  { },
 );
 
 // customerSchema.virtual('info', {

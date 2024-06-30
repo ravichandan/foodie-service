@@ -128,7 +128,7 @@ export class ReviewService {
   }
 
   //update a review
-  async updateRating(query: { place: number; item?: number }): Promise<void> {
+  async updateRating(query: { place: ObjectId; item?: number }): Promise<void> {
     log.debug('Received request to update a Rating with placeId: %s, itemId: %s', query.place, query.item);
     try {
       const filter: FilterQuery<any> = query.item

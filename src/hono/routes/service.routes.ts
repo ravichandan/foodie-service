@@ -64,7 +64,7 @@ export default [
 		validators: [],
 		handler: async (c: Context) => {
 			log.info('In DELETE /delete-test, c.req.param(\'key\')', c.req.query('key'));
-			const result = await mediaService.removeMediaFromR2([{ key: c.req.query('key') }]);
+			const result = await mediaService.removeMediaFromR2([(c.req.query('key')??'' )]);
 			log.debug('In DELETE /delete-test, result', result);
 			return c.body(null, 204);
 		},

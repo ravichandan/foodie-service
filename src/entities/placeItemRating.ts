@@ -8,7 +8,7 @@ import { IPlaceItem } from './placeItem';
  * Stores ratings for Place and Item for the last 3 months
  */
 export type IPlaceItemRating = Document & {
-  _id: number;
+  // _id: number;
   place: IPlace;
   item: IPlaceItem;
   taste: number;
@@ -25,17 +25,17 @@ export type IPlaceItemRating = Document & {
  */
 const placeItemRatingSchema: Schema<IPlaceItemRating> = new Schema<IPlaceItemRating>(
   {
-    _id: Number,
+    // _id: Number,
     place: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Place',
     },
     item: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Place_Item',
     },
     noOfReviews: Number,
@@ -45,7 +45,7 @@ const placeItemRatingSchema: Schema<IPlaceItemRating> = new Schema<IPlaceItemRat
     ambience: Number,
   },
   {
-    _id: false,
+    // _id: false,
   },
 );
 

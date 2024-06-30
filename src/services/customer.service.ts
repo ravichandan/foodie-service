@@ -24,7 +24,7 @@ export class CustomerService {
   }
 
   //update a place
-  async updateCustomerPicture(id: number, media: IMedia): Promise<ICustomer | null | undefined> {
+  async updateCustomerPicture(id: any, media: IMedia): Promise<ICustomer | null | undefined> {
     log.debug('Received request to add picture to a customer with id: ', id);
 
     try {

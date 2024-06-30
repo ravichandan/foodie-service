@@ -25,7 +25,7 @@ class CustomerController {
     try {
       log.trace('Creating a Customer with given data');
       let customer: ICustomer | null | undefined = await customerService.createCustomer(data);
-      if (data.correlationId) {
+      if (customer && data.correlationId) {
         try {
           // update Media document if it exists.
           log.trace('Fetching Media document with correlationId: ', customer.correlationId);

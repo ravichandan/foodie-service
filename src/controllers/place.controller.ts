@@ -7,12 +7,13 @@ import { IMedia } from '../entities/media';
 import * as Utils from '../utils/Utils';
 import { Logger } from 'log4js';
 import { PlaceModel, PlaceResponse } from '../models/placeModel';
-import { IItem } from '../entities/item';
+import { Cuisine, IItem, ItemCategory } from '../entities/item';
 import { itemService } from '../services/item.service';
 import { IPlaceItem } from '../entities/placeItem';
 import { placeItemService } from '../services/placeItem.service';
 import { placeToPlaceModel } from '../utils/Utils';
 import { HTTP400Error, HTTP404Error } from '../utils/error4xx';
+import { ItemModel } from '../models/itemModel';
 
 const log: Logger = Utils.getLogger('place.controller');
 
@@ -194,11 +195,31 @@ class PlaceController {
     //data to be saved in database
     // log.debug('Adding correlationId into the request body');
 
-    if (!data.item) {
-      log.error('Item reference is mandatory');
-      throw new HTTP400Error('Item reference is mandatory');
+
+    // create PlaceItem mapping
+    const place: IPlace | undefined = await placeService.getPlace(data.place?.id);
+    if (!place) {
+      log.error('No Place found with the given placeId: ', data.place?.id);
+      throw new HTTP404Error(`Place not found with given id: ${data.place?.id}`)
+    }
+
+    let item;
+    if (!data.aliases) {
+      log.trace('Looking for known \'Item\'s from aliases: ', data.aliases);
+      item = await itemService.getItemByAliases(data.aliases);
+      data.item = item ?? {
+        aliases: [data.name],
+        name: data.name,
+        category: data.category,
+        cuisines: data.cuisines,
+        description: data.description,
+        media: data.medias?.[0]
+      } as IItem;
+      // log.error('Item reference is mandatory');
+      // throw new HTTP400Error('Item reference is mandatory');
       // res.status(400).send('Item reference is mandatory');
     }
+
     // data.category= ItemCategory[req.body.category.toUpperCase() as ItemCategory];
     // data.cuisines= [...req.body.cuisines.map((c: any) => Cuisine[c.toUpperCase() as Cuisine])];
     // const { itemReferenceId, ...itemData } = { ...data };
@@ -207,43 +228,38 @@ class PlaceController {
     log.trace('Validating Item reference in the request ');
     try {
       let item: IItem | undefined;
-      if (!data.item.id) {
+      if (!data.item?.id) {
         log.info('Item is not found in inventory, creating it');
         item = await itemService.createItem(data.item);
         log.trace('Item created successfully in the inventory');
-      } else {
-        item = await itemService.getItem(data.item.id);
-        log.trace('Item found with id: ', data.item.id);
+      // } else {
+      //   item = await itemService.getItem(data.item.id);
+      //   log.trace('Item found with id: ', data.item.id);
       }
       log.trace('Looking for the place with id: ', data.place?.id);
 
-      // create PlaceItem mapping
-      const place: IPlace | undefined = await placeService.getPlace(data.place?.id);
-      if (!place) {
-        log.error('No Place found with the given placeId: ', data.place?.id);
-      }
       if (place && item) {
         const placeItemData: IPlaceItem = {
           place: place,
           item: item,
           name: data.name,
           description: data.description,
-          medias: [...data.medias],
+          medias: data.medias? [...data.medias]: undefined,
         } as IPlaceItem;
         log.trace('Adding PlaceItem document with data: ', placeItemData);
         await placeItemService.addPlaceItem(placeItemData);
         log.trace('Successfully added PlaceItem document.');
       }
 
-      if (!item) {
-        log.info('Item not created due to previous errors, returning 404');
-        throw new HTTP404Error('Item not found');
-        // res.status(404).send('Item not found');
-      } else {
-        log.info('Item created successfully, returning the new object');
-        return item;
+      // if (!item) {
+      //   log.info('Item not created due to previous errors, returning 404');
+      //   throw new HTTP404Error('Item not found');
+      //   // res.status(404).send('Item not found');
+      // } else {
+      log.info('Item created successfully, returning the new object');
+      return item;
         // res.status(201).send(item);
-      }
+      // }
     } catch (error: any) {
       log.error('Error while adding Item to Place with given data. Error: ', error);
       throw error;
