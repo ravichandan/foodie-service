@@ -109,7 +109,7 @@ export default [
 			// add the media file url into database
 			if (Array.isArray(result)) {
 				try {
-					await mediaController.addMultipleMedias(req, res, result);
+					await mediaController.addMultipleMedias(req.body, result);
 				} catch (e: any) {
 					log.error('in service.routes, caught result: ', result);
 					log.error('in service.routes, caught error: ', e);
@@ -497,7 +497,7 @@ export default [
 			// add the media file url into database
 			if (Array.isArray(result)) {
 				try {
-					result = await mediaController.addMultipleMedias(req, res, result);
+					result = await mediaController.addMultipleMedias(req.body, result);
 				} catch (e: any) {
 					log.error('in service.routes, caught result: ', result);
 					log.error('in service.routes, caught error: ', e);
@@ -535,7 +535,7 @@ export default [
 
 			// add the media file url into database
 			if (Array.isArray(uploadedFile)) {
-				await mediaController.addMultipleMedias(req, res, uploadedFile);
+				await mediaController.addMultipleMedias(req.body, uploadedFile);
 			} else {
 				await mediaController.addMedia(req, res, uploadedFile.path);
 			}
@@ -571,6 +571,30 @@ export default [
 	},
 
 	// Customers routes
+	{
+		path: '/customers/oidc-login',
+		method: 'post',
+		validators: [checkSchema(FieldConfigs.loginOrSignupOidcCustomerSchemaConfig), checkSchema(FieldConfigs.validateAuth)],
+		handler: async (req: Request, res: Response) => {
+			const err = validationResult(req);
+			if (!err.isEmpty()) {
+				log.error('Bad Request', err.mapped());
+				res.status(401).send(err.mapped());
+			} else {
+				// No errors, pass req and res on to your controller
+				log.debug('in POST /customers/oidc-login route handler, processing request');
+				if (req.body.userInfo) {
+					try{
+						await customerController.loginCustomer(req, res);
+					} catch (e: any) {
+						log.error('in service.routes, caught error: ', e);
+						return res.status(500).json({ errors: [e.message] });
+					}
+				}
+				log.debug('Done creating a Customer record');
+			}
+		},
+	},
 	{
 		path: '/customers',
 		method: 'post',
@@ -623,7 +647,7 @@ export default [
 			} else {
 				// No errors, pass req and res on to your controller
 				log.debug('in get /customers/:customerId route handler, processing request');
-				await customerController.getACustomerById(req, res);
+				await customerController.getACustomerByIdOrEmail({ id: req.params.id });
 				log.debug('Fetching completed');
 			}
 		},

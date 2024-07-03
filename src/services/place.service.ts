@@ -1,6 +1,6 @@
 import { IPlace, Place } from '../entities/place';
 import { Logger } from 'log4js';
-import { getLogger } from '../utils/Utils';
+import { deduceCityName, getLogger } from '../utils/Utils';
 import { IMedia } from '../entities/media';
 
 const log: Logger = getLogger('place.service');
@@ -12,6 +12,7 @@ export class PlaceService {
     try {
       placeData.createdAt = new Date();
       placeData.modifiedAt = new Date();
+      placeData.address.city = deduceCityName(placeData.address);
       log.trace('Creating Place with data: ', placeData);
       const newPlace: IPlace = await Place.create(placeData);
       await Place.populate(newPlace, 'openingTime');
@@ -93,13 +94,13 @@ export class PlaceService {
         places = await Place.find({
           'address.postcode': postcode,
         })
-          .populate('address')
+          .populate('address medias')
           .limit(10)
           .lean()
           .exec();
       } else if (!!city) {
         places = await Place.find({ 'address.city': city })
-          .populate('address')
+          .populate('address medias')
           .limit(10)
           .lean()
           .exec();

@@ -164,7 +164,7 @@ class ReviewController {
     const liked = data.likedBy.find((c) => c.id === data.customerInfo.id);
     const thread = await reviewThreadService.getThreadByReviewId(data.id);
     if (liked) {
-      const cust = await customerService.getCustomer('' + data.customerInfo.id);
+      const cust = await customerService.getCustomer({ id: ''+data.customerInfo.id });
       // const thread = await reviewThreadService.getThreadByReviewId(data.id);
       cust && thread?.likedBy.push(cust) && thread?.save();
       // thread?.save();

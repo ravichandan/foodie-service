@@ -41,6 +41,9 @@ export type ICustomer = Document & {
   // reviews liked by this Customer
   liked: IReview[];
 
+  // status of the customer verified|unverified
+  status: 'verified' | 'unverified';
+
   // Total points earned in their lifetime
   totalPointsEarned: number;
 
@@ -73,14 +76,19 @@ export const customerSchema: Schema<ICustomer> = new Schema<ICustomer>(
       required: true,
     },
 
-    phone: {
+    status: {
       type: String,
       required: true,
+    },
+
+    phone: {
+      type: String,
+      required: false,
     },
     interestedIn: {
       type: [String],
       enum: Object.values(Cuisine),
-      validate: (c: Cuisine) => Array.isArray(c) && c.length > 0,
+      validate: (c: Cuisine[]) => !c || Array.isArray(c),
     },
     picture: {
       type: mediaSchema,

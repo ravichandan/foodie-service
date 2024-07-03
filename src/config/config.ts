@@ -8,9 +8,13 @@ export const config = {
   DB_CONNECTION_STR:"mongodb+srv://admin:admin@cluster0.gaz0ywh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
   appKey:"xhASmry6QFCsGLeavZANlpPgfEnjeNXzuzAf9IzdfM1v4JSd17yQ7NYA8jDFIngM",
   // appKey:"xpFn86p1T5TlEwaFOS3j18h203KUZc7RK3feeVoFqYOBDsLy3PyrVpvRaZX3wE8s",
-  appId:"ddata-ttagxfs",
+  appId:"data-ttagxfs",
   appRegion:"ap-southeast-2",
-  databaseName: "qa"
-
+  databaseName: "test",
+  states_suburbs: [{
+    state: "NSW",
+    suburbs: ['The Ponds','Quakers Hill', 'Schofields','Parramatta', 'Harris Park', 'Box hill', 'Kellyville', 'Riverstone'],
+    city: "Sydney"
+  }]
 };
 //config connection

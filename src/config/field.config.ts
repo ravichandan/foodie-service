@@ -256,6 +256,13 @@ export const addCustomerSchemaConfig: Schema = {
     },
   },
 };
+export const loginOrSignupOidcCustomerSchemaConfig: Schema = {
+  userInfo: {
+    in: ['body'],
+    optional: false,
+    errorMessage: 'userInfo has to be sent along the request',
+  },
+};
 
 export const getOrPutCustomerByIdSchemaConfig: Schema = {
   customerId: {
@@ -283,11 +290,10 @@ export const getCustomerByNameSchemaConfig: Schema = {
   },
 };
 
-const verifyAuthToken = async (token: string, { req, res }: any) => {
+const verifyAuthToken = async (_: string, { req, res }: any) => {
   const admin = req.headers['x-admin-name'];
-  const isAuthenticated = admin === 'chandan' ? true : await googleJwtValidator(token);
+  const isAuthenticated = admin === 'chandan' ? true : await googleJwtValidator(req.body.userInfo.token);
   if (!isAuthenticated) {
-    console.log('throwing 401:', req);
     throw new HTTP401Error();
   }
   return true;

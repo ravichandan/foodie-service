@@ -55,7 +55,7 @@ class MediaController {
     }
   };
   // middleware to add a media
-  addMultipleMedias = async (req: Request, res: Response, files: any[]) => {
+  addMultipleMedias = async (body: any, files: any[]) => {
     //data to be saved in database
     log.debug('In media.controller -> addMultipleMedias()');
     // uploadedResult.
@@ -66,7 +66,7 @@ class MediaController {
         key: file.Key,
         createdAt: new Date(),
         modifiedAt: new Date(),
-        ...req.body,
+         ...(body),
       };
 
       //call the addMedia function in the service and pass the data from the request

@@ -1,6 +1,6 @@
 import {
   DeleteObjectCommand,
-  DeleteObjectsCommand,
+  DeleteObjectsCommand, GetObjectCommand,
   ListBucketsCommand,
   PutObjectCommand,
   S3Client,
@@ -86,6 +86,11 @@ export class R2Provider {
     });
   }
 
+  async getSignedUrl(key: string){
+    // console.log(
+      return await getSignedUrl(this.client, new GetObjectCommand({Bucket: this.S3_BUCKET_NAME, Key: key}), { expiresIn: 3600 })
+    // )
+  }
   async uploadFileForCustomer(customerId: string, fileStream: any) {
     let key = '';
     // const fileName = filePath.split('\\').pop().split('/').pop();
@@ -134,6 +139,7 @@ export class R2Provider {
         console.log(progress);
       });
 
+      console.log('this.getSignedUrl(key)', await this.getSignedUrl(key));
       return await parallelUploads3.done();
     } catch (e) {
       console.log(e);

@@ -12,7 +12,6 @@ export class MediaService {
   // async addMediaToR2(req: Request, res: Response) {
   async addMediaToR2(customerId: string, files: any) {
     log.trace('In addMediaNew');
-    log.trace('req.files', files);
     if (!files) {
       return;
     }
@@ -32,9 +31,12 @@ export class MediaService {
     // working ends;
 
     return await Promise.all(
-      (files as any).map(async (file: Express.Multer.File) => {
+      (files as any).map(async (file: Express.Multer.File | Readable) => {
         // Write your buffer
-        const bufferStream = Readable.from(file.buffer);
+        let bufferStream = file;
+        if(!(file instanceof Readable)) {
+          bufferStream = Readable.from(file.buffer);
+        }
         return await r2Provider.uploadFileForCustomer(customerId, bufferStream);
       }),
     );

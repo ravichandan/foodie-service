@@ -23,9 +23,10 @@ const options = {
   serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
   socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
   family: 4, // Use IPv4, skip trying IPv6
+  dbName: config.databaseName
 };
 
-console.log('dbconnecion string:: , ', connectionString);
+console.log('db.connection string:: , ', connectionString);
 //config connection
 export const db = mongoose.connect(connectionString, options);
 

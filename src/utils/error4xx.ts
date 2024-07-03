@@ -13,11 +13,17 @@ export class CustomerIdHeaderNotFoundError extends HTTP400Error {
     super(message ?? 'CUSTOMER_ID header has to be provided ');
   }
 }
+
 export class HTTP404Error extends HTTPClientError {
   readonly statusCode = 404;
 
   constructor(message: string = 'Not found') {
     super(message);
+  }
+}
+export class CustomerNotFoundError extends HTTP404Error {
+  constructor(message?: string) {
+    super(message ?? 'Customer not found with given id');
   }
 }
 

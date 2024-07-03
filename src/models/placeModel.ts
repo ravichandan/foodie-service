@@ -3,6 +3,7 @@ import { AddressModel } from './addressModel';
 import { ReviewModel } from './reviewModel';
 import { ItemModel } from './itemModel';
 import { OpeningTimes } from '../entities/place';
+import { MediaModel } from './mediaModel';
 
 export type PlaceResponse = {
   page: number;
@@ -19,6 +20,7 @@ export type PlaceModel = {
   service: number;
   ambience: number;
   noOfReviews: number;
+  medias: MediaModel[];
   reviews: ReviewModel[];
   openingTimes: OpeningTimes;
   items: { id: ItemModel };
