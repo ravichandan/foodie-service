@@ -187,7 +187,8 @@ class CustomerController {
             .then(readable => mediaService.addMediaToR2(customer?.id, [readable]))
             .then(files => files && mediaController.addMultipleMedias(undefined, files))
             .then(medias => !!(medias?.[0]) ? customerService.updateCustomerPicture(customer?.id, medias[0] as IMedia): undefined);
-          picturePromise.then();
+          // picturePromise.then();
+          await picturePromise;
         }
       }
 
