@@ -26,6 +26,8 @@ process.on('unhandledRejection', (e) => {
 });
 
 const router = express();
+router.use(express.urlencoded({extended: false}));
+router.use(express.json());
 
 applyMiddleware(controllers, router);
 applyRoutes(routes, router);
@@ -58,3 +60,5 @@ db.then(() => {
   logger.trace('After setting runningServer.keepAliveTimeout:: ', runningServer.keepAliveTimeout);
   logger.trace('After setting runningServer.headersTimeout:: ', runningServer.headersTimeout);
 });
+
+module.exports = router;

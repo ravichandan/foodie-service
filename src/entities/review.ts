@@ -3,6 +3,10 @@ import mongoose, { Document, Model, model, ObjectId, Schema } from 'mongoose';
 import { IMedia, mediaSchema } from './media';
 import { customerSchema, ICustomer } from './customer';
 
+
+//@ts-ignore
+mongoose.ObjectId.set(v => !v ? null : v);
+
 // creating interfaces for entities
 export type IReview = Document & {
   // _id: number;
@@ -106,10 +110,14 @@ export const reviewSchema: Schema<IReview> = new Schema<IReview>(
       ref: 'Place',
     },
     item: {
+      required: false,
       type:
         Schema.Types.ObjectId,
         // Number,
       ref: 'Place_Item',
+      default: null,
+      set: (v: any) => !v ? null : v
+
     },
     customer: {
       type:
@@ -120,7 +128,7 @@ export const reviewSchema: Schema<IReview> = new Schema<IReview>(
 
     description: {
       type: String,
-      required: true,
+      required: false,
     },
 
     taste: Number,
@@ -139,8 +147,8 @@ export const reviewSchema: Schema<IReview> = new Schema<IReview>(
     // 	type: [customerSchema],
     // 	validate: (v: ICustomer) => Array.isArray(v), // && v.length > 0,
     // },
-    children: [{ type: Number, ref: 'Review' }],
-    parent: { type: Number, ref: 'IReview', required: false, default: null },
+    children: [{ type: Schema.Types.ObjectId, ref: 'Review' }],
+    parent: { type: Schema.Types.ObjectId, ref: 'IReview', required: false, default: null },
 
     createdAt: {
       type: Date,

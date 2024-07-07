@@ -38,7 +38,7 @@ export class ReviewService {
       log.debug('Review added successfully returning created object. newReview: ', newReview);
       return newReview;
     } catch (error) {
-      log.error('Error while adding a review. Error: ', error);
+      log.error('Error while adding bulk reviews. Error: ', error);
       throw error;
     }
   }

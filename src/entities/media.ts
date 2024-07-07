@@ -38,29 +38,29 @@ export const mediaSchema: Schema<IMedia> = new mongoose.Schema<IMedia>(
 
     place: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Place',
     },
 
     item: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Place_Item',
     },
 
     review: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Review',
     },
 
     customer: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Customer',
     },
 

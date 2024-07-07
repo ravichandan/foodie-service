@@ -11,8 +11,9 @@ const log: Logger = getLogger('media.service');
 export class MediaService {
   // async addMediaToR2(req: Request, res: Response) {
   async addMediaToR2(customerId: string, files: any) {
-    log.trace('In addMediaNew');
+    log.trace('In addMediaToR2');
     if (!files) {
+      log.trace('In addMediaToR2, no files found, returning...');
       return;
     }
 

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import cors from 'cors';
 import parser from 'body-parser';
 import compression from 'compression';
@@ -16,8 +16,8 @@ export const handleCors = (router: Router) => {
 
 export const handleBodyRequestParsing = (router: Router) => {
   log.trace('Adding parser.json()) to router');
-  router.use(parser.urlencoded({ extended: true }));
-  router.use(parser.json());
+  router.use(express.json());
+  router.use(express.urlencoded({ extended: false  }));
 };
 
 export const handleCompression = (router: Router) => {

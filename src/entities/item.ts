@@ -109,13 +109,5 @@ const itemSchema: Schema<IItem> = new Schema<IItem>(
   {},
 );
 
-// @ts-ignore
-// const AutoIncrement = Inc(mongoose);
-// @ts-ignore
-// itemSchema.plugin(AutoIncrement, { id: 'item_id_counter', inc_field: '_id' });
-
 //creating the Place model by passing placeSchema
 export const Item: Model<IItem> = model<IItem>('Item', itemSchema);
-
-// var mongoose = require('mongoose');
-// var Schema = mongoose.Schema;

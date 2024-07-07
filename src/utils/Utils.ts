@@ -237,19 +237,18 @@ export const reviewsToReviewModels = (reviews: IReview[]): ReviewModel[] => {
 };
 
 export const reviewModelToReviewEntity = (pi: ReviewModel): IReview => {
-	const model: any = {
+	const model: any = pi; //{
 		// description: pi.description,
 		// id: pi.id,
 		// taste: pi.taste,
 		// presentation: pi.presentation,
 		// ambience:pi.ambience,
-		...pi,
-		customer: pi.customerInfo?.id,
+		// ...pi,
 		// medias: mediaModelsToMediaEntities(pi.medias),
 		// service:pi.service,
 		// placeId:''+pi.place,
-		// itemId: ''+pi.item
-	};
+		// item: !pi.item
+	// };
 	delete model.liked;
 	return model as IReview;
 };
@@ -261,7 +260,7 @@ export const customerToCustomerModel = (pi: ICustomer): CustomerModel => {
 		id: pi.id || pi._id,
 		reviews: reviewsToReviewModels(pi.reviews),
 		liked: reviewsToReviewModels(pi.reviews),
-		picture: mediaToMediaModel(pi.picture),
+		picture: pi.picture? mediaToMediaModel(pi.picture):undefined,
 		address: { ...pi.address },
 	};
 	return model;

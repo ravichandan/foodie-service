@@ -152,8 +152,8 @@ export const addItemSchemaConfig: Schema = {
   name: { isLength: { options: { min: 3, max: 100 } } },
   description: { optional: true, isLength: { options: { max: 300 } } },
   medias: {
-    custom: { options: (arr: any[]) => !arr || arr.every((a) => !!a?._id && !!a?.url) },
-    errorMessage: 'If a media file is provided, the id and url should be provided',
+    custom: { options: (arr: any[]) => !arr || arr.every((a) => !a?._id || !a?.url) },
+    errorMessage: 'If a media file is provided, it should have an id and url',
   },
 };
 
@@ -174,8 +174,8 @@ export const createItemSchemaConfig: Schema = {
     },
   },
   medias: {
-    custom: { options: (arr: any[]) => !arr || arr.every((a) => !!a?._id && !!a?.url) },
-    errorMessage: 'If a media file is provided, the id and url should be provided',
+    custom: { options: (arr: any[]) => !arr || arr.every((a) => !a?._id || !a?.url) },
+    errorMessage: 'If a media file is provided, it should have an id and url',
   },
 };
 
@@ -186,19 +186,20 @@ export const postReviewSchemaConfig: Schema = {
   taste: { optional: true, isFloat: { options: { min: 1, max: 5 } } },
   presentation: { optional: true, isFloat: { options: { min: 1, max: 5 } } },
   medias: {
-    custom: { options: (arr: any[]) => !arr || arr.every((a) => !!a?._id && !!a?.url) },
-    errorMessage: 'If a media file is provided, the id and url should be provided',
+    custom: { options: (arr: any[]) => !arr || arr.every((a) => !a?._id || !a?.url) },
+    errorMessage: 'If a media file is provided, it should have an id and url',
   },
-  customerInfo: {
-    optional: false,
-    custom: {
-      options: (val: any, _: any) => {
-        console.log('Hello22222', val);
-        console.log('Hello33333', !val || !(val as CustomerModel).id);
-        return !!val || !!(val as CustomerModel).id;
-      },
-    },
-  },
+  // customerInfo: {
+  //   optional: false,
+  //   custom: {
+  //     options: (val: any, _: any) => {
+  //       // console.log('postReviewSchemaConfig, val: ', val);
+  //       // console.log('postReviewSchemaConfig, (val as CustomerModel).id: ', (val as CustomerModel).id);
+  //       // console.log('postReviewSchemaConfig, !!(val as CustomerModel).id: ', !!(val as CustomerModel).id);
+  //       return !!val && !!(val as CustomerModel).id;
+  //     },
+  //   },
+  // },
   placeId: { optional: false },
   itemId: { optional: true },
 };
@@ -292,11 +293,23 @@ export const getCustomerByNameSchemaConfig: Schema = {
 
 const verifyAuthToken = async (_: string, { req, res }: any) => {
   const admin = req.headers['x-admin-name'];
-  const isAuthenticated = admin === 'chandan' ? true : await googleJwtValidator(req.body.userInfo.token);
+  const token = req.headers['x-token'];
+  const isAuthenticated = admin === 'chandan' ? true : await googleJwtValidator(token??req.body.userInfo.token);
   if (!isAuthenticated) {
     throw new HTTP401Error();
   }
   return true;
+};
+
+
+export const verifyCustomerIdHeader: Schema = {
+
+  CUSTOMER_ID: {
+    in: ['headers'],
+    optional: false,
+    errorMessage: 'Provide a valid CUSTOMER_ID header',
+    isMongoId: true,
+  },
 };
 
 export const validateAuth: Schema = {

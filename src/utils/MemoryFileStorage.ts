@@ -19,7 +19,7 @@ const createFileBuffer = async (req: Request, res: Response): Promise<any> => {
   return new Promise((resolve, reject): void => {
     uploadMultipleFiles(req, res, (error) => {
       // console.log('uploadMultipleFiles error: ', error);
-      // console.log('uploadMultipleFiles req.files: ', req.files);
+      console.log('uploadMultipleFiles req.files: ', req.files);
       // console.log('uploadMultipleFiles req.body: ', req.body);
       // console.log('uploadMultipleFiles res: ', res);
       if (error) {

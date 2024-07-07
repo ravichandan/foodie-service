@@ -34,3 +34,10 @@ export class HTTP401Error extends HTTPClientError {
     super(message);
   }
 }
+export class HTTP500Error extends HTTPClientError {
+  readonly statusCode = 500;
+
+  constructor(message: string = 'Internal server error') {
+    super(message);
+  }
+}

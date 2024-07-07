@@ -317,6 +317,7 @@ export default [
 		method: 'get',
 		validators: [
 			// checkSchema(FieldConfigs.getPlaceSchemaConfig)
+			checkSchema(FieldConfigs.postReviewSchemaConfig), checkSchema(FieldConfigs.validateAuth)
 		],
 		handler: async (req: Request, res: Response) => {
 			const err = validationResult(req);
@@ -425,7 +426,7 @@ export default [
 	{
 		path: '/reviews', // create/post a new review
 		method: 'post',
-		validators: [checkSchema(FieldConfigs.postReviewSchemaConfig), checkSchema(FieldConfigs.validateAuth)],
+		validators: [checkSchema(FieldConfigs.verifyCustomerIdHeader), checkSchema(FieldConfigs.postReviewSchemaConfig), checkSchema(FieldConfigs.validateAuth), ],
 		handler: async (req: Request, res: Response) => {
 			const err = validationResult(req);
 			if (!err.isEmpty()) {
@@ -478,10 +479,19 @@ export default [
 	{
 		path: '/medias/upload',
 		method: 'post',
-		validators: [],
+		validators: [
+			checkSchema(FieldConfigs.verifyCustomerIdHeader),
+		],
 		handler: async (req: Request, res: Response) => {
-			log.trace('Server is up and running');
+			// req.files=req.body.files;
+			log.trace('In POST /medias/upload, req.body:: ', req.files);
+			log.trace('In POST /medias/upload, req.body:: ', req.body);
 
+			// if(!req.body.files){
+			// 	log.trace('\'files\' to be provided as form-data');
+			// 	res.status(400).send( new HTTP400Error('"files" to be provided as form-data'));
+			// 	return;
+			// }
 			// const result = await r2Provider.listBuckets()
 			/*let result = await r2FileUpload(req, res);
 			result = await mediaService.addMultipleMedias(req,res);

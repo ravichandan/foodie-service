@@ -92,8 +92,8 @@ const placeItemSchema: Schema<IPlaceItem> = new Schema<IPlaceItem>(
     },
     item: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Item',
     },
     name: String,

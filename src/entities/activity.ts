@@ -31,16 +31,16 @@ export type IActivity = Document & {
   thread?: number;
 
   // review liked by this Customer
-  liked?: number;
+  liked?: ObjectId;
 
   // review liked by this Customer
-  unliked?: number;
+  unliked?: ObjectId;
 
   // review liked by this Customer
-  disliked?: number;
+  disliked?: ObjectId;
 
   // review liked by this Customer
-  undisliked?: number;
+  undisliked?: ObjectId;
 
   // Points earned in this activity
   pointsEarned?: number;
@@ -80,25 +80,25 @@ export const activitySchema: Schema<IActivity> = new Schema<IActivity>(
     },
 
     liked: {
-      type: Number,
+      type: Schema.Types.ObjectId,
       ref: 'Review',
       // type: reviewSchema,
       // validate: (v: IReview) => Array.isArray(v), // && v.length > 0,
     },
     unliked: {
-      type: Number,
+      type: Schema.Types.ObjectId,
       ref: 'Review',
       // type: reviewSchema,
       // validate: (v: IReview) => Array.isArray(v), // && v.length > 0,
     },
     disliked: {
-      type: Number,
+      type: Schema.Types.ObjectId,
       ref: 'Review',
       // type: reviewSchema,
       // validate: (v: IReview) => Array.isArray(v), // && v.length > 0,
     },
     undisliked: {
-      type: Number,
+      type: Schema.Types.ObjectId,
       ref: 'Review',
       // type: reviewSchema,
       // validate: (v: IReview) => Array.isArray(v), // && v.length > 0,

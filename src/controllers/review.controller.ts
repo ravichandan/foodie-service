@@ -14,6 +14,8 @@ import { IReviewThread } from '../entities/reviewThread';
 import { activityService } from '../services/activity.service';
 import { IActivity } from '../entities/activity';
 import { activityController } from './activity.controller';
+import { HTTPClientError } from '../utils/errorHttp';
+import { HTTP500Error } from '../utils/error4xx';
 
 const log: Logger = getLogger('review.controller');
 
@@ -28,6 +30,7 @@ class ReviewController {
 
     let data = {
       correlationId: req.header('correlationId'),
+      customer: req.header('CUSTOMER_ID'),
       ...req.body,
       // category: ReviewCategory[req.body.category.toUpperCase() as ReviewCategory],
       // cuisines: [...req.body.cuisines.map((c: any) => Cuisine[c.toUpperCase() as Cuisine])],
@@ -124,7 +127,8 @@ class ReviewController {
       }
     } catch (error: any) {
       log.error('Error while creating review records ', error);
-      res.send(error.message);
+      const err = new HTTP500Error(error)
+      res.status(err.statusCode).send(error);
     }
   };
 
