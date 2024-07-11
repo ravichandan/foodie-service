@@ -180,10 +180,10 @@ export const itemToItemModel = (pi: IPlaceItem): ItemModel | undefined => {
 		ingredients: pi.ingredients,
 		calorieInfo: pi.calorieInfo,
 		price: pi.price,
-		taste: pi.ratings ? pi.ratings[0]?.taste : 0,
+		taste:  pi.rating?.taste ?? 0,
 		cuisine: pi.item?.cuisines?.join(','),
-		presentation: pi.ratings ? pi.ratings[0]?.presentation : 0,
-		noOfReviews: pi.ratings ? pi.ratings[0]?.noOfReviews : 0,
+		presentation: pi.rating?.presentation ?? 0,
+		noOfReviews: pi.rating?.noOfReviews ?? 0,
 	};
 };
 

@@ -12,7 +12,7 @@ import { itemService } from '../services/item.service';
 import { IPlaceItem } from '../entities/placeItem';
 import { placeItemService } from '../services/placeItem.service';
 import { placeToPlaceModel } from '../utils/Utils';
-import { HTTP400Error, HTTP404Error } from '../utils/error4xx';
+import { HTTP400Error, HTTP404Error, HTTP500Error } from '../utils/error4xx';
 import { ItemModel } from '../models/itemModel';
 
 const log: Logger = Utils.getLogger('place.controller');
@@ -75,7 +75,13 @@ class PlaceController {
   };
 
   /**
-   * API Controller method for 'get all places'. This takes atleast one of placeName or postcode, with pagination params
+   * API Controller method for 'get all places'. This takes at-least one of placeName or postcode, with pagination params
+   * This request to query all the places with a name, for ex: Burger, will be sent only from home page search box,
+   * when users want to search places (or items in places) by name. In this 'Burger' example, all the places with
+   * the name 'Burger' union all the places, (whose names may not have Burger in them), with items' names includes
+   * the word 'burger' in them. The result consists of all those above-mentioned places, with at-least 5 items
+   * matching the mentioned criteria sorted by highest taste rating first.
+   *
    */
   getPlaces = async (args: { placeName: string; itemName?: string; postcode: string }) => {
     log.info('Received request in getPlaces');
@@ -86,7 +92,7 @@ class PlaceController {
     } as any;
 
     log.trace('Params to getPlaces: ', { placeName, itemName, postcode });
-    const places: IPlace[] | undefined = await placeService.getPlaces({ placeName, postcode });
+    const places: IPlace[] | undefined = await placeService.getPlaces({ placeName, itemName, postcode });
     log.trace('Found the following places with given params', places);
     if (!places) {
       throw new HTTP404Error('Place not found with given id');
@@ -100,26 +106,30 @@ class PlaceController {
         page: 0,
       };
       // res.send(places); // TODO
-      // return;
+      return placeResponse;
     }
 
     log.trace('Only one place found with given criteria, loading its items, reviews and ratings recursively');
+    try{
     await Place.populate(places, [
       { path: 'reviews ratings', options: { sort: { createdAt: -1 }, perDocumentLimit: 5 } },
-      {
-        path: 'items',
-        populate: { path: 'reviews ratings', options: { sort: { createdAt: -1 }, perDocumentLimit: 5 } },
-        match: (place: IPlace, virtual: any) => ({
-          ...(!!itemName && { localName: { $regex: itemName, $options: 'i' } }),
-        }),
-      },
+      // {
+      //   path: 'items',
+      //   populate: { path: 'reviews rating', options: { sort: { createdAt: -1 }, perDocumentLimit: 5 } },
+      //   match: (place: IPlace, virtual: any) => ({
+      //     ...(!!itemName && { localName: { $regex: itemName, $options: 'i' } }),
+      //   }),
+      // },
     ]);
-
+    } catch (error: any){
+      log.error('Error while populating more fields in to places object. Error: ', error);
+      throw new HTTP500Error(error.message);
+    }
     log.trace('Loaded all properties for the place, ', places);
 
     const placeResponse: PlaceResponse = {
       places: Utils.placesToPlaceModels(places),
-      size: 1,
+      size: places.length,
       page: 1,
     };
     console.log('placeResponse:: ', placeResponse);

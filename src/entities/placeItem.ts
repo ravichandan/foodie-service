@@ -72,7 +72,7 @@ export type IPlaceItem = Document & {
   // category: ItemCategory;
   medias: IMedia[];
   reviews: IReview[];
-  ratings: IPlaceItemRating[];
+  rating: IPlaceItemRating;
 
   createdAt: Date;
   modifiedAt: Date;
@@ -131,7 +131,7 @@ placeItemSchema.virtual('reviews', {
   match: (pi: IPlaceItem) => ({ place: pi.place }),
 });
 
-placeItemSchema.virtual('ratings', {
+placeItemSchema.virtual('rating', {
   ref: 'Place_Item_Rating',
   localField: 'item',
   foreignField: 'item',

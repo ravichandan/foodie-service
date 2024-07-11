@@ -79,7 +79,7 @@ export const getPlaceByNameSchemaConfig: Schema = {
   },
   itemName: {
     in: ['query'],
-    optional: false,
+    optional: true,
     errorMessage: 'item name has to be provided as a query param in the url .../places/?itemName=<value>',
   },
   postcode: {

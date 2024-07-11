@@ -233,12 +233,22 @@ export default [
 				res.status(401).send(err.mapped());
 			} else {
 				// No errors, pass req and res on to your controller
-				log.debug('in get /places/?placeName=<xyz> route handler, processing request, req.params:', req.params);
+				log.debug('in get /places/?placeName=<xyz>&itemName=<abc> route handler, processing request, req.params:', req.params);
 				const { placeName, itemName, postcode } = {
 					...req.params,
 					...req.query,
 				} as any;
-				await placeController.getPlaces({ placeName, itemName, postcode });
+				try {
+					const response = await placeController.getPlaces({ placeName, itemName, postcode });
+					res.send(response);
+				} catch (error: any){
+					log.error('Error while doing getPlaces Error:: ', error)
+					if(error instanceof HTTPClientError) {
+						res.status(error.statusCode).send(error.message);
+						return;
+					}
+					res.status(500).send(error.message);
+				}
 				// res.send({...req.params,...req.query});
 				log.debug('Returning the fetched Place');
 			}
