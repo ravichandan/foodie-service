@@ -114,6 +114,45 @@ export const getPlaceByNameSchemaConfig: Schema = {
   },
 };
 
+
+export const getItemsByNameSchemaConfig: Schema = {
+  itemName: {
+    in: ['query'],
+    optional: true,
+    errorMessage: 'item name has to be provided as a query param in the url .../places/?itemName=<value>',
+  },
+  postcode: {
+    custom: { options: queryParamsHasPostcodeOrSuburb },
+    // 	in: ['query'],
+    // optional: false,
+    // errorMessage: 'postcode should be provided to search the place',
+    // isInt: true,
+    // toInt: true,
+  },
+
+  suburb: {
+    custom: { options: queryParamsHasPostcodeOrSuburb },
+    // 	in: ['query'],
+    // optional: false,
+    // errorMessage: 'postcode should be provided to search the place',
+    // isInt: true,
+    // toInt: true,
+  },
+  pageNumber: {
+    in: ['query'],
+    optional: true,
+    isInt: true,
+    toInt: true,
+    errorMessage: 'pageNumber in query parameter has to be a number',
+  },
+  pageSize: {
+    in: ['query'],
+    optional: true,
+    errorMessage: 'pageSize in query parameter has to be a number',
+    toInt: true,
+  },
+};
+
 export const getItemSchemaConfig: Schema = {
   itemId: {
     in: ['params'],

@@ -2,6 +2,12 @@
 import { ReviewModel } from './reviewModel';
 import { CalorieInfo, FoodAllergens } from '../entities/placeItem';
 
+export type ItemResponse = {
+  page: number;
+  size: number;
+  items: ItemModel[];
+};
+
 export type ItemModel = {
   id: any;
   name: string;

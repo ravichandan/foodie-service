@@ -3,13 +3,14 @@ import { Request, Response } from 'express';
 import { Cuisine, IItem, ItemCategory } from '../entities/item';
 import { mediaService } from '../services/media.service';
 import { IMedia } from '../entities/media';
-import { getLogger } from '../utils/Utils';
+import { getLogger, itemsToItemModels } from '../utils/Utils';
 import { Logger } from 'log4js';
 import { IPlaceItem } from '../entities/placeItem';
 import { placeService } from '../services/place.service';
 import { IPlace } from '../entities/place';
 import { placeItemService } from '../services/placeItem.service';
 import { HTTP404Error } from '../utils/error4xx';
+import { ItemResponse } from '../models/itemModel';
 
 const log: Logger = getLogger('item.controller');
 
@@ -51,6 +52,19 @@ class ItemController {
   getItems = async (req: Request, res: Response) => {
     const items = await itemService.getItems();
     res.send(items);
+  };
+
+  //get all items by a matching name
+  getItemsByName = async (args : {itemName: string, postcode?: string, city?: string, suburb?: string}, ) => {
+    const items = await itemService.getItemsByName(args);
+    const itemResponse = {
+      page: 1,
+      size: items?.length ?? 0,
+      items: items//!!items? itemsToItemModels(items): [],
+      // itemsOriginal: items
+    }
+    return itemResponse;
+    // res.send(items);
   };
 
   //get a single item

@@ -81,7 +81,7 @@ const placeSchema: Schema<IPlace> = new Schema<IPlace>(
       type: String,
     },
     address: {
-      type: addressSchema,
+    type: addressSchema,
       required: false,
     },
     tags: {

@@ -15,6 +15,7 @@ import { HTTP400Error, HTTP404Error } from '../utils/error4xx';
 import { IPlaceItem } from '../entities/placeItem';
 // import { getPopularPlacesAndItems } from '../config/field.config';
 import { HTTPClientError } from '../utils/errorHttp';
+import { getItemsByNameSchemaConfig } from '../config/field.config';
 
 const log = getLogger('service.routes');
 export type UploadedFile = {
@@ -410,6 +411,42 @@ export default [
 					}
 				}
 				log.debug('Done adding Place');
+			}
+		},
+	},
+	{
+		path: '/items',
+		method: 'get',
+		validators: [checkSchema(FieldConfigs.getItemsByNameSchemaConfig)],
+		handler: async (req: Request, res: Response) => {
+			const err = validationResult(req);
+			if (!err.isEmpty()) {
+				log.error('Bad Request', err.mapped());
+				res.status(400).send(err.mapped());
+			} else {
+				// No errors, pass req and res on to your controller
+				log.info('in GET /items/ route handler, processing request');
+				const { itemName, postcode, suburb, city } = {
+					...req.params,
+					...req.query,
+				} as any;
+				try {
+					const result = await itemController.getItemsByName({itemName, postcode, suburb, city});
+					res.send(result);
+				} catch (error: any) {
+					log.error('GET /items/ resulted in Error', error);
+					if (error instanceof HTTPClientError) {
+						// return c.notFound();
+						res.status(error.statusCode).send(error);
+						// res.sendStatus(404);//.send('Item not found');
+						// res.status(201).send(item);
+					// } else if (error instanceof HTTP400Error) {
+					// 	res.sendStatus(400);//.send('Item reference is mandatory');
+					} else {
+						res.status(500).send({message: error.message });
+					}
+				}
+				log.debug('Done fetching items');
 			}
 		},
 	},

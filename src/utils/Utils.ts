@@ -170,9 +170,9 @@ export const placesToPlaceModels = (places: IPlace[]): PlaceModel[] => {
 export const itemToItemModel = (pi: IPlaceItem): ItemModel | undefined => {
 	if (!pi) return undefined;
 	return {
-		aliases: pi.item.aliases,
+		aliases: pi.item?.aliases,
 		name: pi.name ?? pi.item?.name,
-		description: pi.description || pi.item.description,
+		description: pi.description || pi.item?.description,
 		id: pi._id,
 		reviews: reviewsToReviewModels(pi.reviews),
 		category: pi.item?.category,
@@ -196,8 +196,8 @@ export const reviewToReviewModel = (pi: IReview): ReviewModel => {
 	if (!pi) return {} as ReviewModel;
 	// console.log(' in reviewToReviewModel22: ', (pi instanceof IReview));
 	// pi = pi.toObject();
-	console.log(' in reviewToReviewModel: ' + pi.place, (pi.place as any) instanceof Number);
-	console.log(' in reviewToReviewModel22: ' + typeof pi.place);
+	// console.log(' in reviewToReviewModel: ' + pi.place, (pi.place as any) instanceof Number);
+	// console.log(' in reviewToReviewModel22: ' + typeof pi.place);
 	// logger.trace('In Utils->reviewToReviewModel, pi.toObject():: ', pi);
 	const model: ReviewModel = {
 		// description: pi.description,
