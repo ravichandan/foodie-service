@@ -158,7 +158,7 @@ export const getItemSchemaConfig: Schema = {
     in: ['params'],
     optional: false,
     errorMessage: 'an itemId has to be provided as a path param in the url .../items/:itemId',
-    isLength: { options: { min: 3, max: 20 } },
+    isLength: { options: { min: 3 } },
   },
 };
 

@@ -198,7 +198,9 @@ export class ItemService {
 				},
 				{
 					$project: {
-						_id:1,
+
+						id:'$_id',
+						_id: 0,
 						name: 1							,
 						details:{
 							$first: '$item'

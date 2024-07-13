@@ -71,7 +71,7 @@ class ItemController {
   getAItem = async (req: Request, res: Response) => {
     //get id from the parameter
     // TODO take pagination params and return the data accordingly.
-    const id = req.params.id;
+    const id = req.params.itemId;
     const item = await itemService.getItem(id);
     res.send(item);
   };

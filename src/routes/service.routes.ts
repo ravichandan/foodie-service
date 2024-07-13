@@ -462,7 +462,7 @@ export default [
 				res.status(400).send(err.mapped());
 			} else {
 				// No errors, pass req and res on to your controller
-				log.debug('in getItem controller, processing request, req.body:: ', req.body);
+				log.debug('in GET /items/:itemId, processing request, req.body:: ', req.body);
 				await itemController.getAItem(req, res);
 				log.debug('Done getting an Item by given id');
 			}
