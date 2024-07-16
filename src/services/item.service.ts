@@ -310,7 +310,9 @@ export class ItemService {
 				},
 				{
 					$set: {
+						'place.id': { $first: '$place._id'},
 						'place.items': '$item',
+						'place.name': { $first: '$place.placeName'},
 						'place.service': { $first: '$rating.service'},
 						'place.ambience': { $first: '$rating.ambience'},
 						'place.noOfReviews': { $first: '$rating.noOfReviews'},
