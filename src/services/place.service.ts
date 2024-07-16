@@ -148,7 +148,7 @@ export class PlaceService {
 				.populate({ path: 'reviews ratings', options: { sort: { createdAt: -1 }, perDocumentLimit: 5 } })
 				.populate({
 					path: 'items',
-					populate: { path: 'medias reviews ratings', options: { sort: { createdAt: -1 }, perDocumentLimit: 5 } },
+					// populate: { path: 'medias reviews ratings', options: { sort: { createdAt: -1 }, perDocumentLimit: 5 } },
 				})
 				.lean();
 			if (!place) {

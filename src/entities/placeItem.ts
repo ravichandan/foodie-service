@@ -97,6 +97,7 @@ const placeItemSchema: Schema<IPlaceItem> = new Schema<IPlaceItem>(
       ref: 'Item',
     },
     name: String,
+    aliases: [String],
     description: String,
     calorieInfo: new Schema<CalorieInfo>({ count: { type: Number }, unit: { type: String } }),
     ingredients: {

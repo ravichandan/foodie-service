@@ -160,6 +160,37 @@ export const getItemSchemaConfig: Schema = {
     errorMessage: 'an itemId has to be provided as a path param in the url .../items/:itemId',
     isLength: { options: { min: 3 } },
   },
+
+  postcode: {
+    custom: { options: queryParamsHasPostcodeOrSuburb },
+    // 	in: ['query'],
+    // optional: false,
+    // errorMessage: 'postcode should be provided to search the place',
+    // isInt: true,
+    // toInt: true,
+  },
+
+  suburb: {
+    custom: { options: queryParamsHasPostcodeOrSuburb },
+    // 	in: ['query'],
+    // optional: false,
+    // errorMessage: 'postcode should be provided to search the place',
+    // isInt: true,
+    // toInt: true,
+  },
+  pageNumber: {
+    in: ['query'],
+    optional: true,
+    isInt: true,
+    toInt: true,
+    errorMessage: 'pageNumber in query parameter has to be a number',
+  },
+  pageSize: {
+    in: ['query'],
+    optional: true,
+    errorMessage: 'pageSize in query parameter has to be a number',
+    toInt: true,
+  },
 };
 
 export const addPlaceSchemaConfig = {

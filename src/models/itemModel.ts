@@ -1,6 +1,8 @@
 // creating Item model
 import { ReviewModel } from './reviewModel';
 import { CalorieInfo, FoodAllergens } from '../entities/placeItem';
+import { PlaceModel } from './placeModel';
+import { MediaModel } from './mediaModel';
 
 export type ItemResponse = {
   page: number;
@@ -23,4 +25,6 @@ export type ItemModel = {
   price: number;
   aliases: string[];
   reviews: ReviewModel[];
+  medias: MediaModel[];
+  places: PlaceModel[];
 };

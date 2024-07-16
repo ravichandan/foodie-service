@@ -56,7 +56,7 @@ class ItemController {
 
   //get all items by a matching name
   getItemsByName = async (args : {itemName: string, postcode?: string, city?: string, suburb?: string}, ) => {
-    const items = await itemService.getItemsByName(args);
+    const items = await itemService.getItemsByName2(args);
     const itemResponse = {
       page: 1,
       size: items?.length ?? 0,
@@ -74,6 +74,15 @@ class ItemController {
     const id = req.params.itemId;
     const item = await itemService.getItem(id);
     res.send(item);
+  };
+
+  //get a single item
+  getPlaceOfItem = async (args: { itemId: string, postcode?: string; city?: string, suburb?: string }) => {
+    //get id from the parameter
+    // TODO take pagination params and return the data accordingly.
+    // const id = req.params.itemId;
+    const item = await itemService.getPlacesOfAnItem(args);
+    return item;
   };
 
   //get a single item

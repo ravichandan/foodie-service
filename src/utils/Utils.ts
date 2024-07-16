@@ -184,6 +184,8 @@ export const itemToItemModel = (pi: IPlaceItem): ItemModel | undefined => {
 		cuisine: pi.item?.cuisines?.join(','),
 		presentation: pi.rating?.presentation ?? 0,
 		noOfReviews: pi.rating?.noOfReviews ?? 0,
+		medias: mediasToMediaModels(pi.medias),
+		places: [placeToPlaceModel(pi.place)]
 	};
 };
 

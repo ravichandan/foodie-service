@@ -200,30 +200,38 @@ class PlaceController {
     res.send('place deleted');
   };
 
-  addItem = async (data: IPlaceItem) => {
+  addItem = async (args:{ placeId: string, item: any }) => {
     log.info('Received request in PlaceController->addItem() to add the given Item to the given place');
     //data to be saved in database
     // log.debug('Adding correlationId into the request body');
 
 
     // create PlaceItem mapping
-    const place: IPlace | undefined = await placeService.getPlace(data.place?.id);
+    const place: IPlace | undefined = await placeService.getPlace(args.placeId);
     if (!place) {
-      log.error('No Place found with the given placeId: ', data.place?.id);
-      throw new HTTP404Error(`Place not found with given id: ${data.place?.id}`)
+      log.error('No Place found with the given placeId: ', args.placeId);
+      throw new HTTP404Error(`Place not found with given id: ${args.placeId}`)
     }
 
     let item;
-    if (!data.aliases) {
-      log.trace('Looking for known \'Item\'s from aliases: ', data.aliases);
-      item = await itemService.getItemByAliases(data.aliases);
-      data.item = item ?? {
-        aliases: [data.name],
-        name: data.name,
-        category: data.category,
-        cuisines: data.cuisines,
-        description: data.description,
-        media: data.medias?.[0]
+    if(args.item.id){
+      log.trace('looking for item with id: ', args.item.id);
+      item = await itemService.getItem(args.item.id);
+    }
+    if (!item && !args.item.aliases) {
+      log.trace('Looking for known \'Item\'s from aliases: ', args.item.aliases);
+      item = await itemService.getItemByNameOrAliases({ name: args.item.name, aliases: args.item.aliases });
+    }
+    if(!item ){
+      log.trace('Preparing the item data to create a new one');
+      // item = await itemService.getItemByAliases(data.aliases);
+      args.item = {
+        aliases: [args.item.name],
+        name: args.item.name,
+        category: args.item.category,
+        cuisines: args.item.cuisines,
+        description: args.item.description,
+        media: args.item.medias?.[0]
       } as IItem;
       // log.error('Item reference is mandatory');
       // throw new HTTP400Error('Item reference is mandatory');
@@ -238,23 +246,27 @@ class PlaceController {
     log.trace('Validating Item reference in the request ');
     try {
       let item: IItem | undefined;
-      if (!data.item?.id) {
+      if (!item && !args.item?.id) {
         log.info('Item is not found in inventory, creating it');
-        item = await itemService.createItem(data.item);
+        item = await itemService.createItem(args.item);
         log.trace('Item created successfully in the inventory');
       // } else {
       //   item = await itemService.getItem(data.item.id);
       //   log.trace('Item found with id: ', data.item.id);
       }
-      log.trace('Looking for the place with id: ', data.place?.id);
+      else {
+        log.error('Invalid item reference in the request');
+        throw new HTTP400Error('Invalid item reference in the request');
+      }
+      log.trace('Looking for the place with id: ', args.placeId);
 
       if (place && item) {
         const placeItemData: IPlaceItem = {
           place: place,
           item: item,
-          name: data.name,
-          description: data.description,
-          medias: data.medias? [...data.medias]: undefined,
+          name: args.item.name,
+          description: args.item.description,
+          medias: args.item.medias? [...args.item.medias]: undefined,
         } as IPlaceItem;
         log.trace('Adding PlaceItem document with data: ', placeItemData);
         await placeItemService.addPlaceItem(placeItemData);

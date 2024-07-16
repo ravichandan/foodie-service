@@ -4,8 +4,9 @@ import { getLogger } from '../utils/Utils';
 import { IPlaceItem, PlaceItem } from '../entities/placeItem';
 import { Review } from '../entities/review';
 import { PlaceItemRating } from '../entities/placeItemRating';
-import { Media } from '../entities/media';
 import { Place } from '../entities/place';
+import { ItemModel } from '../models/itemModel';
+import { HTTP400Error } from '../utils/error4xx';
 // import { Query } from 'mongoose';
 
 const log: Logger = getLogger('item.service');
@@ -71,22 +72,31 @@ export class ItemService {
 	}
 
 	//get a single item
-	async getItemByAliases(aliases: string[]): Promise<IItem | undefined> {
+	async getItemByNameOrAliases(args: { name: string,aliases: string[]}): Promise<IItem | undefined> {
+		const {name, aliases} = {...args};
 		log.debug('Received request to get an item with aliases: ', aliases);
+		const q: any = {};
+		if (!!args.name) {
+			q['name'] = { $in: args.name}
+		}
+		if (!!args.aliases) {
+			q['aliases'] = { $in: args.aliases}
+		}
+
 		try {
-			const item = await Item.findOne({ aliases: { $in: aliases } });
+			const item = await Item.findOne({ ...Object.entries(q).map(entry => ({ $eq: entry })) });
 			if (!item) {
-				log.trace('Item not found by given aliases');
+				log.trace('Item not found by given name or aliases');
 				return undefined;
 			}
 			return item;
 		} catch (error) {
-			log.error('Error while doing getItem with given aliases: %s. Error: ', aliases, error);
+			log.error('Error while doing getItem with given name or aliases: %s. Error: ', aliases, error);
 			throw error;
 		}
 	}
 
-	async getItemsByName(args: { itemName: string, postcode?: string; city?: string, suburb?: string }) {
+	async getItemsByName2(args: { itemName: string, postcode?: string; city?: string, suburb?: string }) {
 		log.debug('Received request to get all items with args: ', args);
 		if (!args.postcode && !args.city && !args.suburb) {
 			log.error('Either postcode or city or suburb is mandatory to search items by name');
@@ -102,28 +112,167 @@ export class ItemService {
 		if (!!args.suburb) {
 			q['$address.suburb'] = args.suburb;
 		}
-
 		try {
-			const items: IPlaceItem[] = await PlaceItem.aggregate([
+			const items: ItemModel[] = await Item.aggregate([
+
+					{
+						$match: {
+							$or: [
+								{ name: { $regex: args.itemName, $options: 'i' } },
+								{ aliases: { $in: [new RegExp(`${args.itemName}`, 'i')] } },
+							],
+						},
+					},
+					{
+						$lookup: {
+							from: PlaceItem.collection.collectionName,
+							localField: '_id', // field of reference to PlaceItem
+							foreignField: 'item',
+							as: 'place_items',
+						},
+					},
+
+					{ $unwind: '$place_items' },
+					{
+						$lookup: {
+							from: Place.collection.collectionName,
+							localField: 'place_items.place', // field of reference to Place schema
+							foreignField: '_id',
+							pipeline: [
+								{
+									$match: {
+										$expr: { $or: [...Object.entries(q).map(entry => ({ $eq: entry }))] },
+									},
+								},
+							],
+							as: 'places',
+						},
+					},
+					{ $unwind: '$places' },
+					{
+						$addFields: {
+							'places.items.description': '$place_items.description',
+							'places.items.name': '$place_items.name',
+							'places.items.id': '$place_items.id',
+							// {
+							// $arrayElemAt: [
+							// 	'$place_items.name',
+							// 0
+							// ]
+							// },
+							// "items.itemColor": {
+							// 	$arrayElemAt: [
+							// 		"$itemColor.name",
+							// 		0
+							// 	]
+							// }
+						},
+					},
+					{
+						$group:
+							{
+								_id: '$_id',
+								places: {
+									$push: '$places',
+								},
+								medias: {
+									$push: '$media',
+								},
+								cuisines: {
+									$first: '$cuisines',
+								},
+								category: {
+									$first: '$category',
+								},
+								name: {
+									$first: '$name',
+								},
+								description: {
+									$first: '$description',
+								},
+							},
+					},
+					{
+						$project: {
+							id: '$_id',
+							_id: 0,
+							places: 1,
+							medias: 1,
+							cuisines: 1,
+							category: 1,
+							name: 1,
+							description: 1,
+						},
+					},
+				],
+			);
+			log.trace('getItemsByName2:: , items:: ', items);
+			return items;
+		} catch (error: any) {
+			log.error('in error in getItemsbyName2, err:: ', error);
+		}
+	}
+
+	async getPlacesOfAnItem(args: { itemId: string, postcode?: string; city?: string, suburb?: string, size?: number, page?: number }) {
+		log.debug('Received request to get all places of a given item with args: ', args);
+		if (!args.postcode && !args.city && !args.suburb) {
+			log.error('Either postcode or city or suburb is mandatory to search items by id');
+			throw new HTTP400Error('Either postcode or city or suburb is mandatory to search items by id');
+		}
+		args.size = args.size ?? 10;
+		args.page = args.page ?? 1;
+		const q: any = {};
+		if (!!args.postcode) {
+			q['$address.postcode'] = +args.postcode;
+		}
+		if (!!args.city) {
+			q['$address.city'] = args.city;
+		}
+		if (!!args.suburb) {
+			q['$address.suburb'] = args.suburb;
+		}
+		try {
+			const items: ItemModel[] = await PlaceItem.aggregate([
+				{
+					$match: {
+						$expr: {
+							$eq: [{ $toObjectId: args.itemId }, "$item"]
+						}
+					},
+				},
+				{
+					$lookup: {
+						from: Place.collection.collectionName,
+						localField: 'place', // field of reference to Place schema
+						foreignField: '_id',
+						pipeline: [
+							{
+								$match: {
+									$expr: { $or: [...Object.entries(q).map(entry => ({ $eq: entry }))] },
+								},
+							},
+						],
+						as: 'place',
+					},
+				},
 				{
 					$lookup: {
 						from: Review.collection.collectionName,
 						localField: '_id', // field of reference to PlaceItem
 						foreignField: 'item',
-						// let: {
-						// 	pl: "$place"
-						// },
 						pipeline: [
 							{
-							// 	$match: {
-							// 		$expr: {
-							// 				$eq: [ "$taste", 0.05 ]
-							// 		}
-							// 	}
-							// }, {
+								// 	$match: {
+								// 		$expr: {
+								// 				$eq: [ "$taste", 0.05 ]
+								// 		}
+								// 	}
+								// }, {
 								'$sort': {  'createdAt': -1 }
 							}, {
-								'$limit': 20
+								'$limit': args.size
+							}, {
+								'$skip': (args.page - 1)  * args.size
 							},
 						],
 						as: 'reviews',
@@ -134,97 +283,113 @@ export class ItemService {
 						from: PlaceItemRating.collection.collectionName,
 						localField: '_id', // field of reference to PlaceItem
 						foreignField: 'item',
-						// let: {
-						// 	place: "$place"
-						// },
-						pipeline: [
-							{
-							// 	$match: {
-							// 		$expr: {
-							// 			$eq: [ "$place", "$$place" ]
-							// 		}
-							// 	}
-							// }, {
-								'$sort': {  'createdAt': -1 }
-							}, {
-								'$limit': 20
-							},
-						],
-						as: 'ratings',
+						as: 'rating',
 					},
-				},
-				{
-						$lookup: {
-							from: Item.collection.collectionName,
-							localField: 'item', // field of reference to Item schema
-							foreignField: '_id',
-							pipeline: [
-								// {
-								// 	$lookup: {
-								// 		from: Media.collection.collectionName,
-								// 		localField: 'media', // field of reference to Place schema
-								// 		foreignField: '_id',
-								// 		as: 'media'
-								// 	}
-								// },
-								{ $project: { _id: 0, createdAt: 0, modifiedAt: 0 } }
-
-							],
-							as: 'item'
-						}
 				},
 				{
 					$lookup: {
-						from: Place.collection.collectionName,
-						localField: 'place', // field of reference to Place schema
+						from: Item.collection.collectionName,
+						localField: 'item',
 						foreignField: '_id',
-						pipeline: [
-							{
-								$match: {
-									$expr:{$or: [...Object.entries(q).map(entry => ({$eq: entry}))] },
-								}
-							},
-						],
-						as: 'places'
-					}
-				},
-				{
-					$match: {
-						$or: [
-							{ name: { $regex: args.itemName, $options: 'i' } },
-							{ 'item.aliases': { $in: [new RegExp(`${args.itemName}`, 'i')] } },
-						],
+						as: 'item',
 					},
 				},
 				{
-					$project: {
-
-						id:'$_id',
-						_id: 0,
-						name: 1							,
-						details:{
+					$set: {
+						'item.category': '$item.category',
+						'item.cuisine': '$item.cuisine',
+						'item.name': '$name',
+						'item.description': '$description',
+						'item.aliases': '$aliases',
+						'item.taste': { $first: '$rating.taste' },
+						'item.presentation': { $first: '$rating.presentation'},
+						'item.noOfReviews': { $first: '$rating.noOfReviews'},
+						'item.reviews': '$reviews',
+						'item.id': '$_id',
+					}
+				},
+				{
+					$set: {
+						'place.items': '$item',
+						'place.service': { $first: '$rating.service'},
+						'place.ambience': { $first: '$rating.ambience'},
+						'place.noOfReviews': { $first: '$rating.noOfReviews'},
+					}
+				},
+				{
+					$group: {
+						_id: '$_id',
+						places: {
+							// $first: {
+								$first: '$place' ,
+							// } ,
+						},
+						medias: {
+							$push: '$item.media'
+						} ,
+						taste: {
+							$first: {
+								$first: '$taste',
+							},
+						},
+						presentation: {
+							$first: {
+								$first: '$presentation',
+							},
+						},
+						service: {
+							$first: {
+								$first: '$service',
+							},
+						},
+						ambience: {
+							$first: {
+								$first: '$ambience'
+							},
+						},
+						noOfReviews: {
+							$first: {
+								$first: '$noOfReviews'
+							}
+						},
+						reviews: {
+							$first: '$reviews'
+						},
+						items: {
 							$first: '$item'
 						},
-						// item:1,
-						description: 1,
-						places: 1,
-						reviews: 1,
-						ratings: 1
-					}
-				}
-				]);
-				// .populate({
-				// 	path: 'reviews ratings medias',
-				// 	options: { sort: { createdAt: -1 }, limit: 20 },
-				// });
-			if (!items) {
-				log.trace('Item not found for params: ', args);
-				return undefined;
-			}
-			log.trace('Fetched Items with given params: ' + args + '. items: ', items);
+						name: {
+							$first: '$name'
+						},
+						description: {
+							$first: '$description'
+						}
+					},
+
+				},
+					{
+						$project: {
+							id:  {
+								$first: '$items._id' ,
+							},
+							_id: 0,
+							places: 1,
+							medias: {
+								$first: '$medias'
+							},
+							name: 1,
+							description: 1,
+							// service: 1,
+							// ambience: 1,
+							// reviews: 1,
+						},
+					},
+				],
+			);
+			log.trace('getPlacesOfAnItem:: , items:: ', items);
 			return items;
-		} catch (error) {
-			log.error('Error while doing getItem with params: ' + args + '. Error: ', error);
+		} catch (error: any) {
+			log.error('in error in getPlacesOfAnItem, err:: ', error);
 			throw error;
 		}
 	}

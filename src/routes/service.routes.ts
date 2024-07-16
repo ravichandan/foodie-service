@@ -272,7 +272,7 @@ export default [
 					id: req.params.placeId
 				}
 				try {
-					const item = await placeController.addItem(req.body);
+					const item = await placeController.addItem({ placeId: req.params.placeId, item: req.body });
 					// res.send({...req.params,...req.query});
 					log.debug('Returning the fetched placeResponse: ', item);
 					res.send(item);
@@ -452,19 +452,35 @@ export default [
 	},
 
 	{
-		path: '/items/:itemId', // Get an item by id. TODO why is it needed?
+		path: '/items/:itemId', // Get an item by id.
 		method: 'get',
 		validators: [checkSchema(FieldConfigs.getItemSchemaConfig)],
 		handler: async (req: Request, res: Response) => {
+			log.trace('123');
 			const err = validationResult(req);
 			if (!err.isEmpty()) {
 				log.error('Bad Request', err.mapped());
 				res.status(400).send(err.mapped());
 			} else {
 				// No errors, pass req and res on to your controller
-				log.debug('in GET /items/:itemId, processing request, req.body:: ', req.body);
-				await itemController.getAItem(req, res);
-				log.debug('Done getting an Item by given id');
+				log.debug('in GET /items/:itemId, processing request.');
+				const { itemId, postcode, suburb, city } = {
+					...req.params,
+					...req.query,
+				} as any;
+				// await itemController.getAItem(req, res);
+			try{
+				const item = await itemController.getPlaceOfItem({ itemId, postcode, city, suburb });
+				res.send(item);
+			} catch (error: any) {
+				log.error('GET /items/:itemId resulted in Error', error);
+				if (error instanceof HTTPClientError) {
+					res.status(error.statusCode).send(error);
+				} else {
+					res.status(500).send({message: error.message });
+				}
+			}
+			log.debug('Done fetching places of item with given itemId');
 			}
 		},
 	},
