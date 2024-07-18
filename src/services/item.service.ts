@@ -7,6 +7,7 @@ import { PlaceItemRating } from '../entities/placeItemRating';
 import { Place } from '../entities/place';
 import { ItemModel } from '../models/itemModel';
 import { HTTP400Error } from '../utils/error4xx';
+import { Customer } from '../entities/customer';
 // import { Query } from 'mongoose';
 
 const log: Logger = getLogger('item.service');
@@ -72,15 +73,15 @@ export class ItemService {
 	}
 
 	//get a single item
-	async getItemByNameOrAliases(args: { name: string,aliases: string[]}): Promise<IItem | undefined> {
-		const {name, aliases} = {...args};
+	async getItemByNameOrAliases(args: { name: string, aliases: string[] }): Promise<IItem | undefined> {
+		const { name, aliases } = { ...args };
 		log.debug('Received request to get an item with aliases: ', aliases);
 		const q: any = {};
 		if (!!args.name) {
-			q['name'] = { $in: args.name}
+			q['name'] = { $in: args.name };
 		}
 		if (!!args.aliases) {
-			q['aliases'] = { $in: args.aliases}
+			q['aliases'] = { $in: args.aliases };
 		}
 
 		try {
@@ -213,7 +214,14 @@ export class ItemService {
 		}
 	}
 
-	async getPlacesOfAnItem(args: { itemId: string, postcode?: string; city?: string, suburb?: string, size?: number, page?: number }) {
+	async getPlacesOfAnItem(args: {
+		itemId: string,
+		postcode?: string;
+		city?: string,
+		suburb?: string,
+		size?: number,
+		page?: number
+	}) {
 		log.debug('Received request to get all places of a given item with args: ', args);
 		if (!args.postcode && !args.city && !args.suburb) {
 			log.error('Either postcode or city or suburb is mandatory to search items by id');
@@ -233,151 +241,178 @@ export class ItemService {
 		}
 		try {
 			const items: ItemModel[] = await PlaceItem.aggregate([
-				{
-					$match: {
-						$expr: {
-							$eq: [{ $toObjectId: args.itemId }, "$item"]
-						}
+					{
+						$match: {
+							$expr: {
+								$eq: [{ $toObjectId: args.itemId }, '$item'],
+							},
+						},
 					},
-				},
-				{
-					$lookup: {
-						from: Place.collection.collectionName,
-						localField: 'place', // field of reference to Place schema
-						foreignField: '_id',
-						pipeline: [
-							{
-								$match: {
-									$expr: { $or: [...Object.entries(q).map(entry => ({ $eq: entry }))] },
+					{
+						$lookup: {
+							from: Place.collection.collectionName,
+							localField: 'place', // field of reference to Place schema
+							foreignField: '_id',
+							pipeline: [
+								{
+									$match: {
+										$expr: { $or: [...Object.entries(q).map(entry => ({ $eq: entry }))] },
+									},
+								},
+							],
+							as: 'place',
+						},
+					},
+					{
+						$lookup: {
+							from: Review.collection.collectionName,
+							localField: '_id', // field of reference to PlaceItem
+							foreignField: 'item',
+							pipeline: [
+								{
+									$lookup: {
+										from: Customer.collection.collectionName,
+										localField: 'customer', // field of reference to Place schema
+										foreignField: '_id',
+										as: 'customer',
+									},
+								},
+								{
+									$project: {
+										customer: { $first: '$customer' },
+										_id: 0,
+										id: '$_id',
+										taste: 1,
+										presentation: 1,
+										service: 1,
+										ambience: 1,
+										description: 1,
+										helpful: 1,
+										notHelpful: 1,
+										item: 1,
+										place: 1,
+										medias: 1,
+										children: 1,
+										parent: 1,
+
+										// service: 1,
+										// ambience: 1,
+										// reviews: 1,
+									},
+								},
+								{
+									'$sort': { 'createdAt': -1 },
+								}, {
+									'$limit': args.size,
+								}, {
+									'$skip': (args.page - 1) * args.size,
+								},
+							],
+							as: 'reviews',
+						},
+					},
+					{
+						$lookup: {
+							from: PlaceItemRating.collection.collectionName,
+							localField: '_id', // field of reference to PlaceItem
+							foreignField: 'item',
+							as: 'rating',
+						},
+					},
+					{
+						$lookup: {
+							from: Item.collection.collectionName,
+							localField: 'item',
+							foreignField: '_id',
+							pipeline: [],
+							as: 'item',
+						},
+					},
+					{
+						$set: {
+							'item.category': '$item.category',
+							'item.cuisine': '$item.cuisine',
+							'item.name': '$name',
+							'item.price': '$price',
+							'item.description': '$description',
+							'item.aliases': '$aliases',
+							'item.taste': { $first: '$rating.taste' },
+							'item.presentation': { $first: '$rating.presentation' },
+							'item.noOfReviews': { $first: '$rating.noOfReviews' },
+							'item.reviews': '$reviews',
+							'item.id': '$_id',
+						},
+					},
+					{
+						$set: {
+							'place.id': { $first: '$place._id' },
+							'place.items': '$item',
+							'place.name': { $first: '$place.placeName' },
+							'place.service': { $first: '$rating.service' },
+							'place.ambience': { $first: '$rating.ambience' },
+							'place.noOfReviews': { $first: '$rating.noOfReviews' },
+						},
+					},
+					{
+						$group: {
+							_id: '$_id',
+							places: {
+								// $first: {
+								$first: '$place',
+								// } ,
+							},
+							medias: {
+								$push: '$item.media',
+							},
+							taste: {
+								$first: {
+									$first: '$taste',
 								},
 							},
-						],
-						as: 'place',
-					},
-				},
-				{
-					$lookup: {
-						from: Review.collection.collectionName,
-						localField: '_id', // field of reference to PlaceItem
-						foreignField: 'item',
-						pipeline: [
-							{
-								// 	$match: {
-								// 		$expr: {
-								// 				$eq: [ "$taste", 0.05 ]
-								// 		}
-								// 	}
-								// }, {
-								'$sort': {  'createdAt': -1 }
-							}, {
-								'$limit': args.size
-							}, {
-								'$skip': (args.page - 1)  * args.size
+							presentation: {
+								$first: {
+									$first: '$presentation',
+								},
 							},
-						],
-						as: 'reviews',
-					},
-				},
-				{
-					$lookup: {
-						from: PlaceItemRating.collection.collectionName,
-						localField: '_id', // field of reference to PlaceItem
-						foreignField: 'item',
-						as: 'rating',
-					},
-				},
-				{
-					$lookup: {
-						from: Item.collection.collectionName,
-						localField: 'item',
-						foreignField: '_id',
-						as: 'item',
-					},
-				},
-				{
-					$set: {
-						'item.category': '$item.category',
-						'item.cuisine': '$item.cuisine',
-						'item.name': '$name',
-						'item.description': '$description',
-						'item.aliases': '$aliases',
-						'item.taste': { $first: '$rating.taste' },
-						'item.presentation': { $first: '$rating.presentation'},
-						'item.noOfReviews': { $first: '$rating.noOfReviews'},
-						'item.reviews': '$reviews',
-						'item.id': '$_id',
-					}
-				},
-				{
-					$set: {
-						'place.id': { $first: '$place._id'},
-						'place.items': '$item',
-						'place.name': { $first: '$place.placeName'},
-						'place.service': { $first: '$rating.service'},
-						'place.ambience': { $first: '$rating.ambience'},
-						'place.noOfReviews': { $first: '$rating.noOfReviews'},
-					}
-				},
-				{
-					$group: {
-						_id: '$_id',
-						places: {
-							// $first: {
-								$first: '$place' ,
-							// } ,
-						},
-						medias: {
-							$push: '$item.media'
-						} ,
-						taste: {
-							$first: {
-								$first: '$taste',
+							service: {
+								$first: {
+									$first: '$service',
+								},
+							},
+							ambience: {
+								$first: {
+									$first: '$ambience',
+								},
+							},
+							noOfReviews: {
+								$first: {
+									$first: '$noOfReviews',
+								},
+							},
+							reviews: {
+								$first: '$reviews',
+							},
+							items: {
+								$first: '$item',
+							},
+							name: {
+								$first: '$name',
+							},
+							description: {
+								$first: '$description',
 							},
 						},
-						presentation: {
-							$first: {
-								$first: '$presentation',
-							},
-						},
-						service: {
-							$first: {
-								$first: '$service',
-							},
-						},
-						ambience: {
-							$first: {
-								$first: '$ambience'
-							},
-						},
-						noOfReviews: {
-							$first: {
-								$first: '$noOfReviews'
-							}
-						},
-						reviews: {
-							$first: '$reviews'
-						},
-						items: {
-							$first: '$item'
-						},
-						name: {
-							$first: '$name'
-						},
-						description: {
-							$first: '$description'
-						}
-					},
 
-				},
+					},
 					{
 						$project: {
-							id:  {
-								$first: '$items._id' ,
+							id: {
+								$first: '$items._id',
 							},
 							_id: 0,
 							places: 1,
 							medias: {
-								$first: '$medias'
+								$first: '$medias',
 							},
 							name: 1,
 							description: 1,
@@ -389,6 +424,61 @@ export class ItemService {
 				],
 			);
 			log.trace('getPlacesOfAnItem:: , items:: ', items);
+			const noOfReviewPhotos = await PlaceItem.aggregate([
+					{
+						$match: {
+							$expr: {
+								$eq: [{ $toObjectId: args.itemId }, '$item'],
+							},
+						},
+					},
+					/**
+					 * from: The target collection.
+					 * localField: The local join field.
+					 * foreignField: The target join field.
+					 * as: The name for the results.
+					 * pipeline: Optional pipeline to run on the foreign collection.
+					 * let: Optional variables to use in the pipeline field stages.
+					 */
+					{
+						$lookup: {
+							from: 'reviews',
+							localField: '_id',
+							foreignField: 'item',
+							as: 'reviews',
+						},
+					},
+
+					{
+						$unwind: {
+							path: '$reviews',
+							preserveNullAndEmptyArrays: false,
+						},
+					},
+					{
+						$match: {
+							$expr: {
+								$gt: [{ $size: '$reviews.medias' }, 0],
+							},
+						},
+					},
+				{
+					$group: {
+							_id: '$place',
+							"reviews": {
+								$push: '$reviews'
+							}
+						}
+				},
+					{
+						$project: {
+							// _id: 0,
+							medias_count: { $size: '$reviews.medias' },
+						},
+					},
+				],
+			);
+			log.trace('making test for noOfReviewPhotos:: ', noOfReviewPhotos);
 			return items;
 		} catch (error: any) {
 			log.error('in error in getPlacesOfAnItem, err:: ', error);
