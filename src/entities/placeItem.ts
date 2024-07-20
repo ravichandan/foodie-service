@@ -128,15 +128,15 @@ const placeItemSchema: Schema<IPlaceItem> = new Schema<IPlaceItem>(
 
 placeItemSchema.virtual('reviews', {
   ref: 'Review',
-  localField: 'item',
-  foreignField: 'item',
+  localField: '_id',
+  foreignField: 'placeItem',
   match: (pi: IPlaceItem) => ({ place: pi.place }),
 });
 
 placeItemSchema.virtual('rating', {
   ref: 'Place_Item_Rating',
   localField: 'item',
-  foreignField: 'item',
+  foreignField: 'placeItem',
   match: (pi: IPlaceItem) => ({ place: pi.place }),
 
   // match: { archived: false } // match option with basic query selector

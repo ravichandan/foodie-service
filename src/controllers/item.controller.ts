@@ -32,7 +32,7 @@ class ItemController {
       const item: IItem | null | undefined = await itemService.createItem(data);
       log.trace('Fetching Media document with correlationId: ', item.correlationId);
       const media: IMedia | null = item.media ? await mediaService.getMedia({ id: item.media?.id }) : null;
-      !!media && (media.item = item.id) && media?.save();
+      !!media && (media.placeItem = item.id) && media?.save();
 
       if (!item) {
         log.info('Item not created due to previous errors, returning 404');
@@ -77,20 +77,27 @@ class ItemController {
   };
 
   //get a single item
-  getPlaceOfItem = async (args: { itemId: string, postcode?: string; city?: string, suburb?: string }) => {
+  getPlacesOfItem = async (args: { itemId: string, itemName?: string, postcode?: string; city?: string, suburb?: string }) => {
     //get id from the parameter
     // TODO take pagination params and return the data accordingly.
     // const id = req.params.itemId;
-    const item = await itemService.getPlacesOfAnItem(args);
-    return item;
+    const items = await placeItemService.getPlacesOfAnItem2(args);
+    const itemResponse = {
+      page: 1,
+      size: items?.length ?? 0,
+      items: items//!!items? itemsToItemModels(items): [],
+      // itemsOriginal: items
+    }
+    return itemResponse;
+    // return item;
   };
 
   //get a single item
-  getAItemInAPlace = async (args : {placeId: string, itemId: string}) => {
+  getAItemInAPlace = async (args : {placeId?: string, itemId?: string, placeItemId?: string}) => {
     //get id from the parameter
     // TODO take pagination params and return the data accordingly.
-    const { placeId, itemId } = { ...args };
-    const item = await itemService.getAPlaceItem({ placeId, itemId });
+    const { placeId, itemId, placeItemId } = { ...args };
+    const item = await itemService.getAPlaceItem({ placeId, itemId, placeItemId });
     if(!item){
       log.trace('Item not found');
       throw new HTTP404Error(`Item not found in given place`);//: ${placeId}, item: ${itemId} `);

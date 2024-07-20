@@ -104,7 +104,7 @@ export class ReviewService {
     try {
       let review: IReview[] | null;
       if (!!query.placeId && !!query.itemId) {
-        review = await Review.find({ place: { _id: query.placeId }, item: { _id: query.itemId } })
+        review = await Review.find({ place: { _id: query.placeId }, placeItem: { _id: query.itemId } })
           .skip(params.pageSize * (params.pageNumber - 1))
           .limit(params.pageSize)
           .lean()
@@ -166,14 +166,14 @@ export class ReviewService {
           },
         },
       ]);
-      await Review.populate(avgRatings, [{ path: 'place' }, { path: 'item' }]);
+      await Review.populate(avgRatings, [{ path: 'place' }, { path: 'placeItem' }]);
       log.trace('In review.service, updateRating(), calculated rating for last 3 months: ', avgRatings);
       log.debug('Updating PlaceItemRating table with ratings, ', rating?._id);
 
       rating = {
         ...rating,
         place: avgRatings[0].place,
-        item: avgRatings[0].item,
+        placeItem: avgRatings[0].item,
         noOfReviews: avgRatings[0].noOfReviews,
         taste: query.item ? avgRatings[0].avgTaste : null,
         presentation: query.item ? avgRatings[0].avgPresentation : null,

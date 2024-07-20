@@ -10,7 +10,7 @@ import { IPlaceItem } from './placeItem';
 export type IPlaceItemRating = Document & {
   // _id: number;
   place: IPlace;
-  item: IPlaceItem;
+  placeItem: IPlaceItem;
   taste: number;
   presentation: number;
   service: number;
@@ -32,7 +32,7 @@ const placeItemRatingSchema: Schema<IPlaceItemRating> = new Schema<IPlaceItemRat
         // Number,
       ref: 'Place',
     },
-    item: {
+    placeItem: {
       type:
         Schema.Types.ObjectId,
         // Number,

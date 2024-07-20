@@ -45,7 +45,7 @@ export type IPlace = Document & {
 
   // medias of the place given by that Place
   medias: IMedia[];
-  items: IPlaceItem[];
+  placeItems: IPlaceItem[];
   reviews: IReview[];
   ratings: IPlaceItemRating[];
   tags: FriendlyTag[];
@@ -130,7 +130,7 @@ placeSchema.virtual('reviews', {
   // match: { archived: false } // match option with basic query selector
 });
 
-placeSchema.virtual('items', {
+placeSchema.virtual('placeItems', {
   ref: 'Place_Item',
   localField: '_id',
   foreignField: 'place',

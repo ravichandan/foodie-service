@@ -8,7 +8,7 @@ export type IMedia = Document & {
   type: 'image' | 'video' | undefined;
   key: string;
   place: ObjectId;
-  item: ObjectId;
+  placeItem: ObjectId;
   review: ObjectId;
   customer: ObjectId;
   createdAt: Date;
@@ -43,7 +43,7 @@ export const mediaSchema: Schema<IMedia> = new mongoose.Schema<IMedia>(
       ref: 'Place',
     },
 
-    item: {
+    placeItem: {
       type:
         Schema.Types.ObjectId,
         // Number,

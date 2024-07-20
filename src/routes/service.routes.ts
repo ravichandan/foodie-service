@@ -15,7 +15,7 @@ import { HTTP400Error, HTTP404Error } from '../utils/error4xx';
 import { IPlaceItem } from '../entities/placeItem';
 // import { getPopularPlacesAndItems } from '../config/field.config';
 import { HTTPClientError } from '../utils/errorHttp';
-import { getItemsByNameSchemaConfig } from '../config/field.config';
+import { getItemInPlaceByPlaceItemIdSchemaConfig, getItemsByNameSchemaConfig } from '../config/field.config';
 
 const log = getLogger('service.routes');
 export type UploadedFile = {
@@ -308,7 +308,38 @@ export default [
 				const placeId = req.params.placeId;
 				const itemId = req.params.itemId;
 				try {
-					const result: IPlaceItem | undefined = await itemController.getAItemInAPlace({ placeId, itemId });
+					const result: IPlaceItem | undefined = await itemController.getAItemInAPlace({ placeId, itemId, placeItemId: undefined });
+					res.send(result);
+				}  catch (error: unknown) {
+					console.log('error::: ', error);
+					if(error instanceof HTTP404Error) {
+						log.error('Not found error:: ', error);
+						res.status(404).send(error);
+					} else {
+						res.status(500).send(error);
+					}
+				}
+				log.debug('Returning the fetched Place');
+			}
+		},
+	},
+	{
+		path: '/places/items/:placeItemId', // get a single item details from a given place using Place_item id
+		method: 'get',
+		validators: [checkSchema(FieldConfigs.getItemInPlaceByPlaceItemIdSchemaConfig)],
+		handler: async (req: Request, res: Response) => {
+			const err = validationResult(req);
+			if (!err.isEmpty()) {
+				log.error('Bad Request', err.mapped());
+				res.status(401).send(err.mapped());
+			} else {
+				// No errors, pass req and res on to your controller
+				log.debug('in GET /places/items/:placeItemId route handler, processing request, req.params:', req.params);
+				const placeId = req.params.placeId;
+				const itemId = req.params.itemId;
+				const placeItemId = req.params.placeItemId;
+				try {
+					const result: IPlaceItem | undefined = await itemController.getAItemInAPlace({ placeId, itemId,placeItemId });
 					res.send(result);
 				}  catch (error: unknown) {
 					console.log('error::: ', error);
@@ -464,13 +495,13 @@ export default [
 			} else {
 				// No errors, pass req and res on to your controller
 				log.debug('in GET /items/:itemId, processing request.');
-				const { itemId, postcode, suburb, city } = {
+				const { itemId, itemName, postcode, suburb, city } = {
 					...req.params,
 					...req.query,
 				} as any;
 				// await itemController.getAItem(req, res);
 			try{
-				const item = await itemController.getPlaceOfItem({ itemId, postcode, city, suburb });
+				const item = await itemController.getPlacesOfItem({ itemId, itemName, postcode, city, suburb });
 				res.send(item);
 			} catch (error: any) {
 				log.error('GET /items/:itemId resulted in Error', error);

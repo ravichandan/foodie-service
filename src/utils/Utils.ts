@@ -146,7 +146,7 @@ export const placeToPlaceModel = (place: IPlace): PlaceModel => {
 		noOfReviews: place.ratings?.[0]?.noOfReviews ?? 0,
 		description: place.description,
 		id: place._id,
-		items: itemsToItemModels(place.items)?.reduce(
+		items: itemsToItemModels(place.placeItems)?.reduce(
 			(accumulator, value) => ({
 				...accumulator,
 				[value.id]: value,
@@ -209,7 +209,7 @@ export const reviewToReviewModel = (pi: IReview): ReviewModel => {
 		// ambience:pi.ambience,
 		// ...pi.toObject(),
 		place: typeof pi.place === 'number' ? { id: pi.place } : placeToPlaceModel(pi.place as unknown as IPlace),
-		item: typeof pi.item === 'number' ? { id: pi.item } : itemToItemModel(pi.item as unknown as IPlaceItem),
+		item: typeof pi.placeItem === 'number' ? { id: pi.placeItem } : itemToItemModel(pi.placeItem as unknown as IPlaceItem),
 		customerInfo:
 			typeof pi.customer === 'number'
 				? { id: pi.customer }

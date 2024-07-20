@@ -97,6 +97,7 @@ export class ItemService {
 		}
 	}
 
+	// remove this if 3 works
 	async getItemsByName2(args: { itemName: string, postcode?: string; city?: string, suburb?: string }) {
 		log.debug('Received request to get all items with args: ', args);
 		if (!args.postcode && !args.city && !args.suburb) {
@@ -208,14 +209,17 @@ export class ItemService {
 				],
 			);
 			log.trace('getItemsByName2:: , items:: ', items);
+			// this.getItemsByName3(args);
 			return items;
 		} catch (error: any) {
 			log.error('in error in getItemsbyName2, err:: ', error);
 		}
 	}
 
+	// TODO remove this if getPlacesOfAnItem2 works
 	async getPlacesOfAnItem(args: {
 		itemId: string,
+		itemName?: string,
 		postcode?: string;
 		city?: string,
 		suburb?: string,
@@ -267,7 +271,7 @@ export class ItemService {
 						$lookup: {
 							from: Review.collection.collectionName,
 							localField: '_id', // field of reference to PlaceItem
-							foreignField: 'item',
+							foreignField: 'placeItem',
 							pipeline: [
 								{
 									$lookup: {
@@ -315,7 +319,7 @@ export class ItemService {
 						$lookup: {
 							from: PlaceItemRating.collection.collectionName,
 							localField: '_id', // field of reference to PlaceItem
-							foreignField: 'item',
+							foreignField: 'placeItem',
 							as: 'rating',
 						},
 					},
@@ -444,7 +448,7 @@ export class ItemService {
 						$lookup: {
 							from: 'reviews',
 							localField: '_id',
-							foreignField: 'item',
+							foreignField: 'placeItem',
 							as: 'reviews',
 						},
 					},
@@ -487,15 +491,21 @@ export class ItemService {
 	}
 
 	//get a single item
-	async getAPlaceItem(params: { placeId: string; itemId: string }): Promise<IPlaceItem | undefined> {
+	async getAPlaceItem(params: { placeId?: string; itemId?: string, placeItemId?: string }): Promise<IPlaceItem | undefined> {
 		log.debug('Received request to get a item with params: ', params);
 		try {
-			log.debug('PlaceITem:: ', PlaceItem);
-			log.debug('PlaceITem:: ', PlaceItem.find);
-			const item = await PlaceItem.findOne({ place: { _id: params.placeId }, item: { _id: params.itemId } }).populate({
-				path: 'reviews ratings medias',
-				options: { sort: { createdAt: -1 }, limit: 20 },
-			});
+			let item;
+			if(!!params.placeItemId){
+				item = await PlaceItem.findOne({  _id: params.placeItemId }).populate({
+					path: 'reviews ratings medias',
+					options: { sort: { createdAt: -1 }, limit: 20 },
+				});
+			} else if(params.placeId && params.itemId){
+				item = await PlaceItem.findOne({ place: { _id: params.placeId }, item: { _id: params.itemId } }).populate({
+					path: 'reviews ratings medias',
+					options: { sort: { createdAt: -1 }, limit: 20 },
+				});
+			}
 			if (!item) {
 				log.trace('Item not found for params: ', params);
 				return undefined;

@@ -24,7 +24,7 @@ export type IReview = Document & {
   /**
    * Reference of Item entity
    */
-  item: ObjectId;
+  placeItem: ObjectId;
 
   /**
    * Reference of Customer entity
@@ -109,7 +109,7 @@ export const reviewSchema: Schema<IReview> = new Schema<IReview>(
         // Number,
       ref: 'Place',
     },
-    item: {
+    placeItem: {
       required: false,
       type:
         Schema.Types.ObjectId,

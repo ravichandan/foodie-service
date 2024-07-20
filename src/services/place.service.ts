@@ -63,8 +63,8 @@ export class PlaceService {
 											{ placeName: { $regex: params?.placeName, $options: 'i' } },
 											{
 												$or: [
-													{ 'items.name': { $regex: params.itemName, $options: 'i' } },
-													{ 'items.aliases': { $in: [new RegExp(`${params.itemName}`, 'i')] } },
+													{ 'placeItems.name': { $regex: params.itemName, $options: 'i' } },
+													{ 'placeItems.aliases': { $in: [new RegExp(`${params.itemName}`, 'i')] } },
 												],
 											},
 										],
@@ -81,7 +81,7 @@ export class PlaceService {
 			} else {
 				places = await Place.find({})
 					.populate({
-						path: 'items',
+						path: 'placeItems',
 						match: {
 							$or: [
 								{ name: { $regex: params?.itemName, $options: 'i' } },
@@ -147,7 +147,7 @@ export class PlaceService {
 			const place = await Place.findById({ _id: id })
 				.populate({ path: 'reviews ratings', options: { sort: { createdAt: -1 }, perDocumentLimit: 5 } })
 				.populate({
-					path: 'items',
+					path: 'placeItems',
 					// populate: { path: 'medias reviews ratings', options: { sort: { createdAt: -1 }, perDocumentLimit: 5 } },
 				})
 				.lean();
