@@ -196,8 +196,7 @@ export class ItemService {
 					},
 					{
 						$project: {
-							id: '$_id',
-							_id: 0,
+							_id: 1,
 							places: 1,
 							medias: 1,
 							cuisines: 1,
@@ -284,8 +283,7 @@ export class ItemService {
 								{
 									$project: {
 										customer: { $first: '$customer' },
-										_id: 0,
-										id: '$_id',
+										_id: 1,
 										taste: 1,
 										presentation: 1,
 										service: 1,
@@ -410,10 +408,9 @@ export class ItemService {
 					},
 					{
 						$project: {
-							id: {
+							_id: {
 								$first: '$items._id',
 							},
-							_id: 0,
 							places: 1,
 							medias: {
 								$first: '$medias',
@@ -490,19 +487,19 @@ export class ItemService {
 		}
 	}
 
-	//get a single item
+	//get a single item TODO remove this
 	async getAPlaceItem(params: { placeId?: string; itemId?: string, placeItemId?: string }): Promise<IPlaceItem | undefined> {
-		log.debug('Received request to get a item with params: ', params);
+		log.debug('item.service -> getAPlaceItem, received request to get an item with params: ', params);
 		try {
 			let item;
 			if(!!params.placeItemId){
 				item = await PlaceItem.findOne({  _id: params.placeItemId }).populate({
-					path: 'reviews ratings medias',
+					path: 'reviews rating medias',
 					options: { sort: { createdAt: -1 }, limit: 20 },
 				});
 			} else if(params.placeId && params.itemId){
 				item = await PlaceItem.findOne({ place: { _id: params.placeId }, item: { _id: params.itemId } }).populate({
-					path: 'reviews ratings medias',
+					path: 'reviews rating medias',
 					options: { sort: { createdAt: -1 }, limit: 20 },
 				});
 			}

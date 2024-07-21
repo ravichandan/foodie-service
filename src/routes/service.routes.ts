@@ -16,6 +16,8 @@ import { IPlaceItem } from '../entities/placeItem';
 // import { getPopularPlacesAndItems } from '../config/field.config';
 import { HTTPClientError } from '../utils/errorHttp';
 import { getItemInPlaceByPlaceItemIdSchemaConfig, getItemsByNameSchemaConfig } from '../config/field.config';
+import { ItemResponse } from '../models/itemModel';
+import { PlaceModel, PlaceResponse } from '../models/placeModel';
 
 const log = getLogger('service.routes');
 export type UploadedFile = {
@@ -308,7 +310,7 @@ export default [
 				const placeId = req.params.placeId;
 				const itemId = req.params.itemId;
 				try {
-					const result: IPlaceItem | undefined = await itemController.getAItemInAPlace({ placeId, itemId, placeItemId: undefined });
+					const result: PlaceResponse | undefined = await itemController.getAnItemInAPlace({ placeId, itemId, placeItemId: undefined });
 					res.send(result);
 				}  catch (error: unknown) {
 					console.log('error::: ', error);
@@ -339,7 +341,7 @@ export default [
 				const itemId = req.params.itemId;
 				const placeItemId = req.params.placeItemId;
 				try {
-					const result: IPlaceItem | undefined = await itemController.getAItemInAPlace({ placeId, itemId,placeItemId });
+					const result: PlaceResponse | undefined = await itemController.getAnItemInAPlace({ placeId, itemId,placeItemId });
 					res.send(result);
 				}  catch (error: unknown) {
 					console.log('error::: ', error);

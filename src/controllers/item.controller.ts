@@ -11,6 +11,7 @@ import { IPlace } from '../entities/place';
 import { placeItemService } from '../services/placeItem.service';
 import { HTTP404Error } from '../utils/error4xx';
 import { ItemResponse } from '../models/itemModel';
+import { PlaceResponse } from '../models/placeModel';
 
 const log: Logger = getLogger('item.controller');
 
@@ -93,16 +94,23 @@ class ItemController {
   };
 
   //get a single item
-  getAItemInAPlace = async (args : {placeId?: string, itemId?: string, placeItemId?: string}) => {
+  getAnItemInAPlace = async (args : {placeId?: string, itemId?: string, placeItemId?: string}) => {
     //get id from the parameter
     // TODO take pagination params and return the data accordingly.
     const { placeId, itemId, placeItemId } = { ...args };
-    const item = await itemService.getAPlaceItem({ placeId, itemId, placeItemId });
-    if(!item){
-      log.trace('Item not found');
-      throw new HTTP404Error(`Item not found in given place`);//: ${placeId}, item: ${itemId} `);
+    const places = await placeService.getAnItemInAPlace({ placeId, itemId, placeItemId });
+    const placeResponse: PlaceResponse = {
+      page: 1,
+      size: places?.length ?? 0,
+      places: places ?? []//!!items? itemsToItemModels(items): [],
+      // itemsOriginal: items
     }
-    return item;
+    return placeResponse;
+    // if(!items){
+    //   log.trace('Item not found');
+    //   throw new HTTP404Error(`Item not found in given place`);//: ${placeId}, item: ${itemId} `);
+    // }
+    // return items;
   };
 
   //update item

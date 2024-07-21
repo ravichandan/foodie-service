@@ -3,6 +3,8 @@ import { Logger } from 'log4js';
 import { deduceCityName, getLogger } from '../utils/Utils';
 import { IMedia } from '../entities/media';
 import { PlaceItem } from '../entities/placeItem';
+import { ItemModel } from '../models/itemModel';
+import { PlaceModel } from '../models/placeModel';
 
 const log: Logger = getLogger('place.service');
 
@@ -53,24 +55,24 @@ export class PlaceService {
 							as: 'items',
 						},
 					},
-					{
-						$match:
-							{
-								$and: [
-									{ 'address.postcode': +params?.postcode, },
-									{
-										$or: [
-											{ placeName: { $regex: params?.placeName, $options: 'i' } },
-											{
-												$or: [
-													{ 'placeItems.name': { $regex: params.itemName, $options: 'i' } },
-													{ 'placeItems.aliases': { $in: [new RegExp(`${params.itemName}`, 'i')] } },
-												],
-											},
-										],
-									},
-								],
-							},
+						{
+							$match:
+								{
+									$and: [
+										{ 'address.postcode': +params?.postcode },
+										{
+											$or: [
+												{ placeName: { $regex: params?.placeName, $options: 'i' } },
+												{
+													$or: [
+														{ 'placeItems.name': { $regex: params.itemName, $options: 'i' } },
+														{ 'placeItems.aliases': { $in: [new RegExp(`${params.itemName}`, 'i')] } },
+													],
+												},
+											],
+										},
+									],
+								},
 						},
 					],
 				)
@@ -162,6 +164,145 @@ export class PlaceService {
 			throw error;
 		}
 	}
+
+	async getAnItemInAPlace(params: {
+		placeId?: string;
+		itemId?: string,
+		placeItemId?: string,
+		page?: number,
+		size?: number
+	}): Promise<PlaceModel[] | undefined> {
+		log.debug('item.service -> getAPlaceItem2, received request to get an item with params: ', params);
+		try {
+			let prematch: any;
+			if (!!params.placeItemId) {
+				prematch =
+					[{
+						$lookup: {
+							from: 'place_items',
+							localField: '_id',
+							foreignField: 'place',
+							pipeline: [
+								{
+									$match: {
+										$expr: {
+											$eq: [{ $toObjectId: params.placeItemId }, '$_id'],
+										},
+									},
+								},
+							],
+							as: 'placeItem',
+						},
+					},
+						{
+							$unwind: {
+								path: '$placeItem',
+								preserveNullAndEmptyArrays: true,
+							},
+						}];
+			} else if (params.placeId && params.itemId) {
+				prematch = [{
+					$match: {
+						$expr: {
+							$eq: [{ $toObjectId: params.placeId }, '$_id'],
+						},
+					},
+				},
+					{
+						$lookup: {
+							from: 'place_items',
+							localField: '_id',
+							foreignField: 'place',
+							pipeline: [
+								{
+									$match: {
+										$expr: {
+											$eq: [{ $toObjectId: params.itemId }, '$item'],
+										},
+									},
+								},
+							],
+							as: 'placeItem',
+						},
+					},
+					{
+						$unwind: {
+							path: '$placeItem',
+							preserveNullAndEmptyArrays: true,
+						},
+					}];
+			}
+
+			// $expr: {
+			// 	$eq: [{ $toObjectId: args.itemId }, '$item'],
+			// },
+			const places: PlaceModel[] = await Place.aggregate([
+				...prematch,
+				{
+					$lookup: {
+						from: 'items',
+						localField: 'placeItem.item',
+						foreignField: '_id',
+						as: 'items',
+					},
+				},
+				// {
+				// 	$unwind: {
+				// 		path: '$item',
+				// 		preserveNullAndEmptyArrays: true,
+				// 	},
+				// },
+				{
+					$lookup: {
+						from: 'place_item_ratings',
+						localField: 'placeItem._id',
+						foreignField: 'placeItem',
+						as: 'ratingInfo',
+					},
+				},
+				{
+					$unwind: {
+						path: '$ratingInfo',
+						preserveNullAndEmptyArrays: true,
+					},
+				},
+				{
+					$addFields: {
+						name: '$placeName'
+					}
+				},
+				{
+					$lookup: {
+						from: 'reviews',
+						localField: 'placeItem._id',
+						foreignField: 'placeItem',
+						pipeline: [
+							{ $sort: { createdAt: -1 } },
+							{ $skip: ((params.page ?? 1) - 1) * (params.size ?? 5) },
+							{ $limit: (params.size ?? 5) },
+						],
+						as: 'reviews',
+					},
+				},
+
+				// {
+				// 	$project: {
+				// 		_id: 0
+				// 	}
+				// }
+			]);
+			if (!places) {
+				log.trace('Item not found for params: ', params);
+				return undefined;
+			}
+			log.trace('Fetched an item from place with given params: ' + params + '. places: ', places);
+			return places;
+		} catch (error) {
+			log.error('Error while doing getAnItemInAPlace with params: ' + params + '. Error: ', error);
+			throw error;
+		}
+	}
+
 
 	//update a place
 	async updatePlaceMedias(id: string, media: IMedia): Promise<IPlace | null | undefined> {

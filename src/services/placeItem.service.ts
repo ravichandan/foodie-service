@@ -5,7 +5,8 @@ import { IPlace, Place } from '../entities/place';
 import { PlaceItemRating } from '../entities/placeItemRating';
 import { ItemModel } from '../models/itemModel';
 import { Review } from '../entities/review';
-import { Item } from '../entities/item';
+import { IItem, Item } from '../entities/item';
+import { Customer } from '../entities/customer';
 
 const log: Logger = getLogger('placeItem.service');
 
@@ -92,7 +93,7 @@ export class PlaceItemService {
 									$match: {
 										$expr: { $or: [...Object.entries(q).map(entry => ({ $eq: entry }))] },
 									},
-								},
+								}
 							],
 							as: 'place',
 						},
@@ -112,6 +113,32 @@ export class PlaceItemService {
 							from: Review.collection.collectionName,
 							localField: '_id', // field of reference to Place schema
 							foreignField: 'placeItem',
+							pipeline: [
+								{
+									$lookup: {
+										from: Customer.collection.collectionName,
+										localField: 'customer', // field of reference to Place schema
+										foreignField: '_id',
+										pipeline: [
+											{
+												$project: {
+													_id: 0,
+													'name': 1,
+													'status': 1
+												}
+											}
+										],
+										as: 'customer'
+									},
+
+								},
+								{
+									$unwind:{
+										path: '$customer',
+										preserveNullAndEmptyArrays: true
+										}
+								},
+							],
 							as: 'review',
 						},
 					},
@@ -206,8 +233,7 @@ export class PlaceItemService {
 					},
 					{
 						$project: {
-							_id: 0,
-							id: '$itemId',
+							_id: '$itemId',
 							placeItemId: 1,
 							name: 1,
 							ingredients: 1,
@@ -235,6 +261,116 @@ export class PlaceItemService {
 		}
 	}
 
+
+// TODO remove
+	async getAnItemInAPlace(params: { placeId?: string; itemId?: string, placeItemId?: string, page? : number, size?: number }): Promise<ItemModel[] | undefined> {
+		log.debug('item.service -> getAPlaceItem2, received request to get an item with params: ', params);
+		try {
+			let match: any;
+			if(!!params.placeItemId){
+				match= {
+					$expr: {
+				 		$eq: [{ $toObjectId: params.placeItemId }, '$_id'] ,
+					}
+						// _id: { $toObjectId: params.placeItemId }
+				};
+
+			} else if (params.placeId && params.itemId) {
+				match= {
+					$expr: {
+						$and: [
+							{ $eq: [{ $toObjectId: params.placeId }, '$place'] },
+							{ $eq: [{ $toObjectId: params.itemId }, '$item'] },
+						],
+						// place: { $toObjectId: params.placeId },
+						// item: { $toObjectId: params.itemId }
+					}
+				}
+			}
+
+			// $expr: {
+			// 	$eq: [{ $toObjectId: args.itemId }, '$item'],
+			// },
+			const items: ItemModel[] = await PlaceItem.aggregate([
+				{
+					$match: match
+				},
+				{
+					$lookup: {
+						from: 'places',
+						localField: 'place',
+						foreignField: '_id',
+						as: 'place'
+					}
+				},
+				{
+					$unwind: {
+						path: '$place',
+						preserveNullAndEmptyArrays: false
+					}
+				},
+				{
+					$lookup: {
+						from: "items",
+						localField: "item",
+						foreignField: "_id",
+						as: "item"
+					}
+				},
+				{
+					$unwind: {
+						path: "$item",
+						preserveNullAndEmptyArrays: true
+					}
+				},
+				{
+					$lookup: {
+						from: "place_item_ratings",
+						localField: "_id",
+						foreignField: "placeItem",
+						as: "ratingInfo"
+					}
+				},
+				{
+					$unwind: {
+						path: "$ratingInfo",
+						preserveNullAndEmptyArrays: true
+					}
+				},
+				{
+					$lookup: {
+						from: "reviews",
+						localField: "_id",
+						foreignField: "placeItem",
+						pipeline: [
+							{
+								$sort: {
+									createdAt: -1
+								}
+							},
+							{
+								$skip: ((params.page ?? 1) - 1) * (params.size ?? 5)
+							},
+							{
+								$limit: (params.size ?? 5)
+							}
+
+						],
+						as: "reviews"
+					}
+				}
+			]);
+			if (!items) {
+				log.trace('Item not found for params: ', params);
+				return undefined;
+			}
+			log.trace('Fetched a Item params: ' + params + '. items: ', items);
+			return items;
+		} catch (error) {
+			log.error('Error while doing getItem with params: ' + params + '. Error: ', error);
+			throw error;
+		}
+	}
 
 	//get a single placeItem
 	// not yet used
