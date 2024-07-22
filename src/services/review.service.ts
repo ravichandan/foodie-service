@@ -163,6 +163,20 @@ export class ReviewService {
             noOfReviews: { $sum: 1 },
             place: { $first: '$place' },
             item: { $first: '$item' },
+            noOfReviewPhotos: {
+              $sum: {
+                $cond: [
+                  {
+                    $eq: [
+                      { $type: 'medias' },
+                      'missing',
+                    ],
+                  },
+                  0,
+                  { $size: 'medias' },
+                ],
+              },
+            },
           },
         },
       ]);
@@ -175,6 +189,7 @@ export class ReviewService {
         place: avgRatings[0].place,
         placeItem: avgRatings[0].item,
         noOfReviews: avgRatings[0].noOfReviews,
+        noOfReviewPhotos: avgRatings[0].noOfReviewPhotos,
         taste: query.item ? avgRatings[0].avgTaste : null,
         presentation: query.item ? avgRatings[0].avgPresentation : null,
         service: avgRatings[0].avgService,

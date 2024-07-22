@@ -3,8 +3,8 @@ import { Logger } from 'log4js';
 import { deduceCityName, getLogger } from '../utils/Utils';
 import { IMedia } from '../entities/media';
 import { PlaceItem } from '../entities/placeItem';
-import { ItemModel } from '../models/itemModel';
 import { PlaceModel } from '../models/placeModel';
+import { Customer } from '../entities/customer';
 
 const log: Logger = getLogger('place.service');
 
@@ -190,16 +190,66 @@ export class PlaceService {
 										},
 									},
 								},
+								{
+									$lookup: {
+										from: 'place_item_ratings',
+										localField: '_id',
+										foreignField: 'placeItem',
+										as: 'ratingInfo',
+									},
+								},
+								{
+									$unwind: {
+										path: '$ratingInfo',
+										preserveNullAndEmptyArrays: true,
+									},
+								},
+								{
+									$lookup: {
+										from: 'reviews',
+										localField: '_id',
+										foreignField: 'placeItem',
+										pipeline: [
+											{ $sort: { createdAt: -1 } },
+											{ $skip: ((params.page ?? 1) - 1) * (params.size ?? 5) },
+											{ $limit: (params.size ?? 5) },
+											{
+												$lookup: {
+													from: Customer.collection.collectionName,
+													localField: 'customer', // field of reference to Place schema
+													foreignField: '_id',
+													pipeline:[
+														{
+															$project: {
+																createdAt: 0,
+																modifiedAt: 0,
+															},
+														},
+													],
+													as: 'customer',
+												},
+											},
+											{
+												$unwind: {
+													path: '$customer',
+													preserveNullAndEmptyArrays: true,
+												},
+											},
+										],
+										as: 'reviews',
+									},
+								},
 							],
 							as: 'placeItem',
 						},
 					},
-						{
-							$unwind: {
-								path: '$placeItem',
-								preserveNullAndEmptyArrays: true,
-							},
-						}];
+					{
+						$unwind: {
+							path: '$placeItem',
+							preserveNullAndEmptyArrays: true,
+						},
+					},
+				];
 			} else if (params.placeId && params.itemId) {
 				prematch = [{
 					$match: {
@@ -221,6 +271,55 @@ export class PlaceService {
 										},
 									},
 								},
+								{
+									$lookup: {
+										from: 'place_item_ratings',
+										localField: '_id',
+										foreignField: 'placeItem',
+										as: 'ratingInfo',
+									},
+								},
+								{
+									$unwind: {
+										path: '$ratingInfo',
+										preserveNullAndEmptyArrays: true,
+									},
+								},
+								{
+									$lookup: {
+										from: 'reviews',
+										localField: '_id',
+										foreignField: 'placeItem',
+										pipeline: [
+											{ $sort: { createdAt: -1 } },
+											{ $skip: ((params.page ?? 1) - 1) * (params.size ?? 5) },
+											{ $limit: (params.size ?? 5) },
+											{
+												$lookup: {
+													from: Customer.collection.collectionName,
+													localField: 'customer', // field of reference to Place schema
+													foreignField: '_id',
+													pipeline:[
+														{
+															$project: {
+																createdAt: 0,
+																modifiedAt: 0,
+															},
+														},
+													],
+													as: 'customer',
+												},
+											},
+											{
+												$unwind: {
+													path: '$customer',
+													preserveNullAndEmptyArrays: true,
+												},
+											}
+										],
+										as: 'reviews',
+									},
+								},
 							],
 							as: 'placeItem',
 						},
@@ -230,7 +329,8 @@ export class PlaceService {
 							path: '$placeItem',
 							preserveNullAndEmptyArrays: true,
 						},
-					}];
+					}
+				];
 			}
 
 			// $expr: {
@@ -246,42 +346,9 @@ export class PlaceService {
 						as: 'items',
 					},
 				},
-				// {
-				// 	$unwind: {
-				// 		path: '$item',
-				// 		preserveNullAndEmptyArrays: true,
-				// 	},
-				// },
-				{
-					$lookup: {
-						from: 'place_item_ratings',
-						localField: 'placeItem._id',
-						foreignField: 'placeItem',
-						as: 'ratingInfo',
-					},
-				},
-				{
-					$unwind: {
-						path: '$ratingInfo',
-						preserveNullAndEmptyArrays: true,
-					},
-				},
 				{
 					$addFields: {
-						name: '$placeName'
-					}
-				},
-				{
-					$lookup: {
-						from: 'reviews',
-						localField: 'placeItem._id',
-						foreignField: 'placeItem',
-						pipeline: [
-							{ $sort: { createdAt: -1 } },
-							{ $skip: ((params.page ?? 1) - 1) * (params.size ?? 5) },
-							{ $limit: (params.size ?? 5) },
-						],
-						as: 'reviews',
+						name: '$placeName',
 					},
 				},
 
