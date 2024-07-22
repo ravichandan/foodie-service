@@ -210,6 +210,13 @@ export class PlaceService {
 										localField: '_id',
 										foreignField: 'placeItem',
 										pipeline: [
+											{
+												$match: {
+													$expr: {
+														$ne: [null, '$description'],
+													}
+												}
+											},
 											{ $sort: { createdAt: -1 } },
 											{ $skip: ((params.page ?? 1) - 1) * (params.size ?? 5) },
 											{ $limit: (params.size ?? 5) },
@@ -291,6 +298,13 @@ export class PlaceService {
 										localField: '_id',
 										foreignField: 'placeItem',
 										pipeline: [
+											{
+												$match: {
+													$expr: {
+														$ne: [null, '$description'],
+													}
+												}
+											},
 											{ $sort: { createdAt: -1 } },
 											{ $skip: ((params.page ?? 1) - 1) * (params.size ?? 5) },
 											{ $limit: (params.size ?? 5) },
