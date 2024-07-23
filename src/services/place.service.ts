@@ -242,6 +242,28 @@ export class PlaceService {
 													preserveNullAndEmptyArrays: true,
 												},
 											},
+											// {
+											// 	$lookup: {
+											// 		from: ReviewThread.collection.collectionName,
+											// 		localField: '_id', // field of reference to Place schema
+											// 		foreignField: 'review',
+											// 		pipeline:[
+											// 			{
+											// 				$project: {
+											// 					createdAt: 0,
+											// 					modifiedAt: 0,
+											// 				},
+											// 			},
+											// 		],
+											// 		as: 'info',
+											// 	},
+											// },
+											// {
+											// 	$unwind: {
+											// 		path: '$info',
+											// 		preserveNullAndEmptyArrays: true,
+											// 	},
+											// },
 										],
 										as: 'reviews',
 									},
@@ -329,7 +351,29 @@ export class PlaceService {
 													path: '$customer',
 													preserveNullAndEmptyArrays: true,
 												},
-											}
+											},
+											// {
+											// 	$lookup: {
+											// 		from: ReviewThread.collection.collectionName,
+											// 		localField: '_id', // field of reference to Place schema
+											// 		foreignField: 'review',
+											// 		pipeline:[
+											// 			{
+											// 				$project: {
+											// 					createdAt: 0,
+											// 					modifiedAt: 0,
+											// 				},
+											// 			},
+											// 		],
+											// 		as: 'info',
+											// 	},
+											// },
+											// {
+											// 	$unwind: {
+											// 		path: '$info',
+											// 		preserveNullAndEmptyArrays: true,
+											// 	},
+											// },
 										],
 										as: 'reviews',
 									},
@@ -363,14 +407,26 @@ export class PlaceService {
 				{
 					$addFields: {
 						name: '$placeName',
+						items: {
+							$map: {
+								input: "$items",
+								in: {
+									$mergeObjects: [
+										"$$this",
+										{
+											placeItem: "$placeItem"
+										},
+									],
+								},
+							},
+						},
 					},
 				},
-
-				// {
-				// 	$project: {
-				// 		_id: 0
-				// 	}
-				// }
+				{
+					$project: {
+						placeItem: 0
+					}
+				}
 			]);
 			if (!places) {
 				log.trace('Item not found for params: ', params);

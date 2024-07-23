@@ -65,6 +65,10 @@ export type IReview = Document & {
   notHelpful: number;
 
   /**
+   * Indicates how many total replies on this and its children threads
+   */
+  noOfReplies: number;
+  /**
    * List of customers that liked this review3
    */
   // likedBy: ICustomer[]
@@ -138,6 +142,7 @@ export const reviewSchema: Schema<IReview> = new Schema<IReview>(
 
     helpful: Number,
     notHelpful: Number,
+    noOfReplies: Number,
 
     medias: {
       type: [mediaSchema],

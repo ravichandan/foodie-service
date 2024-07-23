@@ -41,6 +41,11 @@ export type IReviewThread = Document & {
   likedBy: ICustomer[];
 
   /**
+   * List of customers that liked this review3
+   */
+  dislikedBy: ICustomer[];
+
+  /**
    * All the 'replies' given on this review.
    */
   replies: IReviewThread[];
@@ -91,6 +96,13 @@ export const reviewThreadSchema: Schema<IReviewThread> = new Schema<IReviewThrea
     },
 
     likedBy: {
+      type:
+        // Schema.Types.ObjectId
+        [customerSchema],
+      validate: (v: ICustomer) => Array.isArray(v), // && v.length > 0,
+    },
+
+    dislikedBy: {
       type:
         // Schema.Types.ObjectId
         [customerSchema],

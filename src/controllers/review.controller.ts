@@ -155,7 +155,7 @@ class ReviewController {
   //get a single review
   getAReview = async (req: Request, res: Response) => {
     //get id from the parameter
-    const id = +req.params.reviewId;
+    const id = req.params.reviewId;
     const review = await reviewService.getReview({ id: id });
     res.send(review);
   };
@@ -200,6 +200,76 @@ class ReviewController {
     await reviewService.deleteReview(id);
     res.send('review deleted');
   };
+
+  async feedbackReview(customerId: string,reviewId: string, action: string) {
+    log.info('Giving feedback: "%s" for reviewId: %s by customer: ', action, reviewId, customerId);
+
+    const review = await reviewService.getReview({id: reviewId});
+    // const customer = await customer.getReview({id: reviewId});
+    const thread = await reviewThreadService.getThreadByReviewId(reviewId);
+    const cust = await customerService.getCustomer({ id: '' + customerId });
+    if(!cust) return undefined;
+    switch (action?.toLowerCase()) {
+      case 'like': {
+        log.trace('Before adding to likedBy list, make sure the customer is not in disliked list');
+        const index = thread?.dislikedBy.findIndex((l) => {
+          return l.id == cust.id;
+        });
+        if (typeof index === 'number' && index > -1) {
+          // only splice array when item is found
+          review && review.notHelpful--;
+          thread?.dislikedBy.splice(index, 1); // 2nd parameter means remove one item only
+        }
+        log.trace('Liking the review for the customer');
+        thread?.likedBy.push(cust) && await thread?.save();
+
+        break;
+      }
+      case 'unlike': {
+        log.trace('Unliking the review for the customer');
+        const index = thread?.likedBy.findIndex((l) => {
+          return l.id == cust.id;
+        });
+        if (typeof index === 'number' && index > -1) {
+          // only splice array when item is found
+          thread?.likedBy.splice(index, 1); // 2nd parameter means remove one item only
+        }
+        await thread?.save();
+        break;
+      }
+      case 'dislike': {
+        log.trace('make sure the customer is not in likedBy list');
+        const index = thread?.likedBy.findIndex((l) => {
+          return l.id == cust.id;
+        });
+        if (typeof index === 'number' && index > -1) {
+          // only splice array when item is found
+          thread?.likedBy.splice(index, 1); // 2nd parameter means remove one item only
+        }
+        log.trace('Disliking the review for the customer');
+        thread?.dislikedBy.push(cust) && await thread?.save();
+        break;
+      }
+      case 'undislike': {
+        const index = thread?.dislikedBy.findIndex((l) => {
+          return l.id == cust.id;
+        });
+        if (typeof index === 'number' && index > -1) {
+          // only splice array when item is found
+          thread?.dislikedBy.splice(index, 1); // 2nd parameter means remove one item only
+        }
+        await thread?.save();
+        break;
+      }
+    }
+    if(review && thread) {
+      review.helpful = thread.likedBy.length;
+      review.notHelpful = thread.dislikedBy.length;
+      await review.save().then();
+    }
+
+    return review;
+  }
 }
 
 //export class

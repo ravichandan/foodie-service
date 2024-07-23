@@ -18,6 +18,7 @@ import { HTTPClientError } from '../utils/errorHttp';
 import { getItemInPlaceByPlaceItemIdSchemaConfig, getItemsByNameSchemaConfig } from '../config/field.config';
 import { ItemResponse } from '../models/itemModel';
 import { PlaceModel, PlaceResponse } from '../models/placeModel';
+import { config } from '../config/config';
 
 const log = getLogger('service.routes');
 export type UploadedFile = {
@@ -554,14 +555,20 @@ export default [
 		},
 	},
 	{
-		path: '/reviews', // like or update a review
+		path: '/reviews/:reviewId', // like or update a review
 		method: 'put',
-		validators: [checkSchema(FieldConfigs.putReviewSchemaConfig)],
+		validators: [checkSchema(FieldConfigs.verifyCustomerIdHeader), checkSchema(FieldConfigs.putReviewSchemaConfig)],
 		handler: async (req: Request, res: Response) => {
 			const err = validationResult(req);
-			if (!err.isEmpty()) {
+			const action = req.header('x-action');
+			if (!err.isEmpty() && !action) {
 				log.error('Bad Request', err.mapped());
 				res.status(400).send(err.mapped());
+			} else if(!!action) {
+				const reviewId = req.params.reviewId;
+				const customerId= req.header(config.CUSTOMER_HEADER)!;
+				const result = await reviewController.feedbackReview(customerId, reviewId, action);
+				res.status(200).send(result);
 			} else {
 				// No errors, pass req and res on to your controller
 				log.debug('in service.routes, put /reviews/, processing request, req.body:: ', req.body);

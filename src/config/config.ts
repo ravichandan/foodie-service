@@ -15,6 +15,7 @@ export const config = {
     state: "NSW",
     suburbs: ['The Ponds','Quakers Hill', 'Schofields','Parramatta', 'Harris Park', 'Box hill', 'Kellyville', 'Riverstone'],
     city: "Sydney"
-  }]
+  }],
+  CUSTOMER_HEADER: 'CUSTOMER_ID'
 };
 //config connection

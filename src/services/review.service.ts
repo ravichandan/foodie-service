@@ -61,7 +61,7 @@ export class ReviewService {
   }
 
   //get a single review
-  async getReview(query: { id?: number; correlationId?: string }): Promise<IReview | null> {
+  async getReview(query: { id?: string; correlationId?: string }): Promise<IReview | null> {
     if (!query.id && !query.correlationId) {
       log.error('Need either id or correlationId to query a Review document');
       throw new Error('Need either id or correlationId to query a Review document');
