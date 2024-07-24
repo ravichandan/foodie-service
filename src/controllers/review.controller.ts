@@ -204,25 +204,43 @@ class ReviewController {
   async feedbackReview(customerId: string,reviewId: string, action: string) {
     log.info('Giving feedback: "%s" for reviewId: %s by customer: ', action, reviewId, customerId);
 
-    const review = await reviewService.getReview({id: reviewId});
-    // const customer = await customer.getReview({id: reviewId});
-    const thread = await reviewThreadService.getThreadByReviewId(reviewId);
     const cust = await customerService.getCustomer({ id: '' + customerId });
     if(!cust) return undefined;
+
+    const review = await reviewService.getReview({id: reviewId});
+    if(!review) return undefined;
+    // const customer = await customer.getReview({id: reviewId});
+    let thread = await reviewThreadService.getThreadByReviewId(reviewId);
+    if(!thread){
+      try {
+        thread = await reviewThreadService.createThread({
+          message: review.description,
+          media: review.medias[0],
+        } as IReviewThread);
+      } catch ( err: any){
+        log.error(err.message);
+        throw err;
+      }
+    }
+
+
     switch (action?.toLowerCase()) {
       case 'like': {
         log.trace('Before adding to likedBy list, make sure the customer is not in disliked list');
-        const index = thread?.dislikedBy.findIndex((l) => {
+        const index = thread.dislikedBy.findIndex((l) => {
           return l.id == cust.id;
         });
         if (typeof index === 'number' && index > -1) {
           // only splice array when item is found
-          review && review.notHelpful--;
-          thread?.dislikedBy.splice(index, 1); // 2nd parameter means remove one item only
+          thread.dislikedBy.splice(index, 1); // 2nd parameter means remove one item only
         }
-        log.trace('Liking the review for the customer');
-        thread?.likedBy.push(cust) && await thread?.save();
+        log.trace('look if the customer already in the likedBy list');
 
+        const idx = thread?.likedBy.findIndex((c) => (c._id as any).equals(cust._id))
+        if(idx === -1) {
+          log.trace('Liking the review for the customer');
+          thread.likedBy.push({ _id: cust._id, name: cust.name, email: cust.email, status: cust.status, createdAt: cust.createdAt, modifiedAt: cust.modifiedAt } as ICustomer) && await thread.save();
+        }
         break;
       }
       case 'unlike': {
@@ -246,8 +264,11 @@ class ReviewController {
           // only splice array when item is found
           thread?.likedBy.splice(index, 1); // 2nd parameter means remove one item only
         }
-        log.trace('Disliking the review for the customer');
-        thread?.dislikedBy.push(cust) && await thread?.save();
+        const idx = thread?.dislikedBy.findIndex((c) => (c._id as any).equals(cust._id))
+        if(idx === -1) {
+          log.trace('Disliking the review for the customer');
+          thread?.dislikedBy.push({ _id: cust._id, name: cust.name, email: cust.email, status: cust.status, createdAt: cust.createdAt, modifiedAt: cust.modifiedAt } as ICustomer) && await thread?.save();
+        }
         break;
       }
       case 'undislike': {
