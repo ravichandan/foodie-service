@@ -33,7 +33,8 @@ export class PlaceService {
 		postcode?: string;
 		pageSize?: number;
 		pageNumber?: number;
-	}): Promise<IPlace[] | undefined> {
+	}): Promise<IPlace[] | undefined>
+	{
 		log.info('Received request to getPlaces, params: ', params);
 
 		const prams: { pageSize: number; pageNumber: number } = {

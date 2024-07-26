@@ -14,6 +14,7 @@ export type PlaceResponse = {
 // Place model, a View Object to return in API response
 export type PlaceModel = {
   id: string;
+  _id: string;
   name: string;
   address: AddressModel;
   description: string;

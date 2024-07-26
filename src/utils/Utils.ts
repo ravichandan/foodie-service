@@ -142,10 +142,11 @@ export const placeToPlaceModel = (place: IPlace): PlaceModel => {
 	if (!place) return {} as PlaceModel;
 	const model: PlaceModel = {
 		address: { ...place.address },
-		ambience: place.ratings ? place.ratings[0]?.ambience : 0,
+		ambience: place.ratings?.[0]?.ambience ?? 0,
 		noOfReviews: place.ratings?.[0]?.noOfReviews ?? 0,
 		description: place.description,
 		id: place._id,
+		_id: place._id,
 		items: itemsToItemModels(place.placeItems)?.reduce(
 			(accumulator, value) => ({
 				...accumulator,

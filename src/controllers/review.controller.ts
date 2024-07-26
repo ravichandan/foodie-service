@@ -16,6 +16,7 @@ import { IActivity } from '../entities/activity';
 import { activityController } from './activity.controller';
 import { HTTPClientError } from '../utils/errorHttp';
 import { HTTP500Error } from '../utils/error4xx';
+import { PlaceItem } from '../entities/placeItem';
 
 const log: Logger = getLogger('review.controller');
 
@@ -47,45 +48,53 @@ class ReviewController {
       await reviewService.updateRating({ place: parent.place });
 
       log.trace('Splitting place and items separately and creating Child review records');
-      for (const child of data.children) {
-        log.trace('Child record:: ', child);
+      if(data.children){
+        for (const child of data.children) {
+          log.trace('Child record:: ', child);
 
-        child.place = data.place;
-        child.service = null;
-        child.ambience = null;
-        child.helpful = data.helpful;
-        child.notHelpful = data.notHelpful;
-        child.likedBy = data.likedBy;
-        child.customer = data.customer;
-        child.parent = parent.id;
-        points += calculatePoints(child.description ? 'review' : undefined);
-        try {
-          const childRecord = await reviewService.addReview(child);
-          parent.children.push(childRecord);
-        } catch (error: any) {
-          log.error('Failed to add Review for child item, data.item: ' + data.item, error);
-        }
-        for (const m of child.medias) {
-          points += calculatePoints('rate');
-          m.item = child.item;
-          m.place = child.place;
-          m.customerId = child.customer;
-          m.type = isImage(m.url) ? 'image' : isVideo(m.url) ? 'video' : undefined;
-          // m.type = ;
-          points += calculatePoints(m.type);
-          try {
-            await mediaService.updateMedia(m.id, m);
-          } catch (error: any) {
-            log.error('Failed to update media record with media.id: ' + m.id, error);
+          child.place = data.place;
+          child.service = null;
+          child.ambience = null;
+          child.helpful = data.helpful;
+          child.notHelpful = data.notHelpful;
+          child.likedBy = data.likedBy;
+          child.customer = data.customer;
+          child.parent = parent.id;
+          // fetch placeItem record
+          if(!child.placeItem){
+            const placeItem = await PlaceItem.findOne({place: child.place, item: child.item}, '_id', { lean: true});
+            if(!placeItem) {log.error('PlaceItem not found for given place and item'); throw new Error('PlaceItem not found for given place and item')}
+            child.placeItem = placeItem?._id;
           }
-        }
+          points += calculatePoints(child.description ? 'review' : undefined);
+          try {
+            const childRecord = await reviewService.addReview(child);
+            parent.children.push(childRecord);
+          } catch (error: any) {
+            log.error('Failed to add Review for child item, data.item: ' + data.item, error);
+          }
+          for (const m of child.medias) {
+            points += calculatePoints('rate');
+            m.item = child.item;
+            m.place = child.place;
+            m.customerId = child.customer;
+            m.type = isImage(m.url) ? 'image' : isVideo(m.url) ? 'video' : undefined;
+            // m.type = ;
+            points += calculatePoints(m.type);
+            try {
+              await mediaService.updateMedia(m.id, m);
+            } catch (error: any) {
+              log.error('Failed to update media record with media.id: ' + m.id, error);
+            }
+          }
 
-        // update PlaceReviewRating mapping
-        log.trace('Updating rating table for place and item, item: ', child.item?.id);
-        try {
-          await reviewService.updateRating({ place: child.place, item: child.item });
-        } catch (error: any) {
-          log.error('Failed to update rating table with itemId: ' + child.item.id, error);
+          // update PlaceReviewRating mapping
+          log.trace('Updating rating table for place and item, item: ', child.item?.id);
+          try {
+            await reviewService.updateRating({ place: child.place, placeItem: child.placeItem });
+          } catch (error: any) {
+            log.error('Failed to update rating table with itemId: ' + child.item.id, error);
+          }
         }
       }
       for (const m of parent.medias) {
