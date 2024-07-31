@@ -183,9 +183,10 @@ class PlaceController {
         // return;
       }
       log.trace('Place found with given id, place: ', place);
-      const placeModel: PlaceModel = placeToPlaceModel(place);
-      log.trace('converted place to placeModel: ', placeModel);
-      return placeModel;
+      // const placeModel: PlaceModel = placeToPlaceModel(place);
+      // log.trace('converted place to placeModel: ', placeModel);
+      // return placeModel
+    return place;
       // res.send(placeModel);
     // } catch (error: any) {
     //   log.error('getting a place() -> Error while querying for a place with id: ' + id, error);

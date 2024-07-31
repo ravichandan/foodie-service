@@ -169,57 +169,71 @@ export class PlaceService {
 				query = [
 					{
 						$lookup: {
-							from: 'place_items',
-							localField: '_id',
-							foreignField: 'place',
+							from: "place_items",
+							localField: "_id",
+							foreignField: "place",
 							pipeline: [
 								{
 									$lookup: {
-										from: 'items',
-										localField: 'item',
-										foreignField: '_id',
-										pipeline: [
-											{
-												$project: {
-
-													createdAt: 0,
-													modifiedAt: 0,
-												},
-											},
-										],
-										as: 'item',
-									},
+										from: "place_item_ratings",
+										localField: "_id",
+										foreignField: "placeItem",
+										as: "ratingInfo"
+									}
 								},
 								{
 									$unwind: {
-										path: '$item',
-										preserveNullAndEmptyArrays: false,
-									},
-								},
-								{
-									$lookup: {
-										from: 'place_item_ratings',
-										localField: '_id',
-										foreignField: 'placeItem',
-										as: 'ratingInfo',
-									},
-								},
-								{
-									$unwind: {
-										path: '$ratingInfo',
-										preserveNullAndEmptyArrays: false,
-									},
-								},
-								{
-									$set: {
-										placeItem: '$_id',
-										_id: '$item._id'
+										path: "$ratingInfo",
+										preserveNullAndEmptyArrays: false
 									}
 								}
 							],
-							as: 'placeItems',
-						},
-					}];
+							as: "placeItem"
+						}
+					},
+					{
+						$unwind: {
+							path: "$placeItem",
+							preserveNullAndEmptyArrays: false
+						}
+					},
+					{
+						$lookup: {
+							from: "items",
+							localField: "placeItem.item",
+							foreignField: "_id",
+							pipeline: [
+								{
+									$project: {
+										createdAt: 0,
+										modifiedAt: 0
+									}
+								}
+							],
+							as: "items"
+						}
+					},
+					{
+						$set: {
+							items: {
+								$map: {
+									input: "$items",
+									in: {
+										$mergeObjects: [
+											"$$this",
+											{
+												placeItem: "$placeItem"
+											}
+										]
+									}
+								}
+							}
+						}
+					},
+					{
+						$unset:["placeItem"]
+					}
+				];
 			} else if(args.fetchReviews) {
 				query = [
 					{
