@@ -164,12 +164,18 @@ class PlaceController {
 
 
   //get a single place
-  getAPlace = async (placeId: string) => {
+  getAPlace = async (args: {
+    id: string | undefined,
+    fetchMenu?: boolean,
+    fetchReviews?: boolean,
+    size?: number,
+    page?: number
+  }) => {
     //get id from the parameter
-    const id = placeId;
+    const id = args.id;
     log.debug('Querying for a place with id: ', id);
     // try {
-      const place = await placeService.getPlace(id);
+      const place = await placeService.getPlace(args);
       if (!place) {
       log.trace('Place not found with given id');
         throw new HTTP404Error('Place not found with given id');
@@ -178,6 +184,7 @@ class PlaceController {
       }
       log.trace('Place found with given id, place: ', place);
       const placeModel: PlaceModel = placeToPlaceModel(place);
+      log.trace('converted place to placeModel: ', placeModel);
       return placeModel;
       // res.send(placeModel);
     // } catch (error: any) {
@@ -207,7 +214,7 @@ class PlaceController {
 
 
     // create PlaceItem mapping
-    const place: IPlace | undefined = await placeService.getPlace(args.placeId);
+    const place: IPlace | undefined = await placeService.getPlace({ id: args.placeId, fetchReviews: false, fetchMenu: false });
     if (!place) {
       log.error('No Place found with the given placeId: ', args.placeId);
       throw new HTTP404Error(`Place not found with given id: ${args.placeId}`)

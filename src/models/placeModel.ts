@@ -4,6 +4,7 @@ import { ReviewModel } from './reviewModel';
 import { ItemModel } from './itemModel';
 import { OpeningTimes } from '../entities/place';
 import { MediaModel } from './mediaModel';
+import { IPlaceItemRating } from '../entities/placeItemRating';
 
 export type PlaceResponse = {
   page: number;
@@ -13,16 +14,16 @@ export type PlaceResponse = {
 
 // Place model, a View Object to return in API response
 export type PlaceModel = {
-  id: string;
   _id: string;
   name: string;
   address: AddressModel;
   description: string;
-  service: number;
-  ambience: number;
-  noOfReviews: number;
+  // service: number;
+  // ambience: number;
+  // noOfReviews: number;
   medias: MediaModel[];
   reviews: ReviewModel[];
   openingTimes: OpeningTimes;
-  items: { id: ItemModel };
+  placeItems: { id: ItemModel };
+  ratingInfo: IPlaceItemRating;
 };

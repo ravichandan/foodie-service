@@ -3,6 +3,7 @@ import { ReviewModel } from './reviewModel';
 import { CalorieInfo, FoodAllergens } from '../entities/placeItem';
 import { PlaceModel } from './placeModel';
 import { MediaModel } from './mediaModel';
+import { IPlaceItemRating } from '../entities/placeItemRating';
 
 export type ItemResponse = {
   page: number;
@@ -27,4 +28,5 @@ export type ItemModel = {
   reviews: ReviewModel[];
   medias: MediaModel[];
   places: PlaceModel[];
+  ratingInfo: IPlaceItemRating;
 };

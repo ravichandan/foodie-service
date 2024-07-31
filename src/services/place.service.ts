@@ -5,6 +5,8 @@ import { IMedia } from '../entities/media';
 import { PlaceItem } from '../entities/placeItem';
 import { PlaceModel } from '../models/placeModel';
 import { Customer } from '../entities/customer';
+import { HTTP404Error } from '../utils/error4xx';
+import { config } from '../config/config';
 
 const log: Logger = getLogger('place.service');
 
@@ -33,8 +35,7 @@ export class PlaceService {
 		postcode?: string;
 		pageSize?: number;
 		pageNumber?: number;
-	}): Promise<IPlace[] | undefined>
-	{
+	}): Promise<IPlace[] | undefined> {
 		log.info('Received request to getPlaces, params: ', params);
 
 		const prams: { pageSize: number; pageNumber: number } = {
@@ -143,25 +144,200 @@ export class PlaceService {
 	}
 
 	//get a single place
-	async getPlace(id: string): Promise<IPlace | undefined> {
-		if (!id) return undefined;
-		log.debug('Received request to get a place with id: ', id);
+	async getPlace(args: {
+		id: string | undefined,
+		fetchMenu?: boolean,
+		fetchReviews?: boolean,
+		size?: number,
+		page?: number
+	} = { id: undefined, fetchMenu: true, fetchReviews: false, size: config.PAGE_SIZE, page: 1 }): Promise<IPlace | undefined> {
+		if (!args.id) return undefined;
+		log.debug('Received request to get a place with args: ', args);
+		args.size = args.size ?? config.PAGE_SIZE;
+		args.page = args.page ?? 1;
 		try {
-			const place = await Place.findById({ _id: id })
-				.populate({ path: 'reviews ratings', options: { sort: { createdAt: -1 }, perDocumentLimit: 5 } })
-				.populate({
-					path: 'placeItems',
-					// populate: { path: 'medias reviews ratings', options: { sort: { createdAt: -1 }, perDocumentLimit: 5 } },
-				})
-				.lean();
-			if (!place) {
-				log.trace('Place not found for id: ', id);
-				return undefined;
+			// const place = await Place.findById({ _id: args.id })
+			// 	.populate({ path: 'reviews ratings', options: { sort: { createdAt: -1 }, perDocumentLimit: 5 } })
+			// 	.populate({
+			// 		path: 'placeItems',
+			// 		// populate: { path: 'medias reviews ratings', options: { sort: { createdAt: -1 }, perDocumentLimit: 5 } },
+			// 	})
+			// 	.lean();
+
+			let query: any[] = [];
+			if (args.fetchMenu) {
+				query = [
+					{
+						$lookup: {
+							from: 'place_items',
+							localField: '_id',
+							foreignField: 'place',
+							pipeline: [
+								{
+									$lookup: {
+										from: 'items',
+										localField: 'item',
+										foreignField: '_id',
+										pipeline: [
+											{
+												$project: {
+													_id: 0,
+													createdAt: 0,
+													modifiedAt: 0,
+												},
+											},
+										],
+										as: 'item',
+									},
+								},
+								{
+									$unwind: {
+										path: '$item',
+										preserveNullAndEmptyArrays: false,
+									},
+								},
+								{
+									$lookup: {
+										from: 'place_item_ratings',
+										localField: '_id',
+										foreignField: 'placeItem',
+										as: 'ratingInfo',
+									},
+								},
+								{
+									$unwind: {
+										path: '$ratingInfo',
+										preserveNullAndEmptyArrays: false,
+									},
+								},
+							],
+							as: 'placeItems',
+						},
+					}];
+			} else if(args.fetchReviews) {
+				query = [
+					{
+						$lookup: {
+							from: 'place_items',
+							localField: '_id',
+							foreignField: 'place',
+							pipeline: [
+								{
+									$lookup: {
+										from: 'place_item_ratings',
+										localField: '_id',
+										foreignField: 'placeItem',
+										pipeline: [
+											{
+												$project: { _id: 0 },
+											},
+										],
+										as: 'ratingInfo',
+									},
+								},
+								{
+									$unwind: {
+										path: '$ratingInfo',
+										preserveNullAndEmptyArrays: false,
+									},
+								},
+								{
+									$lookup: {
+										from: 'reviews',
+										localField: '_id',
+										foreignField: 'placeItem',
+										pipeline: [
+											{ $match: { $expr: { $ne: ['$description', null] } } },
+											{ $sort: { createdAt: -1 } },
+											{ $limit: args.size },
+											{ $skip: (args.page! - 1) * args.size! },
+										],
+										as: 'reviews',
+									},
+								},
+								{
+									$lookup: {
+										from: 'reviews',
+										localField: '_id',
+										foreignField: 'placeItem',
+										pipeline: [
+											{
+												$unwind: {
+													path: '$medias',
+													preserveNullAndEmptyArrays: false,
+												},
+											},
+											{
+												$group: {
+													_id: null,
+													medias: {
+														$push: '$medias',
+													},
+												},
+											},
+											{
+												$unwind: {
+													path: '$medias',
+													preserveNullAndEmptyArrays: false,
+												},
+											},
+											{
+												$project: {
+													_id: 0,
+													media: '$medias',
+												},
+											},
+										],
+										as: 'reviewMedias',
+									},
+								},
+							],
+							as: 'placeItems',
+						},
+					},
+				];
 			}
-			log.trace('Fetched a Place id: ' + id + '. place: ', place);
-			return place;
+			const placeDetail: any = await Place.aggregate([
+				{
+					$match: {
+						$expr: {
+							$eq: [{ $toObjectId: args.id }, '$_id'],
+						},
+					},
+				},
+				{
+					$lookup: {
+						from: 'place_item_ratings',
+						localField: '_id',
+						foreignField: 'place',
+						pipeline: [
+							{
+								$match: { $expr: { $eq: ['$placeItem', null] } },
+							},
+							{
+								$project: { _id: 0 },
+							},
+						],
+						as: 'ratingInfo',
+					},
+				},
+				{
+					$unwind: {
+						path: '$ratingInfo',
+						preserveNullAndEmptyArrays: false,
+					},
+				},
+				...query,
+			]);
+			log.trace('Place detail found: ', placeDetail);
+			if (!placeDetail?.length) {
+				log.trace('Place not found for id: ', args.id);
+				throw new HTTP404Error('Place not found with given id: ' + args.id);
+			}
+			log.trace('Fetched a Place id: ' + args.id + '. place: ', placeDetail);
+			return placeDetail[0];
 		} catch (error) {
-			log.error('Error while doing getPlace with id: ' + id + '. Error: ', error);
+			log.error('Error while doing getPlace with id: ' + args.id + '. Error: ', error);
 			throw error;
 		}
 	}
@@ -215,8 +391,8 @@ export class PlaceService {
 												$match: {
 													$expr: {
 														$ne: [null, '$description'],
-													}
-												}
+													},
+												},
 											},
 											{ $sort: { createdAt: -1 } },
 											{ $skip: ((params.page ?? 1) - 1) * (params.size ?? 5) },
@@ -226,7 +402,7 @@ export class PlaceService {
 													from: Customer.collection.collectionName,
 													localField: 'customer', // field of reference to Place schema
 													foreignField: '_id',
-													pipeline:[
+													pipeline: [
 														{
 															$project: {
 																createdAt: 0,
@@ -273,13 +449,13 @@ export class PlaceService {
 							as: 'placeItem',
 						},
 					},
-					{
-						$unwind: {
-							path: '$placeItem',
-							preserveNullAndEmptyArrays: true,
+						{
+							$unwind: {
+								path: '$placeItem',
+								preserveNullAndEmptyArrays: true,
+							},
 						},
-					},
-				];
+					];
 			} else if (params.placeId && params.itemId) {
 				prematch = [{
 					$match: {
@@ -325,8 +501,8 @@ export class PlaceService {
 												$match: {
 													$expr: {
 														$ne: [null, '$description'],
-													}
-												}
+													},
+												},
 											},
 											{ $sort: { createdAt: -1 } },
 											{ $skip: ((params.page ?? 1) - 1) * (params.size ?? 5) },
@@ -336,7 +512,7 @@ export class PlaceService {
 													from: Customer.collection.collectionName,
 													localField: 'customer', // field of reference to Place schema
 													foreignField: '_id',
-													pipeline:[
+													pipeline: [
 														{
 															$project: {
 																createdAt: 0,
@@ -388,7 +564,7 @@ export class PlaceService {
 							path: '$placeItem',
 							preserveNullAndEmptyArrays: true,
 						},
-					}
+					},
 				];
 			}
 
@@ -410,12 +586,12 @@ export class PlaceService {
 						name: '$placeName',
 						items: {
 							$map: {
-								input: "$items",
+								input: '$items',
 								in: {
 									$mergeObjects: [
-										"$$this",
+										'$$this',
 										{
-											placeItem: "$placeItem"
+											placeItem: '$placeItem',
 										},
 									],
 								},
@@ -425,9 +601,9 @@ export class PlaceService {
 				},
 				{
 					$project: {
-						placeItem: 0
-					}
-				}
+						placeItem: 0,
+					},
+				},
 			]);
 			if (!places) {
 				log.trace('Item not found for params: ', params);

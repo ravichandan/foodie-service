@@ -138,19 +138,19 @@ export const dateXMonthsBack = (noOfMonthsBack: number) => ({
 	{},
 );
 
-export const placeToPlaceModel = (place: IPlace): PlaceModel => {
+export const placeToPlaceModel = (place: any): PlaceModel => {
 	if (!place) return {} as PlaceModel;
 	const model: PlaceModel = {
 		address: { ...place.address },
-		ambience: place.ratings?.[0]?.ambience ?? 0,
-		noOfReviews: place.ratings?.[0]?.noOfReviews ?? 0,
+		// ambience: place.ratings?.[0]?.ambience ?? 0,
+		// noOfReviews: place.ratings?.[0]?.noOfReviews ?? 0,
 		description: place.description,
-		id: place._id,
+		// id: place._id,
 		_id: place._id,
-		items: itemsToItemModels(place.placeItems)?.reduce(
-			(accumulator, value) => ({
+		placeItems: place.placeItems?.reduce(
+			(accumulator: any, value: any) => ({
 				...accumulator,
-				[value.id]: value,
+				[value._id]: value,
 			}),
 			{} as any,
 		),
@@ -158,12 +158,13 @@ export const placeToPlaceModel = (place: IPlace): PlaceModel => {
 		openingTimes: place.openingTimes,
 		reviews: reviewsToReviewModels(place.reviews),
 		medias: mediasToMediaModels(place.medias),
-		service: place.ratings ? place.ratings[0]?.service : 0,
+		// service: place.ratings ? place.ratings[0]?.service : 0,
+		ratingInfo: place.ratingInfo
 	};
 	return model;
 };
 
-export const placesToPlaceModels = (places: IPlace[]): PlaceModel[] => {
+export const placesToPlaceModels = (places: IPlace[] | any[]): PlaceModel[] => {
 	const models: PlaceModel[] = places.map((place: IPlace) => placeToPlaceModel(place));
 	return models;
 };
@@ -186,7 +187,8 @@ export const itemToItemModel = (pi: IPlaceItem): ItemModel | undefined => {
 		presentation: pi.rating?.presentation ?? 0,
 		noOfReviews: pi.rating?.noOfReviews ?? 0,
 		medias: mediasToMediaModels(pi.medias),
-		places: [placeToPlaceModel(pi.place)]
+		places: [placeToPlaceModel(pi.place)],
+		ratingInfo: (pi as any).ratingInfo
 	};
 };
 
