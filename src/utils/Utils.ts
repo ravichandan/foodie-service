@@ -150,7 +150,7 @@ export const placeToPlaceModel = (place: any): PlaceModel => {
 		placeItems: place.placeItems?.reduce(
 			(accumulator: any, value: any) => ({
 				...accumulator,
-				[value._id]: value,
+				[value.item?._id]: value,
 			}),
 			{} as any,
 		),

@@ -181,7 +181,7 @@ export class PlaceService {
 										pipeline: [
 											{
 												$project: {
-													_id: 0,
+
 													createdAt: 0,
 													modifiedAt: 0,
 												},
@@ -210,6 +210,12 @@ export class PlaceService {
 										preserveNullAndEmptyArrays: false,
 									},
 								},
+								{
+									$set: {
+										placeItem: '$_id',
+										_id: '$item._id'
+									}
+								}
 							],
 							as: 'placeItems',
 						},

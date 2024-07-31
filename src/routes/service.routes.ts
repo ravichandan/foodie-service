@@ -205,10 +205,10 @@ export default [
 			} else {
 				// No errors, pass req and res on to your controller
 				log.debug('in get /places/:placeId route handler, processing request, req.params:', req.params);
-				const { placeId, fetchMenu, fetchReviews, size, page } = { ...req.params, ...req.query } as any;
+				const { placeId, fetchMenu, fetchReviews, pageSize, pageNum } = { ...req.params, ...req.query } as any;
 
 				try {
-					const placeModel = await placeController.getAPlace({ id: placeId, fetchMenu, fetchReviews, size, page });
+					const placeModel = await placeController.getAPlace({ id: placeId, fetchMenu, fetchReviews, size: pageSize, page: pageNum });
 					res.send(placeModel);
 				} catch (error: any) {
 					log.error('getting a place() -> Error while querying for a place with id: ' + placeId, error);
