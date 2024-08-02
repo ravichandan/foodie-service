@@ -186,11 +186,35 @@ export class PlaceService {
 										path: "$ratingInfo",
 										preserveNullAndEmptyArrays: false
 									}
-								}
+								},
+								{
+									$lookup: {
+										from: 'reviews',
+										localField: '_id',
+										foreignField: 'placeItem',
+										pipeline: [
+											{ $lookup: {
+												from: 'customers',
+												localField: 'customer',
+												foreignField: '_id',
+												pipeline:[{$project: {name: 1, status: 1}}],
+												as: 'customer',
+												}
+											},
+											{ $unwind: '$customer'},
+											{ $match: { $expr: { $ne: ['$description', null] } } },
+											{ $sort: { createdAt: -1 } },
+											{ $limit: 3 },
+											{$project: {customer: 1, description: 1, taste: 1, presentation: 1}}
+										],
+										as: 'reviews',
+									},
+								},
 							],
 							as: "placeItem"
 						}
 					},
+
 					{
 						$unwind: {
 							path: "$placeItem",
