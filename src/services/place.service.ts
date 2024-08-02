@@ -599,6 +599,43 @@ export class PlaceService {
 										as: 'reviews',
 									},
 								},
+								{
+									$lookup: {
+										from: 'reviews',
+										localField: '_id',
+										foreignField: 'placeItem',
+										pipeline: [
+											{
+												$unwind: {
+													path: '$medias',
+													preserveNullAndEmptyArrays: false,
+												},
+											},
+											{
+												$group: {
+													_id: null,
+													medias: {
+														$push: '$medias',
+													},
+												},
+											},
+											{
+												$unwind: {
+													path: '$medias',
+													preserveNullAndEmptyArrays: false,
+												},
+											},
+											{
+												$project: {
+													_id: 0,
+													media: '$medias',
+												},
+											},
+										],
+										as: 'reviewMedias',
+									},
+								},
+
 							],
 							as: 'placeItem',
 						},
