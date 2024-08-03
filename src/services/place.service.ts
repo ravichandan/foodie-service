@@ -261,83 +261,126 @@ export class PlaceService {
 			} else if(args.fetchReviews) {
 				query = [
 					{
-						$lookup: {
-							from: 'place_items',
-							localField: '_id',
-							foreignField: 'place',
-							pipeline: [
-								{
-									$lookup: {
-										from: 'place_item_ratings',
-										localField: '_id',
-										foreignField: 'placeItem',
-										pipeline: [
-											{
-												$project: { _id: 0 },
-											},
-										],
-										as: 'ratingInfo',
+						$lookup:
+							{
+								from: "reviews",
+								localField: "_id",
+								foreignField: "place",
+								pipeline: [
+									{
+										$match: {
+											$expr: {
+												$and:[
+													{$ne: ["$description", null],},
+													{$eq: ["$placeItem", null]}
+												]
+											}
+										}
 									},
-								},
-								{
-									$unwind: {
-										path: '$ratingInfo',
-										preserveNullAndEmptyArrays: false,
-									},
-								},
-								{
-									$lookup: {
-										from: 'reviews',
-										localField: '_id',
-										foreignField: 'placeItem',
-										pipeline: [
-											{ $match: { $expr: { $ne: ['$description', null] } } },
-											{ $sort: { createdAt: -1 } },
-											{ $limit: args.size },
-											{ $skip: (args.page! - 1) * args.size! },
-										],
-										as: 'reviews',
-									},
-								},
-								{
-									$lookup: {
-										from: 'reviews',
-										localField: '_id',
-										foreignField: 'placeItem',
-										pipeline: [
-											{
-												$unwind: {
-													path: '$medias',
-													preserveNullAndEmptyArrays: false,
-												},
-											},
-											{
-												$group: {
-													_id: null,
-													medias: {
-														$push: '$medias',
+
+									{ $sort: { createdAt: -1 } },
+									{ $limit: +args.size },
+									{ $skip: (+args.page! - 1) * +args.size! },
+									{
+										$lookup: {
+											from: "reviews",
+											localField: "children",
+											foreignField: "_id",
+											pipeline: [
+												{
+													$lookup:{
+														from: "place_items",
+														localField: "placeItem",
+														foreignField: "_id",
+														pipeline: [
+															{
+																$project: {
+																	name: 1,
+																	item: 1
+																}
+															}
+														],
+														as: 'placeItem'
 													},
 												},
-											},
-											{
-												$unwind: {
-													path: '$medias',
-													preserveNullAndEmptyArrays: false,
-												},
-											},
-											{
-												$project: {
-													_id: 0,
-													media: '$medias',
-												},
-											},
-										],
-										as: 'reviewMedias',
+												{
+													$unwind: {
+														path: '$placeItem',
+														preserveNullAndEmptyArrays: false
+													}
+												}
+											],
+											as: "children"
+										}
 									},
-								},
-							],
-							as: 'placeItems',
-						},
+									{
+										$lookup: {
+											from: "customers",
+											localField: "customer",
+											foreignField: "_id",
+											pipeline: [
+												{
+													$project: {
+														name: 1,
+														status: 1,
+													}
+												},
+											],
+											as: 'customer'
+										}
+									}, {
+										$unwind: {
+											path: "$customer",
+											preserveNullAndEmptyArrays: true
+										}
+									},
+								],
+								as: "reviews"
+
+							},
+					},
+
+					{ $lookup: {
+								from: "reviews",
+								localField: "_id",
+								foreignField: "place",
+								pipeline: [
+									{
+										$match: {
+											$expr: {
+												$eq: ["$placeItem", null]
+											}
+										}
+									},
+									{
+										$unwind: {
+											path: "$medias",
+											preserveNullAndEmptyArrays: false
+										}
+									},
+									{
+										$group: {
+											_id: null,
+											medias: {
+												$push: "$medias"
+											}
+										}
+									},
+									{
+										$unwind: {
+											path: "$medias",
+											preserveNullAndEmptyArrays: false
+										}
+									},
+									{
+										$project: {
+											_id: 0,
+											media: "$medias"
+										}
+									}
+								],
+								as: "reviewMedias"
+							}
 					},
 				];
 			}
