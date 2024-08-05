@@ -92,24 +92,25 @@ class PlaceController {
     } as any;
 
     log.trace('Params to getPlaces: ', { placeName, itemName, postcode });
-    const places: IPlace[] | undefined = await placeService.getPlaces({ placeName, itemName, postcode });
+    const places: PlaceModel[] | undefined = await placeService.getPlaces({ placeName, itemName, postcode });
     log.trace('Found the following places with given params', places);
     if (!places) {
       throw new HTTP404Error('Place not found with given id');
       // res.status(404).send('No places found with given criteria');
       // return;
     }
-    if (places.length > 2) {
+
+    // if (places.length > 2) {
       const placeResponse: PlaceResponse = {
-        places: Utils.placesToPlaceModels(places),
+        places: places,//Utils.placesToPlaceModels(places),
         size: places.length,
         page: 0,
       };
       // res.send(places); // TODO
       return placeResponse;
-    }
+    // }
 
-    log.trace('Only one place found with given criteria, loading its items, reviews and ratings recursively');
+    /*log.trace('Only one place found with given criteria, loading its items, reviews and ratings recursively');
     try{
     await Place.populate(places, [
       { path: 'reviews ratings', options: { sort: { createdAt: -1 }, perDocumentLimit: 5 } },
@@ -134,7 +135,7 @@ class PlaceController {
     };
     console.log('placeResponse:: ', placeResponse);
     // res.send(placeResponse);
-    return placeResponse;
+    return placeResponse;*/
   };
 
 /**

@@ -7,6 +7,8 @@ import { PlaceModel } from '../models/placeModel';
 import { Customer } from '../entities/customer';
 import { HTTP404Error } from '../utils/error4xx';
 import { config } from '../config/config';
+import mongoose, { Expression } from 'mongoose';
+
 
 const log: Logger = getLogger('place.service');
 
@@ -35,7 +37,7 @@ export class PlaceService {
 		postcode?: string;
 		pageSize?: number;
 		pageNumber?: number;
-	}): Promise<IPlace[] | undefined> {
+	}): Promise<PlaceModel[] | undefined> {
 		log.info('Received request to getPlaces, params: ', params);
 
 		const prams: { pageSize: number; pageNumber: number } = {
@@ -45,16 +47,152 @@ export class PlaceService {
 		};
 		log.trace('Received request to getPlaces, prams: ', prams);
 
+		let query = []
+		if(!!params?.postcode) {
+			query.push({ $match: { 'address.postcode': +params?.postcode } });
+		}
+		if(!!params?.itemName) {
+			query.push(
+				{
+					$lookup: {
+						from: "place_items",
+						localField: "_id",
+						foreignField: "place",
+						pipeline: [
+							{
+								$lookup: {
+									from: "place_item_ratings",
+									localField: "_id",
+									foreignField: "placeItem",
+									as: "ratingInfo"
+								}
+							},
+							{
+								$unwind: {
+									path: "$ratingInfo",
+									preserveNullAndEmptyArrays: true
+								}
+							}
+						],
+						as: "placeItems"
+					}
+				},
+				{
+					$unwind: {
+						path: "$placeItems",
+						preserveNullAndEmptyArrays: false
+					}
+				},
+				{
+					$lookup: {
+						from: "items",
+						localField: "placeItems.item",
+						foreignField: "_id",
+						as: "items"
+					}
+				});
+		}
+
+		query.push({
+			$match: {
+				$or: [
+					{ placeName: { $regex: params?.placeName, $options: 'i' } },
+					!!params?.itemName ? {
+						$or: [
+							{ 'placeItems.name': { $regex: params.itemName, $options: 'i' } },
+							{ 'placeItems.aliases': { $in: [new RegExp(`${params.itemName}`, 'i')] } },
+						],
+					}: {}
+				]
+			}
+		});
+
+		query.push(
+			{
+				$set: {
+					"items.placeItem": "$placeItems"
+				}
+			},
+			{
+				$unwind: {
+					path: "$items",
+					preserveNullAndEmptyArrays: true
+				}
+			},
+			{
+				$lookup: {
+					from: "place_item_ratings",
+					localField: "_id",
+					foreignField: "place",
+					pipeline: [
+						{
+							$match: {
+								$expr: {
+									$ne: ["$placeItem", null]
+								}
+							}
+						}
+					],
+					as: "ratingInfo"
+				}
+			},
+			{
+				$unwind: {
+					path: "$ratingInfo",
+					preserveNullAndEmptyArrays: true
+				}
+			},
+			{
+				$sort: {
+					"placeItems.ratingInfo.taste": -1 as const,
+					"ratingInfo.service": -1 as const,
+				}
+			},
+			{
+				$group: {
+					_id: "$_id",
+					placeName: {
+						$first: "$placeName"
+					},
+					address: {
+						$first: "$address"
+					},
+					tags: {
+						$first: "$tags"
+					},
+					openingTimes: {
+						$first: "$openingTimes"
+					},
+					medias: {
+						$first: "$medias"
+					},
+					createdAt: {
+						$first: "$createdAt"
+					},
+					modifiedAt: {
+						$first: "$modifiedAt"
+					},
+					items: {
+						$addToSet: "$items"
+					},
+					ratingInfo: {
+						$first: "$ratingInfo"
+					}
+				}
+			}
+		);
+		let places;
 		try {
-			let places;
-			if (!!params?.placeName && !!params?.postcode) {
+
+			places = await Place.aggregate([...query]);
+			/*if (!!params?.placeName && !!params?.postcode) {
 
 				places = await Place.aggregate([{
 						$lookup: {
 							from: PlaceItem.collection.collectionName,
 							localField: '_id', // field of reference to PlaceItem
 							foreignField: 'place',
-							as: 'items',
+							as: 'placeItems',
 						},
 					},
 						{
@@ -102,13 +240,14 @@ export class PlaceService {
 					.limit(prams.pageSize)
 					.lean()
 					.exec();
-			}
-			log.trace('Returning fetched places');
-			return places;
+			}*/
+
 		} catch (error) {
 			log.error('Error while doing getPlaces', error);
 			throw error;
 		}
+		log.trace('Returning fetched places::', places);
+		return places;
 	}
 
 	async getTopPlaces(args?: {
