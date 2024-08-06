@@ -142,12 +142,9 @@ export class PlaceService {
 					preserveNullAndEmptyArrays: true
 				}
 			},
-			{
-				$sort: {
-					"placeItems.ratingInfo.taste": -1 as const,
-					"ratingInfo.service": -1 as const,
-				}
-			},
+			{ $set: { fieldType1: { $type: "$placeItems.ratingInfo" }, fieldType2: { $type: "$ratingInfo" } } },
+
+
 			{
 				$group: {
 					_id: "$_id",
@@ -177,9 +174,24 @@ export class PlaceService {
 					},
 					ratingInfo: {
 						$first: "$ratingInfo"
-					}
+					},
+					fieldType1: {
+						$first: "$fieldType1"
+					},
+					fieldType2: {
+						$first: "$fieldType2"
+					},
+				},
+			},
+			{
+				$sort: {
+					fieldType2: -1 as const,fieldType1: -1 as const,
+					"places.placeItems.ratingInfo.taste": -1 as const,
+					"places.ratingInfo.service": -1 as const,
 				}
-			}
+			},
+			{ $project: { "fieldType2": 0, fieldType1: 0 } }
+
 		);
 		let places;
 		try {
