@@ -114,6 +114,9 @@ export class PlaceService {
 				}
 			},
 			{
+				$unset: "openingTimes._id"
+			},
+			{
 				$unwind: {
 					path: "$items",
 					preserveNullAndEmptyArrays: true
@@ -543,6 +546,7 @@ export class PlaceService {
 						},
 					},
 				},
+				{ $unset: "openingTimes._id" },
 				{
 					$lookup: {
 						from: 'place_item_ratings',
