@@ -51,14 +51,14 @@ export class PlaceService {
 		if(!!params?.postcode) {
 			query.push({ $match: { 'address.postcode': +params?.postcode } });
 		}
-		if(!!params?.itemName) {
+		// if(!!params?.itemName) {
 			query.push(
 				{
 					$lookup: {
 						from: "place_items",
 						localField: "_id",
 						foreignField: "place",
-						pipeline: [
+						pipeline: !!params?.itemName ? [
 							{
 								$lookup: {
 									from: "place_item_ratings",
@@ -73,7 +73,7 @@ export class PlaceService {
 									preserveNullAndEmptyArrays: true
 								}
 							}
-						],
+						]: [],
 						as: "placeItems"
 					}
 				},
@@ -91,7 +91,7 @@ export class PlaceService {
 						as: "items"
 					}
 				});
-		}
+		// }
 
 		query.push({
 			$match: {
