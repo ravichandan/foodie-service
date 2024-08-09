@@ -367,7 +367,7 @@ export class PlaceService {
 								{
 									$unwind: {
 										path: '$ratingInfo',
-										preserveNullAndEmptyArrays: false,
+										preserveNullAndEmptyArrays: true,
 									},
 								},
 								{
@@ -402,7 +402,7 @@ export class PlaceService {
 					{
 						$unwind: {
 							path: '$placeItem',
-							preserveNullAndEmptyArrays: false,
+							preserveNullAndEmptyArrays: true,
 						},
 					},
 					{
@@ -490,7 +490,7 @@ export class PlaceService {
 												{
 													$unwind: {
 														path: '$placeItem',
-														preserveNullAndEmptyArrays: false,
+														preserveNullAndEmptyArrays: true,
 													},
 												},
 											],
@@ -540,7 +540,7 @@ export class PlaceService {
 								{
 									$unwind: {
 										path: '$medias',
-										preserveNullAndEmptyArrays: false,
+										preserveNullAndEmptyArrays: true,
 									},
 								},
 								{
@@ -554,7 +554,7 @@ export class PlaceService {
 								{
 									$unwind: {
 										path: '$medias',
-										preserveNullAndEmptyArrays: false,
+										preserveNullAndEmptyArrays: true,
 									},
 								},
 								{
@@ -597,7 +597,7 @@ export class PlaceService {
 				{
 					$unwind: {
 						path: '$ratingInfo',
-						preserveNullAndEmptyArrays: false,
+						preserveNullAndEmptyArrays: true,
 					},
 				},
 				...query,
