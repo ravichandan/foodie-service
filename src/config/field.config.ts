@@ -19,7 +19,7 @@ const validatePostcodeAndSururb = (_: any, { req }: any) => {
 };
 
 const queryParamsHasPostcodeOrSuburb = (_: any, { req }: any) => {
-  if (!req.query?.postcode && !req.query?.suburb) {
+  if (!req.query?.postcode && !req.query?.suburb && !req.query?.city) {
     throw new Error('Either postcode or suburb has to be provided in the query parameters');
   }
   if (req.query?.postcode < 2000 || req.query?.postcode > 2899) {
@@ -371,7 +371,7 @@ export const getCustomerByNameSchemaConfig: Schema = {
 const verifyAuthToken = async (_: string, { req, res }: any) => {
   const admin = req.headers['x-admin-name'];
   const token = req.headers['x-token'];
-  const isAuthenticated = admin === 'chandan' ? true : await googleJwtValidator(token??req.body.userInfo.token);
+  const isAuthenticated = admin === 'admin' ? true : await googleJwtValidator(token??req.body.userInfo.token);
   if (!isAuthenticated) {
     throw new HTTP401Error();
   }

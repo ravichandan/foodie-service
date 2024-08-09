@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getLogger } from '../utils/Utils';
+import { getLogger, simplify } from '../utils/Utils';
 import { placeController } from '../controllers/place.controller';
 import { checkSchema, validationResult } from 'express-validator';
 import * as FieldConfigs from '../config/field.config';
@@ -239,12 +239,12 @@ export default [
 			} else {
 				// No errors, pass req and res on to your controller
 				log.debug('in get /places/?placeName=<xyz>&itemName=<abc> route handler, processing request, req.params:', req.params);
-				const { placeName, itemName, postcode } = {
+				const { placeName, itemName, postcode, city } = {
 					...req.params,
 					...req.query,
 				} as any;
 				try {
-					const response = await placeController.getPlaces({ placeName, itemName, postcode });
+					const response = await placeController.getPlaces({ placeName: simplify(placeName), itemName: simplify(itemName), postcode, city });
 					res.send(response);
 				} catch (error: any){
 					log.error('Error while doing getPlaces Error:: ', error)
@@ -721,7 +721,7 @@ export default [
 			} else {
 				// No errors, pass req and res on to your controller
 				log.debug('in post /customers/ route handler, processing request');
-				if (req.body.id) {
+				if (!req.body.id) {
 					await customerController.addCustomer(req, res);
 				} else {
 					await customerController.updateCustomer(req, res);

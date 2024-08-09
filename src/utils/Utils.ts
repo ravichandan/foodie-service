@@ -361,8 +361,9 @@ export const calculatePoints = (
 	}
 };
 
+export const simplify = (str: string) => str.replace(/[^a-zA-Z ]/g, "");
 export const deduceCityName = (address: AddressModel) => {
-	if (!address.postcode) {
+	if (!!address.postcode) {
 		const pc = address.postcode;
 		if (pc >= 2000 && pc < 3000) return 'Sydney';
 	}

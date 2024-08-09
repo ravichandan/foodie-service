@@ -74,6 +74,12 @@ class PlaceController {
     }
   };
 
+
+  // updatePlaceMedia = async (req: Request, res: Response) => {
+  //
+  //   log.trace('Updating Place document with _id: %s to add to medias array', place._id);
+  //   place = await placeService.updatePlaceMedias(req.params.placeId, media);
+  // }
   /**
    * API Controller method for 'get all places'. This takes at-least one of placeName or postcode, with pagination params
    * This request to query all the places with a name, for ex: Burger, will be sent only from home page search box,
@@ -83,16 +89,16 @@ class PlaceController {
    * matching the mentioned criteria sorted by highest taste rating first.
    *
    */
-  getPlaces = async (args: { placeName: string; itemName?: string; postcode: string }) => {
+  getPlaces = async (args: { placeName: string; itemName?: string; postcode: string; city: string }) => {
     log.info('Received request in getPlaces');
-    const { placeName, itemName, postcode }  = {
+    const { placeName, itemName, postcode , city}  = {
       // ...req.params,
       // ...req.query,
       ...args
     } as any;
 
-    log.trace('Params to getPlaces: ', { placeName, itemName, postcode });
-    const places: PlaceModel[] | undefined = await placeService.getPlaces({ placeName, itemName, postcode });
+    log.trace('Params to getPlaces: ', { placeName, itemName, postcode, city });
+    const places: PlaceModel[] | undefined = await placeService.getPlaces({ placeName, itemName, postcode, city });
     log.trace('Found the following places with given params', places);
     if (!places) {
       throw new HTTP404Error('Place not found with given id');

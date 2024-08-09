@@ -3,6 +3,10 @@ import mongoose from 'mongoose';
 import { Document, Schema, model, Model } from 'mongoose';
 import Inc from 'mongoose-sequence';
 
+export type Location = {
+  latitude: string;
+  longitude: string;
+}
 // creating interfaces for entities
 export type IAddress = Document & {
   // includes door no, street name, etc
@@ -22,6 +26,10 @@ export type IAddress = Document & {
 
   // country
   country: string; // only australia as of now
+
+  location: Location;
+
+  googleMapsUri: string;
 
   // createdAt: Date;
   // modifiedAt: Date;
@@ -63,6 +71,28 @@ export const addressSchema: Schema<IAddress> = new mongoose.Schema<IAddress>(
 
     // country
     country: {
+      type: String,
+    }, // only australia as of now
+
+    // country
+    location: {
+      type: new mongoose.Schema<Location>(
+        {
+          // _id: Number,
+
+          // includes door no, street name, etc
+          latitude: {
+            type: String,
+          },
+
+          // Suburb
+          longitude: {
+            type: String,
+          }})
+    }, // only australia as of now
+
+    // country
+    googleMapsUri: {
       type: String,
     }, // only australia as of now
 

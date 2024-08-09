@@ -51,6 +51,7 @@ export type IPlaceItem = Document & {
   aliases:string[];
   // customised name of the Item in this Place
   name: string;
+  simpleName: string;
 
   category: ItemCategory;
   cuisines: Cuisine[];
@@ -96,6 +97,7 @@ const placeItemSchema: Schema<IPlaceItem> = new Schema<IPlaceItem>(
         // Number,
       ref: 'Item',
     },
+    simpleName: String,
     name: String,
     price: String,
     aliases: [String],

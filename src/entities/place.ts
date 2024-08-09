@@ -16,6 +16,15 @@ export enum FriendlyTag {
   DATE = 'Nice For Dates',
 }
 
+export enum PRICE_LEVEL {
+  FREE='FREE',
+  INEXPENSIVE='INEXPENSIVE',
+  MODERATE='MODERATE',
+  EXPENSIVE='EXPENSIVE',
+  VERY_EXPENSIVE='VERY_EXPENSIVE'
+
+
+}
 export enum WeekDays {
   SUNDAY = 'SUNDAY',
   MONDAY = 'MONDAY',
@@ -41,7 +50,10 @@ export type IPlace = Document & {
   customerId: string;
   // name of the place
   placeName: string; // max 100 chars
+  simpleName: string; // max 100 chars
   description: string; // max 100 chars
+  websiteUri: string; // max 100 chars
+  googleMapsUri: string; // max 100 chars
 
   // medias of the place given by that Place
   medias: IMedia[];
@@ -53,6 +65,8 @@ export type IPlace = Document & {
   openingTimes: OpeningTimes;
 
   address: IAddress;
+  formattedAddress: string;
+  priceLevel: PRICE_LEVEL;
 
   createdAt: Date;
   modifiedAt: Date;
@@ -73,11 +87,20 @@ const placeSchema: Schema<IPlace> = new Schema<IPlace>(
       type: String,
       required: true,
     },
+    simpleName: {
+      type: String,
+    },
     customerId: {
       type: String,
     },
 
     correlationId: {
+      type: String,
+    },
+    websiteUri: {
+      type: String,
+    },
+    googleMapsUri: {
       type: String,
     },
     address: {
@@ -104,6 +127,15 @@ const placeSchema: Schema<IPlace> = new Schema<IPlace>(
       type: [mediaSchema],
       validate: (v: IMedia) => Array.isArray(v), // && v.length > 0,
     },
+
+    formattedAddress: {
+      type: String,
+    },
+    priceLevel: {
+      type: String,
+      enum: Object.values(PRICE_LEVEL),
+    },
+
 
     createdAt: {
       type: Date,

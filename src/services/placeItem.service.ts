@@ -1,6 +1,6 @@
 import { IPlaceItem, PlaceItem } from '../entities/placeItem';
 import { Logger } from 'log4js';
-import { getLogger } from '../utils/Utils';
+import { getLogger, simplify } from '../utils/Utils';
 import { IPlace, Place } from '../entities/place';
 import { PlaceItemRating } from '../entities/placeItemRating';
 import { ItemModel } from '../models/itemModel';
@@ -15,6 +15,7 @@ export class PlaceItemService {
 	async addPlaceItem(data: IPlaceItem): Promise<IPlaceItem> {
 		log.debug('Received request to create a PlaceItem');
 		try {
+			data.simpleName = simplify(data.name);
 			data.createdAt = new Date();
 			data.modifiedAt = new Date();
 			log.trace('Creating PlaceItem with data: ', data);

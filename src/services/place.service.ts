@@ -1,13 +1,11 @@
 import { IPlace, Place } from '../entities/place';
 import { Logger } from 'log4js';
-import { deduceCityName, getLogger } from '../utils/Utils';
+import { deduceCityName, getLogger, simplify } from '../utils/Utils';
 import { IMedia } from '../entities/media';
-import { PlaceItem } from '../entities/placeItem';
 import { PlaceModel } from '../models/placeModel';
 import { Customer } from '../entities/customer';
 import { HTTP404Error } from '../utils/error4xx';
 import { config } from '../config/config';
-import mongoose, { Expression } from 'mongoose';
 
 
 const log: Logger = getLogger('place.service');
@@ -19,6 +17,7 @@ export class PlaceService {
 		try {
 			placeData.createdAt = new Date();
 			placeData.modifiedAt = new Date();
+			placeData.simpleName = simplify(placeData.placeName);
 			placeData.address.city = deduceCityName(placeData.address);
 			log.trace('Creating Place with data: ', placeData);
 			const newPlace: IPlace = await Place.create(placeData);
@@ -31,13 +30,16 @@ export class PlaceService {
 		}
 	}
 
-	async getPlaces(params?: {
-		placeName?: string;
-		itemName?: string;
-		postcode?: string;
-		pageSize?: number;
-		pageNumber?: number;
-	}): Promise<PlaceModel[] | undefined> {
+	async getPlaces(params?:
+										{
+											placeName?: string;
+											itemName?: string;
+											postcode?: string;
+											city?: string;
+											pageSize?: number;
+											pageNumber?: number;
+										}): Promise<PlaceModel[] | undefined>
+	{
 		log.info('Received request to getPlaces, params: ', params);
 
 		const prams: { pageSize: number; pageNumber: number } = {
@@ -47,155 +49,176 @@ export class PlaceService {
 		};
 		log.trace('Received request to getPlaces, prams: ', prams);
 
-		let query = []
-		if(!!params?.postcode) {
+		let query = [];
+		if (!!params?.postcode) {
 			query.push({ $match: { 'address.postcode': +params?.postcode } });
 		}
+		if (!!params?.city) {
+			query.push({ $match: { 'address.city': { $regex: params?.city, $options: "i" }}});
+		}
 		// if(!!params?.itemName) {
-			query.push(
-				{
-					$lookup: {
-						from: "place_items",
-						localField: "_id",
-						foreignField: "place",
-						pipeline: !!params?.itemName ? [
-							{
-								$lookup: {
-									from: "place_item_ratings",
-									localField: "_id",
-									foreignField: "placeItem",
-									as: "ratingInfo"
-								}
+		query.push(
+			{
+				$lookup: {
+					from: 'place_items',
+					localField: '_id',
+					foreignField: 'place',
+					pipeline: !!params?.itemName ? [
+						{
+							$lookup: {
+								from: 'place_item_ratings',
+								localField: '_id',
+								foreignField: 'placeItem',
+								as: 'ratingInfo',
 							},
-							{
-								$unwind: {
-									path: "$ratingInfo",
-									preserveNullAndEmptyArrays: true
-								}
-							}
-						]: [],
-						as: "placeItems"
-					}
+						},
+						{
+							$unwind: {
+								path: '$ratingInfo',
+								preserveNullAndEmptyArrays: true,
+							},
+						},
+					] : [],
+					as: 'placeItems',
 				},
-				{
-					$unwind: {
-						path: "$placeItems",
-						preserveNullAndEmptyArrays: false
-					}
+			},
+			{
+				$unwind: {
+					path: '$placeItems',
+					preserveNullAndEmptyArrays: true,
 				},
-				{
-					$lookup: {
-						from: "items",
-						localField: "placeItems.item",
-						foreignField: "_id",
-						as: "items"
-					}
-				});
+			},
+			{
+				$lookup: {
+					from: 'items',
+					localField: 'placeItems.item',
+					foreignField: '_id',
+					as: 'items',
+				},
+			});
 		// }
 
 		query.push({
 			$match: {
-				$or: [
-					{ placeName: { $regex: params?.placeName, $options: 'i' } },
-					!!params?.itemName ? {
+				$or: !!params?.itemName ? [
+					{ simpleName: { $regex: params?.placeName, $options: 'i' } },
+					{
 						$or: [
-							{ 'placeItems.name': { $regex: params.itemName, $options: 'i' } },
+							{ 'placeItems.simpleName': { $regex: params.itemName, $options: 'i' } },
 							{ 'placeItems.aliases': { $in: [new RegExp(`${params.itemName}`, 'i')] } },
+							{ 'items.name': { $regex: params.itemName, $options: 'i' } },
+							{ 'items.aliases': { $in: [new RegExp(`${params.itemName}`, 'i')] } },
 						],
-					}: {}
-				]
-			}
+					},
+				] : [{ simpleName: { $regex: params?.placeName, $options: 'i' } }],
+			},
 		});
+
+		// query.push({
+		// 	$match: {
+		// 		$or: [
+		// 			{ placeName: { $regex: params?.placeName, $options: 'i' } },
+		// 			!!params?.itemName ? {
+		// 				$or: [
+		// 					{ 'placeItems.name': { $regex: params.itemName, $options: 'i' } },
+		// 					{ 'placeItems.aliases': { $in: [new RegExp(`${params.itemName}`, 'i')] } },
+		// 					{ 'items.name': { $regex: params.itemName, $options: 'i' } },
+		// 					{ 'items.aliases': { $in: [new RegExp(`${params.itemName}`, 'i')] } },
+		// 				],
+		// 			} : {},
+		// 		],
+		// 	},
+		// });
 
 		query.push(
 			{
 				$set: {
-					"items.placeItem": "$placeItems"
-				}
+					'items.placeItem': '$placeItems',
+				},
 			},
 			{
-				$unset: "openingTimes._id"
+				$unset: 'openingTimes._id',
 			},
 			{
 				$unwind: {
-					path: "$items",
-					preserveNullAndEmptyArrays: true
-				}
+					path: '$items',
+					preserveNullAndEmptyArrays: true,
+				},
 			},
 			{
 				$lookup: {
-					from: "place_item_ratings",
-					localField: "_id",
-					foreignField: "place",
+					from: 'place_item_ratings',
+					localField: '_id',
+					foreignField: 'place',
 					pipeline: [
 						{
 							$match: {
 								$expr: {
-									$ne: ["$placeItem", null]
-								}
-							}
-						}
+									$ne: ['$placeItem', null],
+								},
+							},
+						},
 					],
-					as: "ratingInfo"
-				}
+					as: 'ratingInfo',
+				},
 			},
 			{
 				$unwind: {
-					path: "$ratingInfo",
-					preserveNullAndEmptyArrays: true
-				}
+					path: '$ratingInfo',
+					preserveNullAndEmptyArrays: true,
+				},
 			},
-			{ $set: { fieldType1: { $type: "$placeItems.ratingInfo" }, fieldType2: { $type: "$ratingInfo" } } },
+			{ $set: { fieldType1: { $type: '$placeItems.ratingInfo' }, fieldType2: { $type: '$ratingInfo' } } },
 
 
 			{
 				$group: {
-					_id: "$_id",
+					_id: '$_id',
 					placeName: {
-						$first: "$placeName"
+						$first: '$placeName',
 					},
 					address: {
-						$first: "$address"
+						$first: '$address',
 					},
 					tags: {
-						$first: "$tags"
+						$first: '$tags',
 					},
 					openingTimes: {
-						$first: "$openingTimes"
+						$first: '$openingTimes',
 					},
 					medias: {
-						$first: "$medias"
+						$first: '$medias',
 					},
 					createdAt: {
-						$first: "$createdAt"
+						$first: '$createdAt',
 					},
 					modifiedAt: {
-						$first: "$modifiedAt"
+						$first: '$modifiedAt',
 					},
 					items: {
-						$addToSet: "$items"
+						$addToSet: '$items',
 					},
 					ratingInfo: {
-						$first: "$ratingInfo"
+						$first: '$ratingInfo',
 					},
 					fieldType1: {
-						$first: "$fieldType1"
+						$first: '$fieldType1',
 					},
 					fieldType2: {
-						$first: "$fieldType2"
+						$first: '$fieldType2',
 					},
 				},
 			},
 			{
 				$sort: {
-					fieldType2: -1 as const,fieldType1: -1 as const,
-					"places.placeItems.ratingInfo.taste": -1 as const,
-					"places.ratingInfo.service": -1 as const,
-				}
+					fieldType2: -1 as const, fieldType1: -1 as const,
+					'places.placeItems.ratingInfo.taste': -1 as const,
+					'places.ratingInfo.service': -1 as const,
+				},
 			},
-			{ $project: { "fieldType2": 0, fieldType1: 0 } }
-
+			{ $project: { 'fieldType2': 0, fieldType1: 0 } },
 		);
+		log.trace('In getPlaces, query:: ', query.toString());
 		let places;
 		try {
 
@@ -304,7 +327,13 @@ export class PlaceService {
 		fetchReviews?: boolean,
 		size?: number,
 		page?: number
-	} = { id: undefined, fetchMenu: true, fetchReviews: false, size: config.PAGE_SIZE, page: 1 }): Promise<IPlace | undefined> {
+	} = {
+		id: undefined,
+		fetchMenu: true,
+		fetchReviews: false,
+		size: config.PAGE_SIZE,
+		page: 1,
+	}): Promise<IPlace | undefined> {
 		if (!args.id) return undefined;
 		log.debug('Received request to get a place with args: ', args);
 		args.size = args.size ?? config.PAGE_SIZE;
@@ -323,23 +352,23 @@ export class PlaceService {
 				query = [
 					{
 						$lookup: {
-							from: "place_items",
-							localField: "_id",
-							foreignField: "place",
+							from: 'place_items',
+							localField: '_id',
+							foreignField: 'place',
 							pipeline: [
 								{
 									$lookup: {
-										from: "place_item_ratings",
-										localField: "_id",
-										foreignField: "placeItem",
-										as: "ratingInfo"
-									}
+										from: 'place_item_ratings',
+										localField: '_id',
+										foreignField: 'placeItem',
+										as: 'ratingInfo',
+									},
 								},
 								{
 									$unwind: {
-										path: "$ratingInfo",
-										preserveNullAndEmptyArrays: false
-									}
+										path: '$ratingInfo',
+										preserveNullAndEmptyArrays: false,
+									},
 								},
 								{
 									$lookup: {
@@ -347,89 +376,90 @@ export class PlaceService {
 										localField: '_id',
 										foreignField: 'placeItem',
 										pipeline: [
-											{ $lookup: {
-												from: 'customers',
-												localField: 'customer',
-												foreignField: '_id',
-												pipeline:[{$project: {name: 1, status: 1}}],
-												as: 'customer',
-												}
+											{
+												$lookup: {
+													from: 'customers',
+													localField: 'customer',
+													foreignField: '_id',
+													pipeline: [{ $project: { name: 1, status: 1 } }],
+													as: 'customer',
+												},
 											},
-											{ $unwind: '$customer'},
+											{ $unwind: '$customer' },
 											{ $match: { $expr: { $ne: ['$description', null] } } },
 											{ $sort: { createdAt: -1 } },
 											{ $limit: 3 },
-											{$project: {customer: 1, description: 1, taste: 1, presentation: 1}}
+											{ $project: { customer: 1, description: 1, taste: 1, presentation: 1 } },
 										],
 										as: 'reviews',
 									},
 								},
 							],
-							as: "placeItem"
-						}
+							as: 'placeItem',
+						},
 					},
 
 					{
 						$unwind: {
-							path: "$placeItem",
-							preserveNullAndEmptyArrays: false
-						}
+							path: '$placeItem',
+							preserveNullAndEmptyArrays: false,
+						},
 					},
 					{
 						$lookup: {
-							from: "items",
-							localField: "placeItem.item",
-							foreignField: "_id",
+							from: 'items',
+							localField: 'placeItem.item',
+							foreignField: '_id',
 							pipeline: [
 								{
 									$project: {
 										createdAt: 0,
-										modifiedAt: 0
-									}
-								}
+										modifiedAt: 0,
+									},
+								},
 							],
-							as: "items"
-						}
+							as: 'items',
+						},
 					},
 					{
 						$set: {
 							items: {
 								$map: {
-									input: "$items",
+									input: '$items',
 									in: {
 										$mergeObjects: [
-											"$$this",
+											'$$this',
 											{
-												placeItem: "$placeItem"
-											}
-										]
-									}
-								}
-							}
-						}
+												placeItem: '$placeItem',
+											},
+										],
+									},
+								},
+							},
+						},
 					},
 					{
-						$unset:["placeItem"]
-					}
+						$unset: ['placeItem'],
+					},
 				];
-			} else if(args.fetchReviews) {
+			} else if (args.fetchReviews) {
 				query = [
 					{
 						$lookup:
 							{
-								from: "reviews",
-								localField: "_id",
-								foreignField: "place",
+								from: 'reviews',
+								localField: '_id',
+								foreignField: 'place',
 								pipeline: [
 									{
 										$match: {
 											$expr: {
-												$and:[
-													{$ne: ["$description", null],},
-													{$eq: ["$placeItem", null]}
-												]
-											}
-										}
+												$and: [
+													{ $ne: ['$description', null] },
+													{ $eq: ['$placeItem', null] },
+												],
+											},
+										},
 									},
 
 									{ $sort: { createdAt: -1 } },
@@ -437,104 +467,105 @@ export class PlaceService {
 									{ $skip: (+args.page! - 1) * +args.size! },
 									{
 										$lookup: {
-											from: "reviews",
-											localField: "children",
-											foreignField: "_id",
+											from: 'reviews',
+											localField: 'children',
+											foreignField: '_id',
 											pipeline: [
 												{
-													$lookup:{
-														from: "place_items",
-														localField: "placeItem",
-														foreignField: "_id",
+													$lookup: {
+														from: 'place_items',
+														localField: 'placeItem',
+														foreignField: '_id',
 														pipeline: [
 															{
 																$project: {
 																	name: 1,
-																	item: 1
-																}
-															}
+																	item: 1,
+																},
+															},
 														],
-														as: 'placeItem'
+														as: 'placeItem',
 													},
 												},
 												{
 													$unwind: {
 														path: '$placeItem',
-														preserveNullAndEmptyArrays: false
-													}
-												}
+														preserveNullAndEmptyArrays: false,
+													},
+												},
 											],
-											as: "children"
-										}
+											as: 'children',
+										},
 									},
 									{
 										$lookup: {
-											from: "customers",
-											localField: "customer",
-											foreignField: "_id",
+											from: 'customers',
+											localField: 'customer',
+											foreignField: '_id',
 											pipeline: [
 												{
 													$project: {
 														name: 1,
 														status: 1,
-													}
+													},
 												},
 											],
-											as: 'customer'
-										}
+											as: 'customer',
+										},
 									}, {
 										$unwind: {
-											path: "$customer",
-											preserveNullAndEmptyArrays: true
-										}
+											path: '$customer',
+											preserveNullAndEmptyArrays: true,
+										},
 									},
 								],
-								as: "reviews"
+								as: 'reviews',
 
 							},
 					},
 
-					{ $lookup: {
-								from: "reviews",
-								localField: "_id",
-								foreignField: "place",
-								pipeline: [
-									{
-										$match: {
-											$expr: {
-												$eq: ["$placeItem", null]
-											}
-										}
+					{
+						$lookup: {
+							from: 'reviews',
+							localField: '_id',
+							foreignField: 'place',
+							pipeline: [
+								{
+									$match: {
+										$expr: {
+											$eq: ['$placeItem', null],
+										},
 									},
-									{
-										$unwind: {
-											path: "$medias",
-											preserveNullAndEmptyArrays: false
-										}
+								},
+								{
+									$unwind: {
+										path: '$medias',
+										preserveNullAndEmptyArrays: false,
 									},
-									{
-										$group: {
-											_id: null,
-											medias: {
-												$push: "$medias"
-											}
-										}
+								},
+								{
+									$group: {
+										_id: null,
+										medias: {
+											$push: '$medias',
+										},
 									},
-									{
-										$unwind: {
-											path: "$medias",
-											preserveNullAndEmptyArrays: false
-										}
+								},
+								{
+									$unwind: {
+										path: '$medias',
+										preserveNullAndEmptyArrays: false,
 									},
-									{
-										$project: {
-											_id: 0,
-											media: "$medias"
-										}
-									}
-								],
-								as: "reviewMedias"
-							}
+								},
+								{
+									$project: {
+										_id: 0,
+										media: '$medias',
+									},
+								},
+							],
+							as: 'reviewMedias',
+						},
 					},
 				];
 			}
@@ -546,7 +577,7 @@ export class PlaceService {
 						},
 					},
 				},
-				{ $unset: "openingTimes._id" },
+				{ $unset: 'openingTimes._id' },
 				{
 					$lookup: {
 						from: 'place_item_ratings',

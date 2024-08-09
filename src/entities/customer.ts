@@ -50,6 +50,8 @@ export type ICustomer = Document & {
   // Current active points that they can claim.
   claimablePoints: number;
 
+
+
   // The current activity level of the user
   level: ActivityLevel;
 

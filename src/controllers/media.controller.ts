@@ -24,7 +24,7 @@ class MediaController {
     }
 
     //call the addMedia function in the service and pass the data from the request
-    log.trace(`bucker_provider is ${config.bucket_provider}`);
+    log.trace(`bucket_provider is ${config.bucket_provider}`);
     let result;
     if (config.bucket_provider === 'R2') {
       log.trace('Creating file buffers');
