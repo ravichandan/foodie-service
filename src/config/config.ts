@@ -10,7 +10,7 @@ export const config = {
   // appKey:"xpFn86p1T5TlEwaFOS3j18h203KUZc7RK3feeVoFqYOBDsLy3PyrVpvRaZX3wE8s",
   appId:"data-ttagxfs",
   appRegion:"ap-southeast-2",
-  databaseName: "test",
+  databaseName: "qa",
   states_suburbs: [{
     state: "NSW",
     suburbs: ['The Ponds','Quakers Hill', 'Schofields','Parramatta', 'Harris Park', 'Box hill', 'Kellyville', 'Riverstone'],
