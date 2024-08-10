@@ -347,7 +347,7 @@ export const getOrPutCustomerByIdSchemaConfig: Schema = {
     in: ['params'],
     optional: false,
     errorMessage: 'customerId has to be provided as a path param in the url .../customers/:customerId',
-    isLength: { options: { min: 3, max: 20 } },
+    isLength: { options: { min: 3, max: 30 } },
   },
 };
 export const getReviewByIdSchemaConfig: Schema = {

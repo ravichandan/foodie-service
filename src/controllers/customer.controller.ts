@@ -160,7 +160,7 @@ class CustomerController {
   };
 
   async loginCustomer(req: Request, res: Response) {
-    log.trace('in customer.controller, got request to login a oauth customer');
+    log.trace('in customer.controller, got request to login a oauth customer, requestBody:: ', req.body);
     const payload = req.body.userInfo.info;
 
     let customer: ICustomer | undefined = await customerService.getCustomer({email: payload.email});
@@ -199,7 +199,7 @@ class CustomerController {
     }
 
     const token = req.body.userInfo.token;
-    await sessionService.createSession(customer._id, token);
+    await sessionService.createSession(customer, token);
     log.trace('in customer.controller, created session, returning.');
     return res.status(200).send(customer);
   }

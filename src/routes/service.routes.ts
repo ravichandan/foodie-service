@@ -761,7 +761,8 @@ export default [
 			} else {
 				// No errors, pass req and res on to your controller
 				log.debug('in get /customers/:customerId route handler, processing request');
-				await customerController.getACustomerByIdOrEmail({ id: req.params.id });
+				const result = await customerController.getACustomerByIdOrEmail({ id: req.params.customerId });
+				result? res.status(200).send(result):res.status(404).send('Customer not found with given id');
 				log.debug('Fetching completed');
 			}
 		},

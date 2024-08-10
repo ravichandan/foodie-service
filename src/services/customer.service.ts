@@ -67,13 +67,14 @@ export class CustomerService {
 		let customer: any;
 		if (!!args.id) {
 			try {
-				customer = await Customer.findById({ _id: args.id });
+				customer = await Customer.findOne({ email: 'chandan.ravi1987@gmail.com' }).populate('interestedIn').lean();//await Customer.findById({ _id: args.id }).lean();
 			} catch (error) {
 				log.error('Error while doing getCustomer with id: ' + args.id + '. Error: ', error);
 			}
 		} else if (!!args.email) {
 			try {
-				customer = await Customer.findOne({ email: args.email });
+				customer = await Customer.findOne({ email: args.email }).populate('interestedIn').lean();
+
 			} catch (error) {
 				log.error('Error while doing getCustomer with email: ' + args.email + '. Error: ', error);
 			}

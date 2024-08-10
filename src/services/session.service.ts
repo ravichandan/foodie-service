@@ -8,20 +8,20 @@ const log: Logger = getLogger('session.service');
 
 export class SessionService {
 
-  async createSession(customerId: any, key: any) {
-    log.trace('In createSession for customerId: %s, key: %s ', customerId, key);
+  async createSession(customer: any, key: any) {
+    log.trace('In createSession for customerId: %s, key: %s ', customer._id, key);
     if (!key) {
       log.trace('token not found');
       throw new HTTP400Error('token not sent in the request, can\'t create session');
     }
 
-    const customer = await customerService.getCustomer({id: customerId});
+    // const customer = await customerService.getCustomer({id: customerId});
     if(!customer){
       log.error('Customer not found');
       throw new CustomerNotFoundError();
     }
     const data = {
-      customer: customer.id,
+      customer: customer._id,
       session_key: key,
       createdAt: new Date(),
       modifiedAt: new Date()
