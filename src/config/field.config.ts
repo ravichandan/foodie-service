@@ -5,10 +5,14 @@ import { googleJwtValidator } from '../oidc/JwtValidator';
 import { HTTP401Error } from '../utils/error4xx';
 
 const validatePostcodeAndSururb = (_: any, { req }: any) => {
-  if (!req.body?.address?.postcode) {
-    throw new Error('Postcode is required for the address');
-  } else if (req.body?.address?.postcode < 2000 || req.body?.address?.postcode > 2899) {
-    throw new Error('Not a valid postcode in this state');
+
+  if (req.body?.address?.postcode && req.body?.address?.postcode !==0 ) {
+
+    if (!req.body?.address?.postcode) {
+      throw new Error('Postcode is required for the address');
+    } else if (req.body?.address?.postcode < 2000 || req.body?.address?.postcode > 2899) {
+      throw new Error('Not a valid postcode in this state');
+    }
   }
   if (!req.body?.address?.suburb) {
     throw new Error('Sururb is required for the address');
