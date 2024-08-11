@@ -17,14 +17,14 @@ export enum FriendlyTag {
 }
 
 export enum PRICE_LEVEL {
-  FREE='FREE',
-  INEXPENSIVE='INEXPENSIVE',
-  MODERATE='MODERATE',
-  EXPENSIVE='EXPENSIVE',
-  VERY_EXPENSIVE='VERY_EXPENSIVE'
-
-
+  FREE,
+  INEXPENSIVE,
+  MODERATE,
+  EXPENSIVE,
+  VERY_EXPENSIVE,
+  SUPER_EXPENSIVE
 }
+
 export enum WeekDays {
   SUNDAY = 'SUNDAY',
   MONDAY = 'MONDAY',
@@ -132,8 +132,8 @@ const placeSchema: Schema<IPlace> = new Schema<IPlace>(
       type: String,
     },
     priceLevel: {
-      type: String,
-      enum: Object.values(PRICE_LEVEL),
+      type: Number,
+      enum: PRICE_LEVEL,
     },
 
 
