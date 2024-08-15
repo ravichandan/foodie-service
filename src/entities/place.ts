@@ -131,11 +131,11 @@ const placeSchema: Schema<IPlace> = new Schema<IPlace>(
     formattedAddress: {
       type: String,
     },
+
     priceLevel: {
       type: Number,
       enum: PRICE_LEVEL,
     },
-
 
     createdAt: {
       type: Date,

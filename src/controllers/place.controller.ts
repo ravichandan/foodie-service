@@ -89,16 +89,16 @@ class PlaceController {
    * matching the mentioned criteria sorted by highest taste rating first.
    *
    */
-  getPlaces = async (args: { placeName: string; itemName?: string; postcode: string; city: string }) => {
+  getPlaces = async (args: { placeName: string; itemName?: string; postcode: string; suburbs: string[]; city: string }) => {
     log.info('Received request in getPlaces');
-    const { placeName, itemName, postcode , city}  = {
+    const { placeName, itemName, postcode , suburbs, city}  = {
       // ...req.params,
       // ...req.query,
       ...args
     } as any;
 
     log.trace('Params to getPlaces: ', { placeName, itemName, postcode, city });
-    const places: PlaceModel[] | undefined = await placeService.getPlaces({ placeName, itemName, postcode, city });
+    const places: PlaceModel[] | undefined = await placeService.getPlaces({ placeName, itemName, postcode, suburbs, city });
     log.trace('Found the following places with given params', places);
     if (!places) {
       throw new HTTP404Error('Place not found with given id');

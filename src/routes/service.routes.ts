@@ -19,6 +19,7 @@ import { getItemInPlaceByPlaceItemIdSchemaConfig, getItemsByNameSchemaConfig } f
 import { ItemResponse } from '../models/itemModel';
 import { PlaceModel, PlaceResponse } from '../models/placeModel';
 import { config } from '../config/config';
+import { suburbController } from '../controllers/suburb.controller';
 
 const log = getLogger('service.routes');
 export type UploadedFile = {
@@ -188,6 +189,57 @@ export default [
 				// log.debug('Returning the fetched Place');
 		},
 	},
+	{
+		path: '/suburbs', // get place by id
+		method: 'post',
+		validators: [],
+		handler: async (req: Request, res: Response) => {
+				log.info('in POST /suburbs route handler');
+
+				const requestBody = req.body;
+				try {
+					const errored = await suburbController.addMultipleSuburbs(requestBody);
+					if(errored.length > 0){
+						res.status(500).send({
+							failedEntries: errored
+						})
+					}
+					res.status(201).send();
+					// res.send(placeModel);
+				} catch (error: any) {
+					log.error('Saving suburb data resulted in Error: ' , error);
+					if (error instanceof HTTP404Error) {
+						res.status(404).send(error);
+					} else {
+						res.status(500).send(error);
+					}
+				}
+		},
+	},
+	{
+		path: '/suburbs', // get place by id
+		method: 'get',
+		validators: [],
+		handler: async (req: Request, res: Response) => {
+				log.info('in POST /suburbs route handler');
+
+				const requestBody = req.body;
+			const { city, country } = { ...req.query } as any;
+
+			try {
+					const suburbs = await suburbController.getSuburbs({ city, country });
+					res.status(201).send({ suburbs: suburbs });
+					// res.send(placeModel);
+				} catch (error: any) {
+					log.error('Saving suburb data resulted in Error: ' , error);
+					if (error instanceof HTTP404Error) {
+						res.status(404).send(error);
+					} else {
+						res.status(500).send(error);
+					}
+				}
+		},
+	},
 
 	// place routes
 	{
@@ -229,7 +281,6 @@ export default [
 		method: 'get',
 		validators: [
 			checkSchema(FieldConfigs.getPlaceByNameSchemaConfig),
-			// checkSchema(FieldConfigs.getPlaceSchemaConfig)
 		],
 		handler: async (req: Request, res: Response) => {
 			const err = validationResult(req);
@@ -239,12 +290,18 @@ export default [
 			} else {
 				// No errors, pass req and res on to your controller
 				log.debug('in get /places/?placeName=<xyz>&itemName=<abc> route handler, processing request, req.params:', req.params);
-				const { placeName, itemName, postcode, city } = {
+				const { placeName, itemName, postcode, suburbs, city } = {
 					...req.params,
 					...req.query,
 				} as any;
 				try {
-					const response = await placeController.getPlaces({ placeName: simplify(placeName), itemName: simplify(itemName), postcode, city });
+					const response = await placeController.getPlaces(
+						{ placeName: simplify(placeName),
+							itemName: simplify(itemName),
+							postcode,
+							suburbs: suburbs?.split(','),
+							city
+						});
 					res.send(response);
 				} catch (error: any){
 					log.error('Error while doing getPlaces Error:: ', error)

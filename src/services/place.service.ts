@@ -36,6 +36,7 @@ export class PlaceService {
 											itemName?: string;
 											postcode?: string;
 											city?: string;
+											suburbs: string[];
 											pageSize?: number;
 											pageNumber?: number;
 										}): Promise<PlaceModel[] | undefined>
@@ -56,6 +57,28 @@ export class PlaceService {
 		if (!!params?.city) {
 			query.push({ $match: { 'address.city': { $regex: params?.city, $options: "i" }}});
 		}
+		if (!!params?.suburbs) {
+			// {
+			// 	"address.suburb": {
+			// 		$regex: "Quakers Hill",
+			// 		$options: "i"
+			// 	}
+			// },
+			// orrrr
+			// $or: [
+			// 	{
+			// 		"address.suburb": /quakers hill/i
+			// 	},
+			// log.trace('debugging testtt ', params.suburbs.map(suburb => ({ 'address.suburb': {$regex: suburb, $options: 'i' } })));
+			log.trace('debugging testtt ', { 'address.suburb': new RegExp(`(${params.suburbs.join('|')})`, 'i') });
+			query.push({ $match: { 'address.suburb': new RegExp(`(${params.suburbs.join('|')})`, 'i')
+					// 		$or: [
+			// 			params.suburbs.map(suburb => ({ $in: [new RegExp(`${params.suburbs}`, 'i')] }))
+			// // { $in: [new RegExp(`${params.suburbs}`, 'i')] }
+			// ]}
+			}});
+		}
+		log.trace('debuggingggg:: query:: ', query.toString());
 		// if(!!params?.itemName) {
 		query.push(
 			{
