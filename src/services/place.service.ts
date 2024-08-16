@@ -490,6 +490,37 @@ export class PlaceService {
 									{ $skip: (+args.page! - 1) * +args.size! },
 									{
 										$lookup: {
+											from: "reviewthreads",
+											localField: "_id",
+											foreignField: "review",
+											pipeline:[{
+												$project: {
+													// createdAt: 0,
+													replies: 1,
+													likedBy: {
+														_id: 1
+													},
+													review: 1,
+													// modifiedAt: 0,
+													// __v: 0,
+													_id: 1,
+													customer: 1,
+													dislikedBy: 1
+
+
+												}
+											}],
+											as: "info"
+										}
+									},
+									{
+										$unwind: {
+											path: "$info",
+											preserveNullAndEmptyArrays: true
+										}
+									},
+									{
+										$lookup: {
 											from: 'reviews',
 											localField: 'children',
 											foreignField: '_id',
