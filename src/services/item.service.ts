@@ -77,15 +77,19 @@ export class ItemService {
 		const { name, aliases } = { ...args };
 		log.debug('Received request to get an item with aliases: ', aliases);
 		const q: any = {};
-		if (!!args.name) {
-			q['name'] = { $in: args.name };
+		let li = null;
+		if (!!args.name && !!args.aliases) {
+			 li = [new RegExp(args.name, 'i')].push(...args.aliases.map(ali=> new RegExp(ali, 'i')));
+		} else if(!!args.name) {
+			li = [new RegExp(args.name, 'i')];
+		} else if (!!args.aliases) {
+			li = [args.aliases.map(ali=> new RegExp(ali, 'i'))];
 		}
-		if (!!args.aliases) {
-			q['aliases'] = { $in: args.aliases };
-		}
-
+		q['name'] = { $in: li };
+		q['aliases'] = { $in: li };
+		
 		try {
-			const item = await Item.findOne({ ...Object.entries(q).map(entry => ({ $eq: entry })) });
+			const item = await Item.findOne(q).lean();
 			if (!item) {
 				log.trace('Item not found by given name or aliases');
 				return undefined;
@@ -183,8 +187,8 @@ export class ItemService {
 								cuisines: {
 									$first: '$cuisines',
 								},
-								category: {
-									$first: '$category',
+								course: {
+									$first: '$course',
 								},
 								name: {
 									$first: '$name',
@@ -200,7 +204,7 @@ export class ItemService {
 							places: 1,
 							medias: 1,
 							cuisines: 1,
-							category: 1,
+							course: 1,
 							name: 1,
 							description: 1,
 						},
@@ -332,7 +336,7 @@ export class ItemService {
 					},
 					{
 						$set: {
-							'item.category': '$item.category',
+							'item.course': '$item.course',
 							'item.cuisine': '$item.cuisine',
 							'item.name': '$name',
 							'item.price': '$price',

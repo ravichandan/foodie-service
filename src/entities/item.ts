@@ -6,14 +6,14 @@ import { IPlace } from './place';
 const uc = <T extends string>(x: T) => x.toUpperCase() as Uppercase<T>;
 
 const x: 'FOO' = uc('foo'); // okay
-type ItemCategoryKeys = keyof typeof ItemCategory;
+type ItemCourseKeys = keyof typeof ItemCourse;
 type CuisineKeys = keyof typeof Cuisine;
 
-const getCategory = (key: string) => {
-  const c: ItemCategory = ItemCategory[key.toUpperCase() as ItemCategory];
+const getCourse = (key: string) => {
+  const c: ItemCourse = ItemCourse[key.toUpperCase() as ItemCourse];
 };
 
-export enum ItemCategory {
+export enum ItemCourse {
   MAINS = 'MAINS',
   STARTER = 'STARTER',
   DRINKS = 'DRINKS',
@@ -45,7 +45,8 @@ export type IItem = Document & {
   /**
    * Indicates whether is a starter or drinks or main course, etc
    */
-  category: ItemCategory;
+  course: ItemCourse;
+
 
   // name of the item
   name: string; // max 100 chars
@@ -87,10 +88,10 @@ const itemSchema: Schema<IItem> = new Schema<IItem>(
       enum: Object.values(Cuisine),
       validate: (c: Cuisine) => Array.isArray(c) && c.length > 0,
     },
-    category: {
+    course: {
       type: String,
-      enum: Object.values(ItemCategory), //['MAINS', 'STARTER', 'DRINKS'],
-      required: true,
+      enum: Object.values(ItemCourse), //['MAINS', 'STARTER', 'DRINKS'],
+      required: false,
     },
     media: {
       type: mediaSchema,

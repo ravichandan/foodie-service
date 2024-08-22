@@ -7,7 +7,7 @@ import { IMedia } from '../entities/media';
 import * as Utils from '../utils/Utils';
 import { Logger } from 'log4js';
 import { PlaceModel, PlaceResponse } from '../models/placeModel';
-import { Cuisine, IItem, ItemCategory } from '../entities/item';
+import { Cuisine, IItem, ItemCourse } from '../entities/item';
 import { itemService } from '../services/item.service';
 import { IPlaceItem } from '../entities/placeItem';
 import { placeItemService } from '../services/placeItem.service';
@@ -229,9 +229,13 @@ class PlaceController {
     }
 
     let item;
-    if(args.item.id){
+    if(!!args.item.id){
       log.trace('looking for item with id: ', args.item.id);
       item = await itemService.getItem(args.item.id);
+      if(!item) {
+        log.error('Invalid item reference in the request');
+        throw new HTTP400Error('Invalid item reference in the request');
+      }
     }
     if (!item && !args.item.aliases) {
       log.trace('Looking for known \'Item\'s from aliases: ', args.item.aliases);
@@ -243,7 +247,7 @@ class PlaceController {
       args.item = {
         aliases: [args.item.name],
         name: args.item.name,
-        category: args.item.category,
+        course: args.item.course,
         cuisines: args.item.cuisines,
         description: args.item.description,
         media: args.item.medias?.[0]
@@ -253,15 +257,15 @@ class PlaceController {
       // res.status(400).send('Item reference is mandatory');
     }
 
-    // data.category= ItemCategory[req.body.category.toUpperCase() as ItemCategory];
+    // data.course= ItemCourse[req.body.course.toUpperCase() as ItemCourse];
     // data.cuisines= [...req.body.cuisines.map((c: any) => Cuisine[c.toUpperCase() as Cuisine])];
     // const { itemReferenceId, ...itemData } = { ...data };
     // delete data.itemReferenceId;;
     //call the create item function in the service and pass the data from the request
     log.trace('Validating Item reference in the request ');
     try {
-      let item: IItem | undefined;
-      if (!item && !args.item?.id) {
+      // let item: IItem | undefined;
+      if (!item ) {
         log.info('Item is not found in inventory, creating it');
         item = await itemService.createItem(args.item);
         log.trace('Item created successfully in the inventory');
@@ -269,10 +273,7 @@ class PlaceController {
       //   item = await itemService.getItem(data.item.id);
       //   log.trace('Item found with id: ', data.item.id);
       }
-      else {
-        log.error('Invalid item reference in the request');
-        throw new HTTP400Error('Invalid item reference in the request');
-      }
+      
       log.trace('Looking for the place with id: ', args.placeId);
 
       if (place && item) {
@@ -280,11 +281,12 @@ class PlaceController {
           place: place,
           item: item,
           name: args.item.name,
+          category: args.item.category,
           description: args.item.description,
           medias: args.item.medias? [...args.item.medias]: undefined,
         } as IPlaceItem;
         log.trace('Adding PlaceItem document with data: ', placeItemData);
-        await placeItemService.addPlaceItem(placeItemData);
+        item = await placeItemService.addPlaceItem(placeItemData);
         log.trace('Successfully added PlaceItem document.');
       }
 

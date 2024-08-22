@@ -33,7 +33,7 @@ class ReviewController {
       correlationId: req.header('correlationId'),
       customer: req.header('CUSTOMER_ID'),
       ...req.body,
-      // category: ReviewCategory[req.body.category.toUpperCase() as ReviewCategory],
+      
       // cuisines: [...req.body.cuisines.map((c: any) => Cuisine[c.toUpperCase() as Cuisine])],
     };
     points += calculatePoints(data.description ? 'review' : undefined);

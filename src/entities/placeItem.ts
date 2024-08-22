@@ -2,7 +2,7 @@
 import mongoose, { Document, Model, model, Schema } from 'mongoose';
 import { IPlace } from './place';
 import { IMedia, mediaSchema } from './media';
-import { Cuisine, IItem, ItemCategory } from './item';
+import { Cuisine, IItem, ItemCourse } from './item';
 // import Inc from 'mongoose-sequence';
 import { IReview } from './review';
 import { IPlaceItemRating } from './placeItemRating';
@@ -53,7 +53,13 @@ export type IPlaceItem = Document & {
   name: string;
   simpleName: string;
 
-  category: ItemCategory;
+  course: ItemCourse;
+
+  /**
+   * Indicates vendor specific category
+   */
+  category: string;
+
   cuisines: Cuisine[];
   // contains calorie related info
   calorieInfo: CalorieInfo;
@@ -70,7 +76,7 @@ export type IPlaceItem = Document & {
   // customised description of the Item in this Place
   description: string;
   // cuisines: Cuisine[];
-  // category: ItemCategory;
+  // course: ItemCourse;
   medias: IMedia[];
   reviews: IReview[];
   rating: IPlaceItemRating;
@@ -102,6 +108,8 @@ const placeItemSchema: Schema<IPlaceItem> = new Schema<IPlaceItem>(
     price: String,
     aliases: [String],
     description: String,
+
+    category: String,
     calorieInfo: new Schema<CalorieInfo>({ count: { type: Number }, unit: { type: String } }),
     ingredients: {
       type: [String],
@@ -111,9 +119,9 @@ const placeItemSchema: Schema<IPlaceItem> = new Schema<IPlaceItem>(
     // 	enum: Object.values(Cuisine),
     // 	validate: (c: Cuisine) => Array.isArray(c) && c.length > 0,
     // },
-    // category: {
+    // course: {
     // 	type: String,
-    // 	enum: Object.values(ItemCategory), //['MAINS', 'STARTER', 'DRINKS'],
+    // 	enum: Object.values(ItemCourse), //['MAINS', 'STARTER', 'DRINKS'],
     // 	required: true,
     // },
     medias: {

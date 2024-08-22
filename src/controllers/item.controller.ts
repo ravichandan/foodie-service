@@ -1,6 +1,6 @@
 import { itemService } from '../services/item.service';
 import { Request, Response } from 'express';
-import { Cuisine, IItem, ItemCategory } from '../entities/item';
+import { Cuisine, IItem, ItemCourse } from '../entities/item';
 import { mediaService } from '../services/media.service';
 import { IMedia } from '../entities/media';
 import { getLogger, itemsToItemModels } from '../utils/Utils';
@@ -24,7 +24,7 @@ class ItemController {
     const data: IItem = {
       // correlationId: req.header('correlationId'),
       ...req.body,
-      category: ItemCategory[req.body.category.toUpperCase() as ItemCategory],
+      course: ItemCourse[req.body.course.toUpperCase() as ItemCourse],
       cuisines: [...req.body.cuisines.map((c: any) => Cuisine[c.toUpperCase() as Cuisine])],
     };
     //call the create item function in the service and pass the data from the request

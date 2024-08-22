@@ -12,8 +12,9 @@ export type ItemResponse = {
 };
 
 export type ItemModel = {
-  id: any;
+  _id: any;
   name: string;
+  course: string;
   category: string;
   cuisine: string;
   description: string;

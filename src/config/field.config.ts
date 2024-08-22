@@ -1,4 +1,4 @@
-import { Cuisine, ItemCategory } from '../entities/item';
+import { Cuisine, ItemCourse } from '../entities/item';
 import { Schema } from 'express-validator';
 import { CustomerModel } from '../models/customerModel';
 import { googleJwtValidator } from '../oidc/JwtValidator';
@@ -241,10 +241,10 @@ export const addItemSchemaConfig: Schema = {
 export const createItemSchemaConfig: Schema = {
   name: { isLength: { options: { min: 3, max: 100 } } },
   description: { optional: true, isLength: { options: { max: 300 } } },
-  category: {
+  course: {
     custom: {
-      options: (val: string, _: any) => !val || Object.keys(ItemCategory).includes(val.toUpperCase()),
-      errorMessage: 'Invalid Category',
+      options: (val: string, _: any) => !val || Object.keys(ItemCourse).includes(val.toUpperCase()),
+      errorMessage: 'Invalid course',
     },
   },
   cuisines: {

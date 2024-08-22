@@ -20,8 +20,8 @@ export class PlaceItemService {
 			data.modifiedAt = new Date();
 			log.trace('Creating PlaceItem with data: ', data);
 			const newItem: IPlaceItem = await PlaceItem.create(data);
-			log.trace('PlaceItem created successfully, returning data');
-			return newItem;
+			log.trace('PlaceItem created successfully, returning data:: ', newItem);
+			return PlaceItem.populate(newItem, 'item');
 		} catch (error) {
 			log.error('Error while create a PlaceItem: ', error);
 			throw error;
@@ -184,8 +184,8 @@ export class PlaceItemService {
 								cuisines: {
 									$first: '$item.cuisines',
 								},
-								category: {
-									$first: '$item.category',
+								course: {
+									$first: '$item.course',
 								},
 								noOfReviews: {
 									$sum: 1,
@@ -241,7 +241,7 @@ export class PlaceItemService {
 							description: 1,
 							price: 1,
 							cuisines: 1,
-							category: 1,
+							course: 1,
 							noOfReviews: 1,
 							totalNoOfReviews: 1,
 							noOfReviewPhotos: 1,
