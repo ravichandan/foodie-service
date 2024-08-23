@@ -185,6 +185,7 @@ export const itemToItemModel = (pi: IPlaceItem): ItemModel | undefined => {
 		taste:  pi.rating?.taste ?? 0,
 		cuisine: pi.item?.cuisines?.join(','),
 		category: pi.category,
+		uberPopularity: pi.uberPopularity,
 		presentation: pi.rating?.presentation ?? 0,
 		noOfReviews: pi.rating?.noOfReviews ?? 0,
 		medias: mediasToMediaModels(pi.medias),

@@ -10,6 +10,7 @@ import { CustomerIdHeaderNotFoundError } from '../utils/error4xx';
 import { config } from '../config/config';
 import { createFileBuffer } from '../utils/MemoryFileStorage';
 import { handleSingleUploadFile } from '../utils/LocalFileStorage';
+import { placeItemService } from '../services/placeItem.service';
 
 const log: Logger = getLogger('media.controller');
 
@@ -74,6 +75,9 @@ class MediaController {
       const media: IMedia | unknown = await mediaService.addMedia(data);
       if (data.placeId && !!media) {
         const place = await placeService.updatePlaceMedias(data.placeId, media as IMedia);
+      }
+      if (data.placeItemId && !!media) {
+        const placeItem = await placeItemService.updatePlaceItemMedias(data.placeItemId, media as IMedia);
       }
       media && medias.push(media);
     }

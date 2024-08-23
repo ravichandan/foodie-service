@@ -7,6 +7,7 @@ import { ItemModel } from '../models/itemModel';
 import { Review } from '../entities/review';
 import { IItem, Item } from '../entities/item';
 import { Customer } from '../entities/customer';
+import { IMedia } from '../entities/media';
 
 const log: Logger = getLogger('placeItem.service');
 
@@ -425,6 +426,31 @@ export class PlaceItemService {
 			return placeItem;
 		} catch (error) {
 			log.error('Error while deleting PlaceItem with id: ' + id + '. Error: ', error);
+		}
+	}
+
+
+	//update a PlaceItem
+	async updatePlaceItemMedias(id: string, media: IMedia): Promise<IPlaceItem | null | undefined> {
+		log.debug('Received request to add a media a IPlaceItem with id: ', id);
+
+		try {
+			//pass the id of the object you want to update
+			//data is for the new body you are updating the old one with
+			//new:true, so the dats being returned, is the update one
+			log.trace('Updating a IPlaceItem id: ' + id + ' with media: ', media);
+			const placez: any = await PlaceItem.findByIdAndUpdate(
+				{ _id: id },
+				{ $push: { medias: { $each: [media], $sort: -1, $slice: 3 } } },
+				{
+					new: true,
+				},
+			);
+			log.debug('Successfully updated the PlaceItem: ', placez);
+			return placez;
+		} catch (error) {
+			log.error('Error while updating PlaceItem with id: ' + id + '. Error: ', error);
+			throw error;
 		}
 	}
 }

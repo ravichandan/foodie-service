@@ -12,6 +12,10 @@ type CuisineKeys = keyof typeof Cuisine;
 const getCourse = (key: string) => {
   const c: ItemCourse = ItemCourse[key.toUpperCase() as ItemCourse];
 };
+export const getCuisine = (key: string): Cuisine => {
+  const c: Cuisine = Cuisine[key.toUpperCase() as Cuisine];
+  return c;
+};
 
 export enum ItemCourse {
   MAINS = 'MAINS',

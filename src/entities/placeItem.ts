@@ -75,6 +75,9 @@ export type IPlaceItem = Document & {
 
   // customised description of the Item in this Place
   description: string;
+
+  uberPopularity: string; 
+
   // cuisines: Cuisine[];
   // course: ItemCourse;
   medias: IMedia[];
@@ -107,6 +110,7 @@ const placeItemSchema: Schema<IPlaceItem> = new Schema<IPlaceItem>(
     name: String,
     price: String,
     aliases: [String],
+    uberPopularity: String,
     description: String,
 
     category: String,

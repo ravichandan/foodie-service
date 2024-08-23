@@ -18,6 +18,7 @@ export type ItemModel = {
   category: string;
   cuisine: string;
   description: string;
+  uberPopularity: string;
   taste: number;
   presentation: number;
   noOfReviews: number;

@@ -1,4 +1,4 @@
-import { IItem, Item } from '../entities/item';
+import { Cuisine, getCuisine, IItem, Item } from '../entities/item';
 import { Logger } from 'log4js';
 import { getLogger } from '../utils/Utils';
 import { IPlaceItem, PlaceItem } from '../entities/placeItem';
@@ -31,10 +31,14 @@ export class ItemService {
 			// throw error;
 		}
 
+		itemData.createdAt = new Date();
+		itemData.modifiedAt = new Date();
+		if(!!itemData.cuisines){
+			itemData.cuisines=itemData.cuisines.map(c=> getCuisine(c.toUpperCase())) as Cuisine[];
+		}
+		log.trace('Creating Item with data: ', itemData);
 		try {
-			itemData.createdAt = new Date();
-			itemData.modifiedAt = new Date();
-			log.trace('Creating Item with data: ', itemData);
+			
 			const newItem: IItem = await Item.create(itemData);
 			log.trace('Item created successfully, returning data');
 			return newItem;

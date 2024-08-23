@@ -249,9 +249,10 @@ class PlaceController {
         name: args.item.name,
         course: args.item.course,
         cuisines: args.item.cuisines,
+        uberPopularity: args.item.uberPopularity,
         description: args.item.description,
         media: args.item.medias?.[0]
-      } as IItem;
+      }
       // log.error('Item reference is mandatory');
       // throw new HTTP400Error('Item reference is mandatory');
       // res.status(400).send('Item reference is mandatory');
@@ -267,7 +268,7 @@ class PlaceController {
       // let item: IItem | undefined;
       if (!item ) {
         log.info('Item is not found in inventory, creating it');
-        item = await itemService.createItem(args.item);
+        item = await itemService.createItem(args.item as IItem);
         log.trace('Item created successfully in the inventory');
       // } else {
       //   item = await itemService.getItem(data.item.id);
@@ -283,6 +284,7 @@ class PlaceController {
           name: args.item.name,
           category: args.item.category,
           description: args.item.description,
+          uberPopularity: args.item.uberPopularity,
           medias: args.item.medias? [...args.item.medias]: undefined,
         } as IPlaceItem;
         log.trace('Adding PlaceItem document with data: ', placeItemData);
