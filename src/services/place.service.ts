@@ -6,6 +6,7 @@ import { PlaceModel } from '../models/placeModel';
 import { Customer } from '../entities/customer';
 import { HTTP404Error } from '../utils/error4xx';
 import { config } from '../config/config';
+import { PlaceItem } from '../entities/placeItem';
 
 
 const log: Logger = getLogger('place.service');
@@ -452,9 +453,7 @@ export class PlaceService {
 									in: {
 										$mergeObjects: [
 											'$$this',
-											{
-												placeItem: '$placeItem',
-											},
+											{ placeItem: '$placeItem' },
 										],
 									},
 								},
@@ -464,6 +463,20 @@ export class PlaceService {
 					{
 						$unset: ['placeItem'],
 					},
+					{$group: {
+						_id: "$_id",
+						placeName: {$first: "$placeName"},
+						simpleName: {$first: "$simpleName"},
+						address: {$first: "$address"},
+						tags: {$first: "$tags"},
+						openingTimes: {$first: "$openingTimes"},
+						medias: {$first: "$medias"},
+						items: {
+						$push: {
+							$arrayElemAt: [ "$items", 0 ] ,
+							}   
+						}
+					}}
 				];
 			} else if (args.fetchReviews) {
 				query = [
@@ -1038,6 +1051,61 @@ export class PlaceService {
 			return place;
 		} catch (error) {
 			log.error('Error while deleting Place with id: ' + id + '. Error: ', error);
+		}
+	}
+
+		//delete a place by using the find by id and delete
+	async deleteDuplicatePlaces(): Promise<any | undefined> {
+		log.debug('Received request to delete all duplicate places');
+
+		try {
+			const placesWithDuplicates: any[] = await Place.aggregate([
+				{
+				  "$group": {
+					"_id": "$placeName",
+					"original": { "$first": "$$ROOT" },
+					"duplicates": { "$push": "$$ROOT" },
+					"count": { "$sum": 1 }
+				  }
+				},
+				{
+				  "$match": {
+					"count": { "$gt": 1 }
+				  }
+				},
+				{
+				  "$project": {
+					"placeName": "$placeName",
+					"original": 1,
+					"duplicates": {
+					  "$filter": {
+						"input": "$duplicates",
+						"as": "place",
+						"cond": { "$ne": ["$$place._id", "$original._id"] }
+					  }
+					}
+				  }
+				}
+			  ]);
+			const allDuplicateIds: any[] = [];
+			placesWithDuplicates.forEach(p => p.duplicates.forEach((d: any) => allDuplicateIds.push(d._id)));
+			
+			log.trace('Duplicate ids to be deleted:: ',allDuplicateIds);
+			let result = Place.deleteMany({ _id: { $in: allDuplicateIds }});
+			// log.trace('Deleting is completed in place.service, result:; ', result);
+
+// change medias to media in placeItem
+// await PlaceItem.updateMany({}, {$set: {
+// 	mediavb:  { $arrayToObject: "$medias" }
+// }});
+// { 
+// 	medias: 1,
+// 	media: { $arrayElemAt: ["$medias", 0] }
+//   }
+
+			return result;
+		} catch (error) {
+			log.error('Error while deleting duplicate Places. Error: ', error);
 		}
 	}
 }

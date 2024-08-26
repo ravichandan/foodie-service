@@ -215,6 +215,13 @@ class PlaceController {
     res.send('place deleted');
   };
 
+  //delete a place
+  deleteDuplicatePlaces = async (req: Request, res: Response) => {
+    // const id = req.params.id;
+    const result = await placeService.deleteDuplicatePlaces();
+    res.status(204).send(result);
+  };
+
   addItem = async (args:{ placeId: string, item: any }) => {
     log.info('Received request in PlaceController->addItem() to add the given Item to the given place');
     //data to be saved in database
@@ -285,7 +292,7 @@ class PlaceController {
           category: args.item.category,
           description: args.item.description,
           uberPopularity: args.item.uberPopularity,
-          medias: args.item.medias? [...args.item.medias]: undefined,
+          media: args.item.media ? args.item.media: undefined,
         } as IPlaceItem;
         log.trace('Adding PlaceItem document with data: ', placeItemData);
         item = await placeItemService.addPlaceItem(placeItemData);

@@ -188,7 +188,7 @@ export const itemToItemModel = (pi: IPlaceItem): ItemModel | undefined => {
 		uberPopularity: pi.uberPopularity,
 		presentation: pi.rating?.presentation ?? 0,
 		noOfReviews: pi.rating?.noOfReviews ?? 0,
-		medias: mediasToMediaModels(pi.medias),
+		media: pi.media ? mediaToMediaModel(pi.media): mediaToMediaModel(pi.medias?.[0]),
 		places: [placeToPlaceModel(pi.place)],
 		ratingInfo: (pi as any).ratingInfo
 	};

@@ -28,7 +28,7 @@ export type ItemModel = {
   price: number;
   aliases: string[];
   reviews: ReviewModel[];
-  medias: MediaModel[];
+  media: MediaModel;
   places: PlaceModel[];
   ratingInfo: IPlaceItemRating;
 };

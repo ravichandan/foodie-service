@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "",
   "scripts": {
-    "dev": "LOG_LEVEL=trace tsc-watch --onSuccess \"node ./dist/server/app.js\"",
+    "dev": "rm -rf dist && LOG_LEVEL=trace tsc-watch --onSuccess \"node ./dist/server/app.js\"",
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
     "build": "tsc --project tsconfig.json",
     "build:prod": "webpack",

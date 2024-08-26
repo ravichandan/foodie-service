@@ -438,10 +438,12 @@ export class PlaceItemService {
 			//pass the id of the object you want to update
 			//data is for the new body you are updating the old one with
 			//new:true, so the dats being returned, is the update one
+			// { $push: { medias: { $each: [media], $sort: -1, $slice: 3 } } },
 			log.trace('Updating a IPlaceItem id: ' + id + ' with media: ', media);
 			const placez: any = await PlaceItem.findByIdAndUpdate(
 				{ _id: id },
-				{ $push: { medias: { $each: [media], $sort: -1, $slice: 3 } } },
+				// { $push: { medias: { $each: [media], $sort: -1, $slice: 3 } } },
+				{ media: media },
 				{
 					new: true,
 				},

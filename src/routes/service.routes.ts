@@ -12,7 +12,6 @@ import { customerController } from '../controllers/customer.controller';
 import { r2Provider } from '../bucketers/r2.provider';
 import { mediaService } from '../services/media.service';
 import { HTTP400Error, HTTP404Error } from '../utils/error4xx';
-import { IPlaceItem } from '../entities/placeItem';
 // import { getPopularPlacesAndItems } from '../config/field.config';
 import { HTTPClientError } from '../utils/errorHttp';
 import { getItemInPlaceByPlaceItemIdSchemaConfig, getItemsByNameSchemaConfig } from '../config/field.config';
@@ -328,7 +327,7 @@ export default [
 			} else {
 				// No errors, pass req and res on to your controller
 				log.debug('in POST /places/:placeId/items route handler, processing request, req.body:: ', req.body);
-				log.trace('Populate the placeId in the request body');
+				log.trace('Populate the placeId in the request body, placeId:: ', req.params.placeId);
 				req.body.place={
 					id: req.params.placeId
 				}
@@ -472,6 +471,22 @@ export default [
 				await placeController.addPlace(req, res);
 				log.debug('Done adding Place');
 			}
+		},
+	}, {
+		path: '/places', // add a new place
+		method: 'delete',
+		validators: [],
+		handler: async (req: Request, res: Response) => {
+			
+			const duplicateOnly = req.query.duplicateOnly;
+			// No errors, pass req and res on to your controller
+			log.debug('in post /places route handler, processing request');
+			if(!!duplicateOnly){
+			await placeController.deleteDuplicatePlaces(req, res);
+			log.debug('Done deleting duplicate Places');} else{
+				res.sendStatus(204);
+			}
+		
 		},
 	},
 
@@ -641,11 +656,11 @@ export default [
 		path: '/medias/upload',
 		method: 'post',
 		validators: [
-			checkSchema(FieldConfigs.verifyCustomerIdHeader),
+			checkSchema(FieldConfigs.verifyCustomerIdHeader),checkSchema(FieldConfigs.validateAuth),
 		],
 		handler: async (req: Request, res: Response) => {
 			// req.files=req.body.files;
-			log.trace('In POST /medias/upload, req.body:: ', req.files);
+			log.trace('In POST /medias/upload, req.files:: ', req.files);
 			log.trace('In POST /medias/upload, req.body:: ', req.body);
 
 			// if(!req.body.files){

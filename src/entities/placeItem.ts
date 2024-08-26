@@ -80,6 +80,7 @@ export type IPlaceItem = Document & {
 
   // cuisines: Cuisine[];
   // course: ItemCourse;
+  media: IMedia;
   medias: IMedia[];
   reviews: IReview[];
   rating: IPlaceItemRating;
@@ -128,7 +129,7 @@ const placeItemSchema: Schema<IPlaceItem> = new Schema<IPlaceItem>(
     // 	enum: Object.values(ItemCourse), //['MAINS', 'STARTER', 'DRINKS'],
     // 	required: true,
     // },
-    medias: {
+    media: {
       type: [mediaSchema],
       validate: (v: IMedia) => Array.isArray(v), // && v.length > 0,
     },
