@@ -236,7 +236,7 @@ class PlaceController {
     }
 
     let item;
-    if(!!args.item.id){
+    if(args.item.id){
       log.trace('looking for item with id: ', args.item.id);
       item = await itemService.getItem(args.item.id);
       if(!item) {
@@ -248,10 +248,11 @@ class PlaceController {
       log.trace('Looking for known \'Item\'s from aliases: ', args.item.aliases);
       item = await itemService.getItemByNameOrAliases({ name: args.item.name, aliases: args.item.aliases });
     }
+    let iItem: any = null;
     if(!item ){
       log.trace('Preparing the item data to create a new one');
       // item = await itemService.getItemByAliases(data.aliases);
-      args.item = {
+      iItem = {
         aliases: [args.item.name],
         name: args.item.name,
         course: args.item.course,
@@ -259,7 +260,7 @@ class PlaceController {
         uberPopularity: args.item.uberPopularity,
         description: args.item.description,
         media: args.item.medias?.[0]
-      }
+      };
       // log.error('Item reference is mandatory');
       // throw new HTTP400Error('Item reference is mandatory');
       // res.status(400).send('Item reference is mandatory');
@@ -275,7 +276,7 @@ class PlaceController {
       // let item: IItem | undefined;
       if (!item ) {
         log.info('Item is not found in inventory, creating it');
-        item = await itemService.createItem(args.item as IItem);
+        item = await itemService.createItem(iItem as IItem);
         log.trace('Item created successfully in the inventory');
       // } else {
       //   item = await itemService.getItem(data.item.id);
@@ -290,6 +291,7 @@ class PlaceController {
           item: item,
           name: args.item.name,
           category: args.item.category,
+          price: args.item.price? Number(args.item.price.replace(/[^0-9.-]+/g,"")): null,
           description: args.item.description,
           uberPopularity: args.item.uberPopularity,
           media: args.item.media ? args.item.media: undefined,
