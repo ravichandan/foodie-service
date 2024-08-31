@@ -2,6 +2,15 @@ import { ICitySuburb, Suburb } from '../entities/suburb';
 import { Logger } from 'log4js';
 import { getLogger } from '../utils/Utils';
 import { IPlace } from '../entities/place';
+import https from 'https';
+import axios, { AxiosRequestConfig } from 'axios';
+import { config } from '../config/config';
+
+const ax_config: AxiosRequestConfig = {
+    httpsAgent: new https.Agent({
+        rejectUnauthorized: false
+    })
+};
 
 const log: Logger = getLogger('suburb.service');
 
@@ -148,6 +157,44 @@ export class SuburbService {
       log.error('Error while deleting Suburb with id: ' + id + '. Error: ', error);
     }
   }
+
+
+  //get a single suburb
+  async getSuburbFromMapsSq(roadName: string, postCode: string, state: string): Promise<string|undefined> {
+    if (!roadName || !postCode || !state) {
+      log.error('Need roadName, postCode, state to query Suburb from mapssq.six.nsw.gov.au');
+      // throw new Error('Need roadName, postCode, state to query Suburb from mapssq.six.nsw.gov.au');
+      return;
+    }
+    log.trace('suburb.service-> using mapssq.six.nsw.gov.au, fetching suburb from roadname: %s, postCode: %s, state: %s', roadName, postCode, state);
+    try {
+      // https://mapsq.six.nsw.gov.au/services/public/Address_Location?roadName=Merriville&postCode=2155&projection=EPSG%3A4326
+
+      const apiPath = config.mapsq_six_nsw;//'https://jsonplaceholder.typicode.com/posts';
+
+      const params = {
+        // ...ax_config,
+        projection: 'EPSG%3A4326',
+        postCode: postCode,
+        roadName: roadName
+      };
+      const response: any = await axios.get(apiPath, { params: params, ...ax_config });
+
+      log.trace('Got response from mapsq.six.nsw: ', response);
+      const suburbName = response.data?.addressResult?.addresses?.[0]?.suburbName;
+      if(suburbName){
+        log.trace('Found suburb from mapsq.six.nsw.gov.au, suburb:: ', suburbName);
+        // return suburbName;
+      }
+      return suburbName
+      // return response;
+    } catch (error) {
+      log.error('Error while fetching Suburb name', error);
+      return ;
+      // throw error;
+    }
+  }
+
 }
 
 //export the class

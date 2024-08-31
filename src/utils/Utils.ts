@@ -15,6 +15,8 @@ import { ActivityModel } from '../models/activityModel';
 import { Hono, MiddlewareHandler } from 'hono';
 import { AddressModel } from '../models/addressModel';
 import { config } from '../config/config';
+import { HTTP400Error } from './error4xx';
+import { street_types } from '../config/street_types';
 // import { Bindings } from '../index';
 
 log4js.configure({
@@ -384,3 +386,56 @@ export const isImage = (name: string) => {
 export const isVideo = (name: string) => {
 	return name.match(/\.(mp4|m4a|f4v|m4b|mov)$/) != null;
 };
+
+export const cleanPlaceName = (name: string, suburbs: string[]) => {
+
+	
+	logger.trace('List of suburbs:: ', suburbs);
+
+	// first remove special character from the end of the name
+
+	const specialCharRegex = /[^a-zA-Z_]$/g;
+	name = name.replace(specialCharRegex,'');
+
+	// now remove the suburb name if it comes at the end of the place name
+	const re = new RegExp('\\b('+suburbs.join('|').toLowerCase()+ ')\\b$', "i");
+
+	logger.trace('regex:: ', re);
+
+	logger.trace('place name before replace: ', name);
+	const cleanName = name.trim().replace(re, '').trim();
+
+	logger.trace('cleanName:: ', cleanName);
+	return cleanName;
+
+}
+
+export const extractStreetnameFromAddressLine = (line: string): string => {
+	// first remove all the street types like Rd, St, Glade from the line
+	console.log('\\b('+street_types.join('|').toLowerCase()+ ')\\b$');
+	let re = new RegExp('\\b('+street_types.join('|').toLowerCase()+ ')\\b$', "i");
+	line = line.replace(re, '').trim();
+
+	// then remove all strings like Unit, etc
+	re = new RegExp('\\b(unit|flat)\\b$', "i");
+	line = line.replace(re,'').trim();
+
+	// now remove any numbers, commas and special characters
+	line = line.replace(/[^a-zA-Z_ ]/g, '').trim();
+
+	// now split by space and take the longest string as street name
+	const parts: string[] = line.split(' ');
+	switch(parts.length){
+	  case 1: line = parts[0]; break; 
+	  case 2: line = parts[0] > parts[1] ? parts[0]: parts[1] ; break;
+	  case 3:
+	  case 4: 
+	  case 5: line = parts.reduce((a,b) => a.length>b.length ? a : b); break;
+	  default: 
+		logger.error('Check the address, it seems invalid');
+		throw new HTTP400Error('Check the address, it seems invalid');
+	}
+
+	return line;
+
+}

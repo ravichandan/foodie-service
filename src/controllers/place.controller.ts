@@ -14,15 +14,17 @@ import { placeItemService } from '../services/placeItem.service';
 import { placeToPlaceModel } from '../utils/Utils';
 import { HTTP400Error, HTTP404Error, HTTP500Error } from '../utils/error4xx';
 import { ItemModel } from '../models/itemModel';
+import { suburbController } from './suburb.controller';
+import { ICitySuburb } from '../entities/suburb';
+import { config } from '../config/config';
+import { suburbService } from '../services/suburb.service';
+import {street_types} from '../config/street_types';
 
 const log: Logger = Utils.getLogger('place.controller');
 
 class PlaceController {
   //add place controller
   addPlace = async (req: Request, res: Response) => {
-    // check('name').isLength({ min: 3 }).trim().escape(),
-    //     check('email').isEmail().normalizeEmail(),
-    //     check('age').isNumeric().trim().escape()
 
     //data to be saved in database
     log.trace('Adding correlationId into the request body');
@@ -32,7 +34,31 @@ class PlaceController {
     };
     //call the create place function in the service and pass the data from the request
     try {
-      log.trace('Creating a Place with given data');
+      
+      const suburbName = data.address?.suburb;
+      if(suburbName) {
+        // Check if the suburb is a known one
+        log.trace('Check if the suburb is a known one');
+        let suburbs: ICitySuburb[]|undefined = await suburbController.getSuburbsByNames([suburbName]);
+        if(!suburbs?.length) { // suburb is not known, try to deduce it from street name and postcode
+           const line = Utils.extractStreetnameFromAddressLine(data.address.line.toLowerCase());
+          
+          const suburbName = await suburbService.getSuburbFromMapsSq(line, data.address.postcode +'', data.address.state ?? 'NSW');
+          if(!suburbName) {
+            log.error('Check the address, it seems invalid');
+            throw new HTTP400Error('Check the address, it seems invalid');
+          }
+          data.address.suburb = suburbName;
+          suburbs = await suburbController.getSuburbsByNames([suburbName]);
+        }
+        
+        if(suburbs?.length) {
+          const subs : string[]=[suburbs[0].name, ...suburbs[0].surroundingSuburbs];
+          data.placeName = Utils.cleanPlaceName(data.placeName, subs);
+        }
+      }
+
+      log.trace('Creating a Place');
       let place: IPlace | null | undefined = await placeService.createPlace(data);
       if (place.medias.length < 1) {
         try {
