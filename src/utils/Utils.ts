@@ -17,7 +17,6 @@ import { AddressModel } from '../models/addressModel';
 import { config } from '../config/config';
 import { HTTP400Error } from './error4xx';
 import { street_types } from '../config/street_types';
-// import { Bindings } from '../index';
 
 log4js.configure({
 	appenders: {

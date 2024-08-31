@@ -345,6 +345,31 @@ export class PlaceService {
 	}
 
 	//get a single place
+	async getPlaceByNameAndGeoLocation(args: {
+		name: string | undefined,
+		latitude?: string,
+		longitude?: string
+	}): Promise<IPlace | undefined> {
+
+		if (!args.name || !args.latitude || !args.longitude) return undefined;
+		log.debug('Received request to get a place with args: ', args);
+
+		const places: any[] = await Place.aggregate([
+			{
+				$match: {
+					'placeName': { $regex: args.name, $options: 'i' },
+					"address.location.longitude": { $regex: args.longitude.substring(0, args.longitude.indexOf('.') + 4), $options: 'i' },
+					"address.location.latitude": { $regex: args.latitude.substring(0, args.latitude.indexOf('.') + 4), $options: 'i' },
+				}
+			}
+		]);
+		if(places?.length){ 
+			return places[0];
+		}
+		return undefined;
+	}
+
+	//get a single place
 	async getPlace(args: {
 		id: string | undefined,
 		fetchMenu?: boolean,

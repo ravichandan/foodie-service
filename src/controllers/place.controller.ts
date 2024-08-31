@@ -58,7 +58,15 @@ class PlaceController {
         }
       }
 
-      log.trace('Creating a Place');
+      log.trace('Verify if the place is already existing');
+      const existingPlace = await placeService.getPlaceByNameAndGeoLocation({name: data.placeName,latitude: data.address.location.latitude, longitude: data.address.location.longitude });
+      if(existingPlace){
+        log.trace('Place already exists with same name and geo-location');
+        res.status(200).send(existingPlace);
+        return 
+      }
+
+      log.trace('Creating a new Place');
       let place: IPlace | null | undefined = await placeService.createPlace(data);
       if (place.medias.length < 1) {
         try {
