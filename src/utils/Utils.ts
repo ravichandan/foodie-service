@@ -393,7 +393,7 @@ export const cleanPlaceName = (name: string, suburbs: string[]) => {
 
 	// first remove special character from the end of the name
 
-	const specialCharRegex = /[^a-zA-Z_]$/g;
+	const specialCharRegex = /[^a-zA-Z_)]$/g;
 	name = name.replace(specialCharRegex,'');
 
 	// now remove the suburb name if it comes at the end of the place name

@@ -357,7 +357,7 @@ export class PlaceService {
 		const places: any[] = await Place.aggregate([
 			{
 				$match: {
-					'placeName': { $regex: args.name, $options: 'i' },
+					'placeName': { $regex: encodeURIComponent(args.name), $options: 'i' },
 					"address.location.longitude": { $regex: args.longitude.substring(0, args.longitude.indexOf('.') + 4), $options: 'i' },
 					"address.location.latitude": { $regex: args.latitude.substring(0, args.latitude.indexOf('.') + 4), $options: 'i' },
 				}

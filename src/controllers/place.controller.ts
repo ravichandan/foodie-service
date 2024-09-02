@@ -361,7 +361,7 @@ class PlaceController {
     line = line.replace(streetRegex, '').trim();
   
     // then remove all strings like Unit, etc
-    const re = new RegExp('^\\b(unit|flat)\\b', "i");
+    const re = new RegExp('^\\b(unit|flat|ground floor|floor|shop|shop no)\\b', "i");
     line = line.replace(re,'').trim();
   
     // then remove all strings like north south if they come at the end of the string , etc
