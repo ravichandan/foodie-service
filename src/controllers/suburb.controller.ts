@@ -19,6 +19,7 @@ class SuburbController {
 		const suburbs: ICitySuburb[] = keys.map(key => ({
 			name: key,
 			postcode: body[key].Postcode,
+			state: body[key].State,
 			city: body[key].City,
 			country: body[key].Country,
 			surroundingSuburbs: body[key]['Surrounding Suburbs'],

@@ -27,7 +27,7 @@ export class SuburbService {
         // data,
         {
           "$addToSet": { "surroundingSuburbs": { "$each": data.surroundingSuburbs }},
-          $set: { postcode: data.postcode, city: data.city, country: 'Australia' },
+          $set: { postcode: data.postcode, state: data.state, city: data.city, country: 'Australiaa' },
         },
       { upsert: true, new: true, setDefaultsOnInsert: true });
       log.debug('Suburb added successfully returning created object. newSuburb: ', newSuburb);

@@ -6,6 +6,7 @@ export type ICitySuburb = Document & {
   city: string;
   country: string;
   name: string;
+  state: string;
   postcode: string;
   surroundingSuburbs: [string];
   createdAt: Date;
@@ -38,11 +39,16 @@ export const suburbSchema: Schema<ICitySuburb> = new mongoose.Schema<ICitySuburb
     postcode: {
       type: String,
     },
+    
+    // tells state of the suburb
+    state: {
+      type: String,
+    },
 
     // list of names of surrounding suburbs
     surroundingSuburbs: {
       type: [String],
-      validate: (v: String) => Array.isArray(v), // && v.length > 0,
+      validate: (v: string) => Array.isArray(v), // && v.length > 0,
     },
 
     createdAt: {
