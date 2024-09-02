@@ -408,33 +408,3 @@ export const cleanPlaceName = (name: string, suburbs: string[]) => {
 	return cleanName;
 
 }
-
-export const extractStreetnameFromAddressLine = (line: string): string => {
-	// first remove all the street types like Rd, St, Glade from the line
-	console.log('\\b('+street_types.join('|').toLowerCase()+ ')\\b$');
-	let re = new RegExp('\\b('+street_types.join('|').toLowerCase()+ ')\\b$', "i");
-	line = line.replace(re, '').trim();
-
-	// then remove all strings like Unit, etc
-	re = new RegExp('\\b(unit|flat)\\b$', "i");
-	line = line.replace(re,'').trim();
-
-	// now remove any numbers, commas and special characters
-	line = line.replace(/[^a-zA-Z_ ]/g, '').trim();
-
-	// now split by space and take the longest string as street name
-	const parts: string[] = line.split(' ');
-	switch(parts.length){
-	  case 1: line = parts[0]; break; 
-	  case 2: line = parts[0] > parts[1] ? parts[0]: parts[1] ; break;
-	  case 3:
-	  case 4: 
-	  case 5: line = parts.reduce((a,b) => a.length>b.length ? a : b); break;
-	  default: 
-		logger.error('Check the address, it seems invalid');
-		throw new HTTP400Error('Check the address, it seems invalid');
-	}
-
-	return line;
-
-}

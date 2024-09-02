@@ -43,6 +43,9 @@ class PlaceController {
         if(!suburbs?.length) { // suburb is not known, try to deduce it from street name and postcode
            const line = await this.extractStreetnameFromAddressLine(data.address.line.toLowerCase());
           
+          if(+data.address.postcode<1){
+            data.address.postcode = /\d{4}/g.exec((data.address as any).formattedAddress)?.[0] ?? '0' as any;
+          }
           const suburbName = await suburbService.getSuburbFromMapsSq(line, data.address.postcode +'', data.address.state ?? 'NSW');
           if(!suburbName) {
             log.error('Check the address, it seems invalid');
