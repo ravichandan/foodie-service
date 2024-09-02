@@ -41,7 +41,7 @@ class PlaceController {
         log.trace('Check if the suburb is a known one');
         let suburbs: ICitySuburb[]|undefined = await suburbController.getSuburbsByNames([suburbName]);
         if(!suburbs?.length) { // suburb is not known, try to deduce it from street name and postcode
-           const line = Utils.extractStreetnameFromAddressLine(data.address.line.toLowerCase());
+           const line = await this.extractStreetnameFromAddressLine(data.address.line.toLowerCase());
           
           const suburbName = await suburbService.getSuburbFromMapsSq(line, data.address.postcode +'', data.address.state ?? 'NSW');
           if(!suburbName) {
@@ -350,6 +350,51 @@ class PlaceController {
       // res.send(error.message);
     }
   };
+
+  extractStreetnameFromAddressLine = async (line: string): Promise<string> => {
+    // first remove all the street types like Rd, St, Glade from the line
+    console.log('\\b('+street_types.join('|').toLowerCase()+ ')\\b$');
+    const streetRegex = new RegExp('\\b('+street_types.join('|').toLowerCase()+ ')\\b$', "i");
+    line = line.replace(streetRegex, '').trim();
+  
+    // then remove all strings like Unit, etc
+    const re = new RegExp('\\b(unit|flat)\\b$', "i");
+    line = line.replace(re,'').trim();
+  
+    // then remove all strings like north south if they come at the end of the string , etc
+    const newsRegex = new RegExp('\\b(north|east|west|south)\\b$', "i");
+    line = line.replace(newsRegex,'').trim();
+
+    // now remove any numbers, commas and special characters
+    line = line.replace(/[^a-zA-Z_ ]/g, '').trim();
+  
+    // now split by space and take the longest string as street name
+    
+    const parts: any[] = [];
+    for (const l of line.split(' '))
+    { 
+        
+      await suburbService.getSuburbsByNames([l]).then(result => 
+        (!result || result.length==0)&& parts.push(l.trim().replace(streetRegex, '').trim().replace(newsRegex, '').trim())
+      );
+    
+    }
+
+    // parts = parts.map(async p => (await suburbService.getSuburbsByNames([p])).then(x => return x)  );
+    switch(parts.length){
+      case 1: line = parts[0]; break; 
+      case 2: line = parts[0] > parts[1] ? parts[0]: parts[1] ; break;
+      case 3:
+      case 4: 
+      case 5: line = parts.reduce((a,b) => a.length>b.length ? a : b); break;
+      default: 
+      log.error('Check the address, it seems invalid');
+      throw new HTTP400Error('Check the address, it seems invalid');
+    }
+  
+    return line;
+  
+  }
 }
 
 //export class

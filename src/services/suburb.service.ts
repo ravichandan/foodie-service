@@ -80,9 +80,13 @@ export class SuburbService {
   async getSuburbsByNames(names: string[]): Promise<ICitySuburb[] | undefined> {
     log.debug('Received request to getSuburbsByNames');
     try {
-      const suburbs = await Suburb.find({ name: { $in: names } });
-      log.trace('Returning fetched suburbs');
-      return suburbs;
+      const optRegexp: RegExp[] = [];
+names.forEach(function(opt){
+        optRegexp.push(  new RegExp(opt, "i") );
+});
+      const suburbs = await Suburb.find({ name: { $in: optRegexp } });
+      log.trace('Returning fetched suburbs, length: ', suburbs.length);
+      return suburbs ?? undefined;
     } catch (error) {
       log.error('Error while doing getSuburbsByNames', error);
     }
