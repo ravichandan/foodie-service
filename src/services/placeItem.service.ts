@@ -391,6 +391,23 @@ export class PlaceItemService {
 		}
 	}
 
+		//get a single placeItem
+	// not yet used
+	async getPlaceItemByNameAndPlace(itemName: string, placeId: string): Promise<IPlaceItem | undefined | null> {
+		log.debug('Received request to get a placeItem by name: %s and placeId: %s', itemName, placeId);
+		try {
+			const placeItem: IPlaceItem|null = await PlaceItem.findOne({ name: itemName, place:  placeId }).lean();
+			if (!placeItem) {
+				log.trace('PlaceItem not found by name: %s and placeId: %s', itemName, placeId);
+				return undefined;
+			}
+			log.trace('Fetched a placeItem: ', placeItem);
+			return placeItem;
+		} catch (error) {
+			log.error('Error while doing getPlaceItem  name: '+itemName+' and placeId: '+ placeId+'. Error: ', error);
+		}
+	}
+
 	//update a placeItem
 	// not yet used
 	async updatePlaceItem(id: number, data: any): Promise<IPlaceItem | null | undefined> {
