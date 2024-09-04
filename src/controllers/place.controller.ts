@@ -70,6 +70,7 @@ class PlaceController {
         latitude: data.address.location.latitude,
         longitude: data.address.location.longitude,
       });
+      
       if (existingPlace) {
         log.trace('Place already exists with same name and geo-location');
         res.status(200).send(existingPlace);
