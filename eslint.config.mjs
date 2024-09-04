@@ -11,7 +11,9 @@ export default [
 	{
 		languageOptions: { globals: globals.browser } ,
 		ignores: [ "webpack.config.js"],
-
+		rules: {
+            noExplicitAny: false,
+        }
 
 	},
 

@@ -315,32 +315,124 @@ export class PlaceService {
 	async getTopPlaces(args?: {
 		city?: string;
 		postcode?: string;
+		suburb?: string;
 	}): Promise<IPlace[] | undefined> {
-		log.info('Received request to getTopPlaces, args: ', args);
-
-		const { city, postcode } = { ...args };
+		if (!args?.city) return undefined;
+		log.debug('Received request to get top places with args: ', args);
 
 		try {
-			let places;
-			if (!!postcode) {
-				places = await Place.find({
-					'address.postcode': postcode,
-				})
-					.populate('address medias')
-					.limit(10)
-					.lean()
-					.exec();
-			} else if (!!city) {
-				places = await Place.find({ 'address.city': city })
-					.populate('address medias')
-					.limit(10)
-					.lean()
-					.exec();
-			}
-			log.trace('Returning fetched places');
-			return places;
+			const popularPlaces: any = await Place.aggregate([
+				{
+					$match: {
+							'address.city': {$regex: 'sydney', $options: 'i'}
+					},
+				},
+				{ $unset: 'openingTimes._id' },
+
+				{
+					$lookup: {
+						from: 'place_item_ratings',
+						localField: '_id',
+						foreignField: 'place',
+						pipeline: [
+							{ $match: { $expr: { $eq: ['$placeItem', null] } } },
+							{ $project: { _id: 0 }, },
+						],
+						as: 'ratingInfo',
+					},
+				},
+				{
+					$unwind: {
+						path: '$ratingInfo',
+						preserveNullAndEmptyArrays: true,
+					},
+				},
+				{
+					$lookup: {
+						from: 'place_items',
+						localField: '_id',
+						foreignField: 'place',
+						pipeline: [
+							{
+								$lookup: {
+									from: 'place_item_ratings',
+									localField: '_id',
+									foreignField: 'placeItem',
+									as: 'ratingInfo',
+								},
+							},
+							{
+							  $unwind: {
+								path: "$ratingInfo",
+								preserveNullAndEmptyArrays: false
+							  }
+							},{
+							  $sort:{ ratingInfo: -1 },
+							},
+							{ $limit: 1 }
+						],
+						as: 'placeItem',
+					},
+				},
+				{
+					$unwind: {
+						path: '$placeItem',
+						preserveNullAndEmptyArrays: false,
+					},
+				},
+				{
+					$sort:{ "placeItem.ratingInfo.taste": -1 }
+				},
+				{ $limit: 16 },
+				{
+					$lookup: {
+						from: 'items',
+						localField: 'placeItem.item',
+						foreignField: '_id',
+						pipeline: [
+							{
+								$project: {
+									createdAt: 0,
+									modifiedAt: 0,
+								},
+							},
+						],
+						as: 'item',
+					},
+				},
+				{
+					$set: {
+						items: {
+							$map: {
+								input: '$item',
+								in: {
+									$mergeObjects: [
+										'$$this',
+										{ placeItem: '$placeItem' },
+									],
+								},
+							},
+						},
+					},
+				},
+				{
+					$unwind: {
+						path: '$item',
+						preserveNullAndEmptyArrays: false,
+					},
+				},
+				{ $unset: ['placeItem'] },
+				
+			]);
+			log.trace('Top places found: ', popularPlaces);
+			// if (!popularPlaces?.length) {
+			// 	log.trace('Popular places not found for args: ', args);
+			// 	throw new HTTP404Error('Popular places not found for args: ' + args);
+			// }
+			return popularPlaces;
 		} catch (error) {
-			log.error('Error while doing getPlaces', error);
+			log.error('Error while getting popular places. Error: ', error);
+			throw error;
 		}
 	}
 
