@@ -563,7 +563,6 @@ export default [
 		method: 'get',
 		validators: [checkSchema(FieldConfigs.getItemSchemaConfig)],
 		handler: async (req: Request, res: Response) => {
-			log.trace('123');
 			const err = validationResult(req);
 			if (!err.isEmpty()) {
 				log.error('Bad Request', err.mapped());

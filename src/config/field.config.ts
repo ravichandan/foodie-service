@@ -23,11 +23,27 @@ const validatePostcodeAndSururb = (_: any, { req }: any) => {
 };
 
 const queryParamsHasPostcodeOrSuburb = (_: any, { req }: any) => {
-  if (!req.query?.postcode && !req.query?.suburb && !req.query?.city) {
+  if (!req.query?.postcode && !req.query?.suburb ) {
     throw new Error('Either postcode or suburb has to be provided in the query parameters');
   }
   if (req.query?.postcode < 2000 || req.query?.postcode > 2899) {
     throw new Error('Not a valid postcode in this state');
+  }
+  if (req.query?.suburb?.length < 5 || req.query?.suburb?.length > 50) {
+    throw new Error('Not a valid suburb in this state');
+  }
+  return true;
+};
+
+const queryParamsHasSuburbOrPostcodeOrCity = (_: any, { req }: any) => {
+  if (!req.query?.postcode && !req.query?.suburb && !req.query?.city) {
+    throw new Error('Either suburb or postcode or city has to be provided in the query parameters');
+  }
+  if (req.query?.postcode < 2000 || req.query?.postcode > 2899) {
+    throw new Error('Not a valid postcode in this state');
+  }
+  if (req.query?.city?.length < 3 || req.query?.city?.length > 50) {
+    throw new Error('Not a valid city in this country');
   }
   if (req.query?.suburb?.length < 5 || req.query?.suburb?.length > 50) {
     throw new Error('Not a valid suburb in this state');
@@ -173,7 +189,7 @@ export const getItemSchemaConfig: Schema = {
   },
 
   postcode: {
-    custom: { options: queryParamsHasPostcodeOrSuburb },
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
     // 	in: ['query'],
     // optional: false,
     // errorMessage: 'postcode should be provided to search the place',
@@ -181,8 +197,16 @@ export const getItemSchemaConfig: Schema = {
     // toInt: true,
   },
 
+  city: {
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
+    // 	in: ['query'],
+    // optional: false,
+    // errorMessage: 'postcode should be provided to search the place',
+    // isInt: true,
+    // toInt: true,
+  },
   suburb: {
-    custom: { options: queryParamsHasPostcodeOrSuburb },
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
     // 	in: ['query'],
     // optional: false,
     // errorMessage: 'postcode should be provided to search the place',
