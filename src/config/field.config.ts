@@ -110,7 +110,16 @@ export const getPlaceByNameSchemaConfig: Schema = {
     errorMessage: 'item name has to be provided as a query param in the url .../places/?itemName=<value>',
   },
   postcode: {
-    custom: { options: queryParamsHasPostcodeOrSuburb },
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
+    // 	in: ['query'],
+    // optional: false,
+    // errorMessage: 'postcode should be provided to search the place',
+    // isInt: true,
+    // toInt: true,
+  },
+
+  city: {
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
     // 	in: ['query'],
     // optional: false,
     // errorMessage: 'postcode should be provided to search the place',
@@ -119,7 +128,7 @@ export const getPlaceByNameSchemaConfig: Schema = {
   },
 
   suburb: {
-    custom: { options: queryParamsHasPostcodeOrSuburb },
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
     // 	in: ['query'],
     // optional: false,
     // errorMessage: 'postcode should be provided to search the place',
@@ -149,16 +158,23 @@ export const getItemsByNameSchemaConfig: Schema = {
     errorMessage: 'item name has to be provided as a query param in the url .../places/?itemName=<value>',
   },
   postcode: {
-    custom: { options: queryParamsHasPostcodeOrSuburb },
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
     // 	in: ['query'],
     // optional: false,
     // errorMessage: 'postcode should be provided to search the place',
     // isInt: true,
     // toInt: true,
   },
-
+  city: {
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
+    // 	in: ['query'],
+    // optional: false,
+    // errorMessage: 'postcode should be provided to search the place',
+    // isInt: true,
+    // toInt: true,
+  },
   suburb: {
-    custom: { options: queryParamsHasPostcodeOrSuburb },
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
     // 	in: ['query'],
     // optional: false,
     // errorMessage: 'postcode should be provided to search the place',
