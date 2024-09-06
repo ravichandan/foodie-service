@@ -961,10 +961,11 @@ export class PlaceService {
 										pipeline: [
 											{
 												$match: {
-													$expr: {
-														$ne: [null, '$description'],
-													},
-												},
+													$or: [
+														{ description: { $ne: null } },
+														{ medias: { $exists: true, $ne: []} }
+													]
+												}
 											},
 											{ $sort: { createdAt: -1 } },
 											{ $skip: ((params.page ?? 1) - 1) * (params.size ?? 5) },
