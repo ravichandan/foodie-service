@@ -472,7 +472,9 @@ export default [
 				log.debug('Done adding Place');
 			}
 		},
-	}, {
+	},
+	// CORRECTIONS  IN  DB
+	{
 		path: '/places', // add a new place
 		method: 'delete',
 		validators: [],
@@ -487,6 +489,18 @@ export default [
 				res.sendStatus(204);
 			}
 		
+		},
+	}, {
+		path: '/createMissingRatings', // add a new place
+		method: 'get',
+		validators: [],
+		handler: async (req: Request, res: Response) => {
+			
+			// No errors, pass req and res on to your controller
+			log.debug('in GET /createMissingRatings route handler, processing request');
+		
+			await itemController.createMissingRatings(req, res);
+			log.debug('Done createMissingRatings for items');
 		},
 	},
 

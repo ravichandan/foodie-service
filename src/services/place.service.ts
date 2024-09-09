@@ -613,7 +613,14 @@ export class PlaceService {
 										$match: {
 											$expr: {
 												$and: [
-													{ $ne: ['$description', null] },
+													
+													{ $or: [
+														{$ne: ['$description', null]},
+														{$ne: ['$service', null]},
+														{$ne: ['$ambience', null]},
+														
+														{$ne: ['$medias', null]},
+													] },
 													{ $eq: ['$placeItem', null] },
 												],
 											},

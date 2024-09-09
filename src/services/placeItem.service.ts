@@ -5,7 +5,7 @@ import { IPlace, Place } from '../entities/place';
 import { PlaceItemRating } from '../entities/placeItemRating';
 import { ItemModel } from '../models/itemModel';
 import { Review } from '../entities/review';
-import { IItem, Item } from '../entities/item';
+import { Item } from '../entities/item';
 import { Customer } from '../entities/customer';
 import { IMedia } from '../entities/media';
 
@@ -470,6 +470,79 @@ export class PlaceItemService {
 		} catch (error) {
 			log.error('Error while updating PlaceItem with id: ' + id + '. Error: ', error);
 			throw error;
+		}
+	}
+
+		//delete a place by using the find by id and delete
+	async createMissingRatings(): Promise<any | undefined> {
+		log.debug('Received request to new rating');
+
+		try {
+			const placeItems: any[] = await PlaceItem.aggregate([
+				{
+					$match: 
+					{
+						uberPopularity: {
+						$ne: null
+						}
+					}
+				},
+				{
+					$lookup:
+					{
+						from: "place_item_ratings",
+						localField: "_id",
+						foreignField: "placeItem",
+						as: "ratingInfo"
+					}
+				},
+				{
+					$unwind:
+					{
+						path: "$ratingInfo",
+						preserveNullAndEmptyArrays: true
+					}
+				},
+				{
+					$match:
+					{
+						ratingInfo: {
+						$exists: false
+						}
+					}
+				}
+				]);
+			const noOfReviewsRegex = /\(([^)]+)\)/;
+			const percentRegex = /\d+%/gi;
+			// const allDuplicateIds: any[] = [];
+			for(const pi of placeItems) {
+				const ub = pi.uberPopularity;
+				try{
+					const noOfReviews = noOfReviewsRegex.exec(ub)?.[1];
+					const percent = percentRegex.exec(ub)?.[0]?.replace('%','') ?? 0;
+					// update PlaceItemRating table with this data for this placeItem
+					const rating: any = {
+						place: pi.place,
+						placeItem: pi,
+						noOfReviews: noOfReviews,
+						noOfReviewPhotos: 0,
+						taste: +percent/20,
+						presentation: +percent/20,
+						service: 0,
+						ambience: 0,
+						createdAt: new Date(),
+						modifiedAt: new Date(),
+					};
+					log.trace('Creating new rating record %s', rating);
+					await PlaceItemRating.create(rating);
+				} catch(error){
+					log.error('Error while creating placeItemRating entry. Error: ', error);
+				}
+			}
+			return true;
+		} catch (error) {
+			log.error('Error while fetching list of placeItems that doesn\'t have entry in PlaceItemRating table.', error);
+			return false;
 		}
 	}
 }

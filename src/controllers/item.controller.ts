@@ -126,6 +126,15 @@ class ItemController {
     await itemService.deleteItem(id);
     res.send('item deleted');
   };
+
+  createMissingRatings = async (req: Request, res: Response) => {
+    const result = await placeItemService.createMissingRatings();
+    if(result){
+      res.sendStatus(200);
+    } else {
+      res.sendStatus(500);
+    }
+  }
 }
 
 //export class
