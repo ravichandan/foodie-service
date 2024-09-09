@@ -117,11 +117,21 @@ export class ItemService {
 			q['$address.postcode'] = +args.postcode;
 		}
 		if (!!args.city) {
-			q['$address.city'] = args.city;
+			q['$address.city'] = 
+			// { $regex: 
+				args.city
+				// , $options: 'i' }
+				;
 		}
 		if (!!args.suburb) {
-			q['$address.suburb'] = args.suburb;
+			q['$address.suburb'] = 
+			// { $regex: 
+				args.suburb
+				// , $options: 'i' };
+				;
 		}
+		log.trace('qqqqq:: ', q);
+		log.trace('qqqqq:: ', JSON.stringify([...Object.entries(q).map(entry => ({ $eq: entry }))]));
 		try {
 			const items: ItemModel[] = await Item.aggregate([
 
@@ -139,6 +149,28 @@ export class ItemService {
 							localField: '_id', // field of reference to PlaceItem
 							foreignField: 'item',
 							as: 'place_items',
+							pipeline: [
+								{
+								  $lookup: {
+									from:'place_item_ratings',
+									localField: '_id',
+									foreignField: 'placeItem',
+									as: 'ratingInfo'
+								  }
+								}, {
+								  $unwind: {
+									path: '$ratingInfo',
+									preserveNullAndEmptyArrays: true
+								  }
+								},
+								{
+								  $sort:{
+									"ratingInfo.taste": -1,
+									"ratingInfo.presentation": -1
+								  }
+								},
+   							 	{$limit: 4}
+							  ]
 						},
 					},
 
@@ -161,9 +193,11 @@ export class ItemService {
 					{ $unwind: '$places' },
 					{
 						$addFields: {
-							'places.items.description': '$place_items.description',
-							'places.items.name': '$place_items.name',
-							'places.items.id': '$place_items.id',
+							'places.placeItem.description': '$place_items.description',
+							'places.placeItem.name': '$place_items.name',
+							'places.placeItem.id': '$place_items.id',
+							"places.placeItem.ratingInfo": "$place_items.ratingInfo"
+
 							// {
 							// $arrayElemAt: [
 							// 	'$place_items.name',
