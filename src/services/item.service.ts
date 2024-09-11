@@ -138,8 +138,8 @@ export class ItemService {
 					{
 						$match: {
 							$or: [
-								{ name: { $regex: args.itemName, $options: 'i' } },
-								{ aliases: { $in: [new RegExp(`${args.itemName}`, 'i')] } },
+								{ name: { $regex: '\\b('+args.itemName+')\\b', $options: 'i' } },
+								{ aliases: { $in: [new RegExp(`\\b(${args.itemName})\\b`, 'i')] } },
 							],
 						},
 					},
