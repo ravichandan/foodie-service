@@ -8,6 +8,7 @@ import { Review } from '../entities/review';
 import { Item } from '../entities/item';
 import { Customer } from '../entities/customer';
 import { IMedia } from '../entities/media';
+import { PlaceModel } from '../models/placeModel';
 
 const log: Logger = getLogger('placeItem.service');
 
@@ -543,6 +544,158 @@ export class PlaceItemService {
 		} catch (error) {
 			log.error('Error while fetching list of placeItems that doesn\'t have entry in PlaceItemRating table.', error);
 			return false;
+		}
+	}
+
+	async getPopulars(args?: {
+		city?: string;
+		postcode?: string;
+		suburb?: string;
+	}): Promise<PlaceModel[] | undefined> {
+		if (!args?.city) return undefined;
+		log.debug('Received request to get top places with args: ', args);
+
+		try {
+			const popularItemsWithPlaces: any[] = await PlaceItem.aggregate([
+				{
+				  $lookup: {
+					  from: "places",
+					  localField: "place",
+					  foreignField: "_id",
+					  as: "place",
+					  pipeline: [
+						{
+						  $match: {
+							"address.city": {
+							  $regex: "sydney",
+							  $options: "i"
+							}
+						  }
+						},
+						{
+						  $unset: "openingTimes._id"
+						}
+					  ]
+					}
+				},
+				{
+				  $unwind: {
+					  path: "$place",
+					  preserveNullAndEmptyArrays: false
+					}
+				},
+				{
+				  $lookup: {
+					from: "place_item_ratings",
+					localField: "_id",
+					foreignField: "placeItem",
+					pipeline: [
+					  {
+						$match: {
+						  $expr: {
+							$ne: ["$placeItem", null]
+						  }
+						}
+					  },
+					  {
+						$project: {
+						  _id: 0
+						}
+					  }
+					],
+					as: "ratingInfo"
+				  }
+				},
+				{
+				  $unwind: {
+					path: "$ratingInfo",
+					preserveNullAndEmptyArrays: true
+				  }
+				},
+				{
+				  $sort: {
+					  "ratingInfo.taste": -1,
+					  "ratingInfo.presentation": -1
+					}
+				},
+				{
+				  $limit: 6
+				}
+			  ]);
+			log.trace('Popular items withPlaces found: ', popularItemsWithPlaces);
+			const popularPlaces: any[] = await PlaceItem.aggregate([
+				{
+				  $lookup: {
+					  from: "places",
+					  localField: "place",
+					  foreignField: "_id",
+					  as: "place",
+					  pipeline: [
+						{
+						  $match: {
+							"address.city": {
+							  $regex: "sydney",
+							  $options: "i"
+							}
+						  }
+						},
+						{
+						  $unset: "openingTimes._id"
+						}
+					  ]
+					}
+				},
+				{
+				  $unwind: {
+					  path: "$place",
+					  preserveNullAndEmptyArrays: false
+					}
+				},
+				{
+				  $lookup: {
+					from: "place_item_ratings",
+					localField: "_id",
+					foreignField: "placeItem",
+					pipeline: [
+					  {
+						$match: {
+						  $expr: {
+							$eq: ["$placeItem", null]
+						  }
+						}
+					  },
+					  {
+						$project: {
+						  _id: 0
+						}
+					  }
+					],
+					as: "ratingInfo"
+				  }
+				},
+				{
+				  $unwind: {
+					path: "$ratingInfo",
+					preserveNullAndEmptyArrays: false
+				  }
+				},
+				{
+				  $sort: {
+					"ratingInfo.service": -1,
+					"ratingInfo.ambience": -1
+				  }
+				},
+				{
+				  $limit: 2
+				}
+			  ]);
+			log.trace('Popular places found: ', popularPlaces);
+
+			popularItemsWithPlaces.push(...popularPlaces);
+			return popularItemsWithPlaces;
+		} catch (error) {
+			log.error('Error while getting popular places. Error: ', error);
+			throw error;
 		}
 	}
 }

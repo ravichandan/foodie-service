@@ -174,7 +174,7 @@ export default [
 				// const city: string| undefined =
 				// const
 				try {
-					const placeModel = await placeController.getTopPlaces(args);
+					const placeModel = await placeController.getPopulars(args);
 					res.send(placeModel);
 				} catch (error: any) {
 					log.error('getting a popular places and items with args %s resulted in Error: ' ,args , error);

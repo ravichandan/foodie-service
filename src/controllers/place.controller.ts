@@ -70,7 +70,7 @@ class PlaceController {
         latitude: data.address.location.latitude,
         longitude: data.address.location.longitude,
       });
-      
+
       if (existingPlace) {
         log.trace('Place already exists with same name and geo-location');
         res.status(200).send(existingPlace);
@@ -203,7 +203,7 @@ class PlaceController {
   /**
    * API Controller method for 'get top 10 searched places'. This takes one of city or postcode, with pagination params
    */
-  getTopPlaces = async (args: { city?: string; postcode?: string }) => {
+  getPopulars = async (args: { city?: string; postcode?: string }) => {
     log.info('Received request in getTopPlaces');
     const { city, postcode } = {
       // ...req.params,
@@ -212,11 +212,11 @@ class PlaceController {
     } as any;
 
     log.trace('Params to getTopPlaces: ', { city, postcode });
-    const places: IPlace[] | undefined = await placeService.getTopPlaces({ city, postcode });
-    log.trace('Found the following top searched places with given params', places);
+    const places: PlaceModel[] | undefined = await placeItemService.getPopulars({ city, postcode });
+    log.trace('Found the following popular results with given params', places);
     if (!!places) {
       const placeResponse: PlaceResponse = {
-        places: Utils.placesToPlaceModels(places),
+        places: places,
         size: places.length,
         page: 0,
       };
