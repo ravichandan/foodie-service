@@ -622,7 +622,7 @@ export class PlaceItemService {
 				  $limit: 6
 				}
 			  ]);
-			log.trace('Popular items withPlaces found: ', popularItemsWithPlaces);
+			
 			const popularPlaces: any[] = await PlaceItem.aggregate([
 				{
 				  $lookup: {
@@ -689,8 +689,6 @@ export class PlaceItemService {
 				  $limit: 2
 				}
 			  ]);
-			log.trace('Popular places found: ', popularPlaces);
-
 			popularItemsWithPlaces.push(...popularPlaces);
 			return popularItemsWithPlaces;
 		} catch (error) {

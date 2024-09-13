@@ -31,12 +31,13 @@ export const responseTime = (router: Router) => {
       return next();
     }
 
+    const url = req.path;
     const start = Date.now();
-    log.trace('Request timestamp:: ', new Date(start));
+    // log.trace('Request timestamp:: ', new Date(start));
     res.on('finish', function () {
-      log.trace('Response timestamp:: ', new Date());
+      // log.trace('Response timestamp:: ', new Date());
       const duration = Date.now() - start;
-      log.debug('Turnaround time (response sent in): ', duration, 'ms');
+      log.debug('Turnaround time (response sent in) for request', url, 'is: ',duration, 'ms');
     });
     next();
   });
