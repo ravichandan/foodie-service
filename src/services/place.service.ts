@@ -416,6 +416,11 @@ export class PlaceService {
 										as: 'reviews',
 									},
 								},
+								{
+									$set:{
+										media: {$first: '$media'}
+									}
+								}
 							],
 							as: 'placeItem',
 						},
@@ -632,7 +637,7 @@ export class PlaceService {
 								{
 									$project: {
 										_id: 0,
-										media: '$medias',
+										media: {$first: '$medias'},
 									},
 								},
 							],
@@ -937,6 +942,11 @@ export class PlaceService {
 										as: 'reviewMedias',
 									},
 								},
+								{
+									$set: {
+										media: {$first: '$media'}
+									}
+								}
 
 							],
 							as: 'placeItem',

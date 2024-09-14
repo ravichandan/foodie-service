@@ -61,6 +61,12 @@ export type IItem = Document & {
   // medias of the place given by that Place
   media: IMedia;
 
+  vegan: boolean;
+  vegetarian: boolean;
+  eggitarian: boolean;
+  pollotarian: boolean;
+  pescatarian: boolean;
+
   createdAt: Date;
   modifiedAt: Date;
 };
@@ -97,6 +103,13 @@ const itemSchema: Schema<IItem> = new Schema<IItem>(
       enum: Object.values(ItemCourse), //['MAINS', 'STARTER', 'DRINKS'],
       required: false,
     },
+
+    vegan: Boolean,
+    vegetarian: Boolean,
+    eggitarian: Boolean,
+    pollotarian: Boolean,
+    pescatarian: Boolean,
+
     media: {
       type: mediaSchema,
     },

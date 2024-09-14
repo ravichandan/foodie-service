@@ -78,6 +78,12 @@ export type IPlaceItem = Document & {
 
   uberPopularity: string; 
 
+  vegan: boolean,
+  vegetarian: boolean,
+  eggitarian: boolean,
+  pollotarian: boolean,
+  pescatarian: boolean,
+
   // cuisines: Cuisine[];
   // course: ItemCourse;
   media: IMedia;
@@ -114,6 +120,13 @@ const placeItemSchema: Schema<IPlaceItem> = new Schema<IPlaceItem>(
     uberPopularity: String,
     description: String,
 
+
+    vegan: Boolean,
+    vegetarian: Boolean,
+    eggitarian: Boolean,
+    pollotarian: Boolean,
+    pescatarian: Boolean,
+    
     category: String,
     calorieInfo: new Schema<CalorieInfo>({ count: { type: Number }, unit: { type: String } }),
     ingredients: {
