@@ -61,11 +61,18 @@ export type IItem = Document & {
   // medias of the place given by that Place
   media: IMedia;
 
-  vegan: boolean;
-  vegetarian: boolean;
-  eggitarian: boolean;
-  pollotarian: boolean;
-  pescatarian: boolean;
+  /**
+   * vegan <=1,
+   * vegetarian <=2
+   * eggitarian <= 3
+   * pescatarian <=4
+   * pollotarian <=5
+   * lambitarian <=6
+   * halal <=7
+   * carnivore <=10
+   */
+  diet: number;
+
 
   createdAt: Date;
   modifiedAt: Date;
@@ -104,11 +111,21 @@ const itemSchema: Schema<IItem> = new Schema<IItem>(
       required: false,
     },
 
-    vegan: Boolean,
-    vegetarian: Boolean,
-    eggitarian: Boolean,
-    pollotarian: Boolean,
-    pescatarian: Boolean,
+      /**
+   * vegan <=1,
+   * vegetarian <=2
+   * eggitarian <= 3
+   * pescatarian <=4
+   * pollotarian <=5
+   * lambitarian <=6
+   * halal <=7
+   * carnivore <=10
+   */
+    diet: Number,
+    // vegetarian: Boolean,
+    // eggitarian: Boolean,
+    // pollotarian: Boolean,
+    // pescatarian: Boolean,
 
     media: {
       type: mediaSchema,

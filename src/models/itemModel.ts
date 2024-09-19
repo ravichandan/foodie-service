@@ -22,11 +22,7 @@ export type ItemModel = {
   taste: number;
   presentation: number;
   noOfReviews: number;
-  vegan: boolean;
-  vegetarian: boolean;
-  eggitarian: boolean;
-  pollotarian: boolean;
-  pescatarian: boolean;
+  diet: number;
   calorieInfo: CalorieInfo;
   ingredients: string[];
   allergens: FoodAllergens[];

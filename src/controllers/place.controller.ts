@@ -203,16 +203,11 @@ class PlaceController {
   /**
    * API Controller method for 'get top 10 searched places'. This takes one of city or postcode, with pagination params
    */
-  getPopulars = async (args: { city?: string; postcode?: string }) => {
+  getPopulars = async (args: { city?: string; postcode?: string; diets?: string; }) => {
     log.info('Received request in getTopPlaces');
-    const { city, postcode } = {
-      // ...req.params,
-      // ...req.query,
-      ...args,
-    } as any;
 
-    log.trace('Params to getTopPlaces: ', { city, postcode });
-    const places: PlaceModel[] | undefined = await placeItemService.getPopulars({ city, postcode });
+    log.trace('Params to getTopPlaces: ', args);
+    const places: PlaceModel[] | undefined = await placeItemService.getPopulars(args);
     log.trace('Found the following popular results with given params', places);
     if (!!places) {
       const placeResponse: PlaceResponse = {

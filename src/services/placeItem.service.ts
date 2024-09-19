@@ -474,7 +474,7 @@ export class PlaceItemService {
 		}
 	}
 
-		//delete a place by using the find by id and delete
+	//create ratings for items that are missing based on ubereats popularity string
 	async createMissingRatings(): Promise<any | undefined> {
 		log.debug('Received request to new rating');
 
@@ -547,16 +547,84 @@ export class PlaceItemService {
 		}
 	}
 
+	//create dietary category for the item
+	async setItemCategories(): Promise<any | undefined> {
+		log.debug('Received request to new categories for items');
+		const veganCats =new RegExp(['Vegan','Plant'].join( "|" ), "i");
+		const vegetarianCats =new RegExp( ['Veg','Vegetarian','sabzi','sabji','Vegetable','Vegetables',].join( "|" ), "i");
+		const polloCats  =new RegExp(['Chicken', 'murg', 'murgh'].join( "|" ), "i");
+		const lambCats =new RegExp(['lamb', 'goat'].join( "|" ), "i");
+		const halalCats =new RegExp(['halal'].join( "|" ), "i");
+		const pescoCats =new RegExp(['fish', 'prawn', 'prawns', 'shrimp', 'shrimps', 'Seafood'].join( "|" ), "i");
+		const carnivoreCats =new RegExp(['non veg', 'non vegetarian', 'non-veg', 'non-vegetarian', 'carnivore', 'Wagyu','Beef','pork','bacon', 'rib','ribs','Donburi'].join( "|" ), "i");
+		const indoCats =new RegExp(['Indo','desi'].join( "|" ), "i");
+
+		try {
+			log.trace('Set diet of item from item category or its name'); 
+			let items: any[] = await PlaceItem.aggregate([{
+				$match: {
+				$or: [
+					{ diet: {$lt: 1 } },
+					{ diet: { $eq: null } }
+				]
+				}
+			}]);	
+
+			for (const item of items) {
+				const cat = item.category;
+				const name = item.name;
+			
+				if(veganCats.test(cat)|| veganCats.test(name)){
+					item.diet = 1;
+				} else if(carnivoreCats.test(cat) || carnivoreCats.test(name)){
+					item.diet=9;
+				} else if(halalCats.test(cat)||halalCats.test(name)){
+					item.diet=7;
+				}else if(lambCats.test(cat)|| lambCats.test(name)){
+					item.diet=6;
+				} else if(polloCats.test(cat)|| polloCats.test(name)){
+					item.diet=5;
+				} else if(pescoCats.test(cat)||pescoCats.test(name)){
+					item.diet=4;
+				} else if(vegetarianCats.test(cat) || vegetarianCats.test(name)){
+					item.diet = 2;
+				} else if(indoCats.test(cat)|| indoCats.test(name)){
+					item.diet = 6;
+				}
+				if(item.diet){
+					log.trace('Setting diet %s to item _id: %s', item.diet, item._id);
+					await PlaceItem.findByIdAndUpdate(
+						{ _id: item._id },
+						item,
+					);
+				}
+			}
+
+			return true;
+		} catch (error) {
+			log.error('Error while fetching list of placeItems that doesn\'t have entry in PlaceItemRating table.', error);
+			return false;
+		}
+	}
+
 	async getPopulars(args?: {
 		city?: string;
 		postcode?: string;
 		suburb?: string;
+		diets?: string|number[];
 	}): Promise<PlaceModel[] | undefined> {
 		if (!args?.city) return undefined;
 		log.debug('Received request to get top places with args: ', args);
 
+		args.diets = (args.diets as string)?.split(',').filter(Boolean).map(x => +x);
+
+		let dietMatch: any = {$skip:0};
+		if(args.diets?.length){
+			dietMatch = { $match: { diet: {$in : args.diets} } }
+		}
 		try {
 			const popularItemsWithPlaces: any[] = await PlaceItem.aggregate([
+				dietMatch,
 				{
 				  $lookup: {
 					  from: "places",
@@ -564,17 +632,12 @@ export class PlaceItemService {
 					  foreignField: "_id",
 					  as: "place",
 					  pipeline: [
-						{
-						  $match: {
-							"address.city": {
-							  $regex: "sydney",
-							  $options: "i"
-							}
-						  }
+						{ $match: {"address.city": {
+							$regex: "sydney",
+							$options: "i"
+							}}
 						},
-						{
-						  $unset: "openingTimes._id"
-						}
+						{ $unset: "openingTimes._id" }
 					  ]
 					}
 				},
@@ -632,12 +695,10 @@ export class PlaceItemService {
 					  as: "place",
 					  pipeline: [
 						{
-						  $match: {
-							"address.city": {
-							  $regex: "sydney",
-							  $options: "i"
-							}
-						  }
+						  $match: {"address.city": {
+							$regex: "sydney",
+							$options: "i"
+							}},
 						},
 						{
 						  $unset: "openingTimes._id"

@@ -16,6 +16,7 @@ import { PlaceResponse } from '../models/placeModel';
 const log: Logger = getLogger('item.controller');
 
 class ItemController {
+
   //addItem controller
   createItem = async (req: Request, res: Response) => {
     log.info('Received request in ItemController->createItem() to add a new Item to the inventory');
@@ -135,7 +136,16 @@ class ItemController {
       res.sendStatus(500);
     }
   }
+  setItemCategories= async (req: Request, res: Response) =>  {
+	  const result = await placeItemService.setItemCategories();
+    if(result){
+      res.sendStatus(200);
+    } else {
+      res.sendStatus(500);
+    }
+  }
 }
+
 
 //export class
 export const itemController = new ItemController();

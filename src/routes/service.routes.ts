@@ -169,7 +169,8 @@ export default [
 				log.info('in GET /popular-searches route handler');
 				const args = {
 					city:req.query.city as string,
-					postcode:  req.query.postcode as string
+					postcode:  req.query.postcode as string,
+					diets: req.query.diets as string,
 				};
 				// const city: string| undefined =
 				// const
@@ -501,6 +502,18 @@ export default [
 		
 			await itemController.createMissingRatings(req, res);
 			log.debug('Done createMissingRatings for items');
+		},
+	}, {
+		path: '/setItemCategories', // add a new place
+		method: 'get',
+		validators: [],
+		handler: async (req: Request, res: Response) => {
+			
+			// No errors, pass req and res on to your controller
+			log.debug('in GET /setItemCategories route handler, processing request');
+		
+			await itemController.setItemCategories(req, res);
+			log.debug('Done setItemCategories for items');
 		},
 	},
 

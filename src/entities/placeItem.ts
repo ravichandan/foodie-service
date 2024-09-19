@@ -78,11 +78,17 @@ export type IPlaceItem = Document & {
 
   uberPopularity: string; 
 
-  vegan: boolean,
-  vegetarian: boolean,
-  eggitarian: boolean,
-  pollotarian: boolean,
-  pescatarian: boolean,
+  /**
+   * vegan <=1,
+   * vegetarian <=2
+   * eggitarian <= 3
+   * pescatarian <=4
+   * pollotarian <=5
+   * lambitarian <=6
+   * halal <=7
+   * carnivore <=10
+   */
+  diet: number;
 
   // cuisines: Cuisine[];
   // course: ItemCourse;
@@ -120,13 +126,23 @@ const placeItemSchema: Schema<IPlaceItem> = new Schema<IPlaceItem>(
     uberPopularity: String,
     description: String,
 
+  /**
+   * vegan <=1,
+   * vegetarian <=2
+   * eggitarian <= 3
+   * pescatarian <=4
+   * pollotarian <=5
+   * lambitarian <=6
+   * halal <=7
+   * carnivore <=10
+   */
+    diet: Number,
 
-    vegan: Boolean,
-    vegetarian: Boolean,
-    eggitarian: Boolean,
-    pollotarian: Boolean,
-    pescatarian: Boolean,
-    
+    // vegetarian: Boolean,
+    // eggitarian: Boolean,
+    // pollotarian: Boolean,
+    // pescatarian: Boolean,
+
     category: String,
     calorieInfo: new Schema<CalorieInfo>({ count: { type: Number }, unit: { type: String } }),
     ingredients: {
