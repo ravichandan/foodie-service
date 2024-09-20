@@ -403,7 +403,7 @@ export const cleanPlaceName = (name: string, suburbs: string[]) => {
 	logger.trace('regex:: ', re);
 
 	logger.trace('place name before replace: ', name);
-	const cleanName = name.trim().replace(re, '').trim();
+	const cleanName = name.trim().replace(re, '').replace('  ',' ').trim();
 
 	logger.trace('cleanName:: ', cleanName);
 	return cleanName;

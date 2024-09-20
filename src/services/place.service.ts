@@ -20,7 +20,7 @@ export class PlaceService {
 		try {
 			placeData.createdAt = new Date();
 			placeData.modifiedAt = new Date();
-			placeData.placeName=placeData.placeName.replace(placeData.address.suburb,'');
+			// placeData.placeName=placeData.placeName.replace(placeData.address.suburb,'');
 			placeData.simpleName = simplify(placeData.placeName);
 			placeData.address.city = deduceCityName(placeData.address);
 
