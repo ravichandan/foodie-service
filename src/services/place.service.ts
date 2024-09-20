@@ -1,12 +1,14 @@
 import { IPlace, Place } from '../entities/place';
 import { Logger } from 'log4js';
-import { deduceCityName, getLogger, simplify } from '../utils/Utils';
+import { deduceCityName, getLogger, simplify, cleanPlaceName } from '../utils/Utils';
 import { IMedia } from '../entities/media';
 import { PlaceModel } from '../models/placeModel';
 import { Customer } from '../entities/customer';
 import { HTTP404Error } from '../utils/error4xx';
 import { config } from '../config/config';
 import { PlaceItem } from '../entities/placeItem';
+import { Suburb } from '../entities/suburb';
+import { suburbService } from './suburb.service';
 
 
 const log: Logger = getLogger('place.service');
@@ -18,8 +20,10 @@ export class PlaceService {
 		try {
 			placeData.createdAt = new Date();
 			placeData.modifiedAt = new Date();
+			placeData.placeName=placeData.placeName.replace(placeData.address.suburb,'');
 			placeData.simpleName = simplify(placeData.placeName);
 			placeData.address.city = deduceCityName(placeData.address);
+
 			log.trace('Creating Place with data: ', placeData);
 			const newPlace: IPlace = await Place.create(placeData);
 			await Place.populate(newPlace, 'openingTime');
@@ -1071,7 +1075,7 @@ export class PlaceService {
 	}
 
 		//delete a place by using the find by id and delete
-	async deleteDuplicatePlaces(): Promise<any | undefined> {
+	async doCorrectPlaceRecords(): Promise<any | undefined> {
 		log.debug('Received request to delete all duplicate places');
 
 		try {
@@ -1108,16 +1112,43 @@ export class PlaceService {
 			
 			log.trace('Duplicate ids to be deleted:: ',allDuplicateIds);
 			let result = Place.deleteMany({ _id: { $in: allDuplicateIds }});
-			// log.trace('Deleting is completed in place.service, result:; ', result);
 
-// change medias to media in placeItem
-// await PlaceItem.updateMany({}, {$set: {
-// 	mediavb:  { $arrayToObject: "$medias" }
-// }});
-// { 
-// 	medias: 1,
-// 	media: { $arrayElemAt: ["$medias", 0] }
-//   }
+			const suburbs = await suburbService.getSuburbNames({city: 'Sydney'});
+			const suburbNames = suburbs?.map(sub => sub.name);
+
+			const placesWithTheirSuburbName = await Place.aggregate([
+				{
+				  $addFields: {
+					suburbInPlaceName: {
+					  $regexMatch: {
+						input: "$placeName",
+						regex: {
+						  $toString: "$address.suburb"
+						},
+						options: "i"
+					  }
+					}
+				  }
+				},
+				{
+				  $match: {
+					suburbInPlaceName: true
+				  }
+				},
+				{
+				  $project: {
+					suburbInPlaceName: 0
+				  }
+				}
+			  ]);
+			for(const pl of placesWithTheirSuburbName) {
+				pl.placeName=pl.placeName.replace(pl.address.suburb,'');
+				pl.placeName=pl.placeName.replace('()','');
+				pl.placeName=pl.placeName.replace('  ',' ');
+				pl.placeName=pl.placeName.replace(/(- |-)$/,'').trim();
+				pl.simpleName = cleanPlaceName(pl.placeName, suburbNames ?? [pl.address?.suburb]);
+				await Place.findByIdAndUpdate(pl._id, pl);
+			};
 
 			return result;
 		} catch (error) {

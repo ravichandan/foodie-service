@@ -266,9 +266,9 @@ class PlaceController {
   };
 
   //delete a place
-  deleteDuplicatePlaces = async (req: Request, res: Response) => {
+  doCorrectPlaceRecords = async (req: Request, res: Response) => {
     // const id = req.params.id;
-    const result = await placeService.deleteDuplicatePlaces();
+    const result = await placeService.doCorrectPlaceRecords();
     res.status(204).send(result);
   };
 

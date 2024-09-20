@@ -129,7 +129,8 @@ class ItemController {
   };
 
   createMissingRatings = async (req: Request, res: Response) => {
-    const result = await placeItemService.createMissingRatings();
+    let result = await placeItemService.createMissingRatings();
+    result = await placeItemService.setNoOfReviewsToNoOfRatings();
     if(result){
       res.sendStatus(200);
     } else {

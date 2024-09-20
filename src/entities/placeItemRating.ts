@@ -16,6 +16,7 @@ export type IPlaceItemRating = Document & {
   service: number;
   ambience: number;
   noOfReviews: number;
+  noOfRatings: number;
   noOfReviewPhotos: number;
   createdAt: Date;
   modifiedAt: Date;
@@ -40,6 +41,7 @@ const placeItemRatingSchema: Schema<IPlaceItemRating> = new Schema<IPlaceItemRat
       ref: 'Place_Item',
     },
     noOfReviews: Number,
+    noOfRatings: Number,
     noOfReviewPhotos: Number,
     taste: Number,
     presentation: Number,

@@ -519,13 +519,13 @@ export class PlaceItemService {
 			for(const pi of placeItems) {
 				const ub = pi.uberPopularity;
 				try{
-					const noOfReviews = noOfReviewsRegex.exec(ub)?.[1];
+					const noOfRatings = noOfReviewsRegex.exec(ub)?.[1];
 					const percent = percentRegex.exec(ub)?.[0]?.replace('%','') ?? 0;
 					// update PlaceItemRating table with this data for this placeItem
 					const rating: any = {
 						place: pi.place,
 						placeItem: pi,
-						noOfReviews: noOfReviews,
+						noOfRatings: noOfRatings,
 						noOfReviewPhotos: 0,
 						taste: +percent/20,
 						presentation: +percent/20,
@@ -543,6 +543,60 @@ export class PlaceItemService {
 			return true;
 		} catch (error) {
 			log.error('Error while fetching list of placeItems that doesn\'t have entry in PlaceItemRating table.', error);
+			return false;
+		}
+	}
+
+	async setNoOfReviewsToNoOfRatings(): Promise<any | undefined> {
+		log.debug('Received request to new rating');
+
+		try {
+			const placeItemsRatings: any[] = await PlaceItemRating.aggregate([
+				{
+				  $match: {
+					  placeItem: {
+						$ne: null
+					  }
+					}
+				},
+				{
+				  $lookup: {
+					  from: "place_items",
+					  localField: "placeItem",
+					  foreignField: "_id",
+					  as: "pi",
+					  pipeline: [
+						{
+						  $match: {
+							uberPopularity: {
+							  $ne: null
+							}
+						  }
+						}
+					  ]
+					}
+				},
+				{
+				  $unwind: {
+					  path: "$pi",
+					  preserveNullAndEmptyArrays: false
+					}
+				}
+			  ]);
+			
+			  // const allDuplicateIds: any[] = [];
+			for(const pr of placeItemsRatings) {
+				const noOfReviews = pr.noOfReviews;
+				try{
+					pr.noOfRatings = noOfReviews;
+					await PlaceItemRating.findByIdAndUpdate(pr._id, pr);
+				} catch(error){
+					log.error('Error while updating placeItemRating entry. Error: ', error);
+				}
+			}
+			return true;
+		} catch (error) {
+			log.error('Error while fetching list of placeItemRatings to update their noOfRatings field.', error);
 			return false;
 		}
 	}
@@ -656,7 +710,13 @@ export class PlaceItemService {
 					  {
 						$match: {
 						  $expr: {
-							$ne: ["$placeItem", null]
+							$and:[
+								{$ne: ["$placeItem", null]},
+								{$gte: ["$noOfRatings", 30]}
+								// {$placeItem: {$ne: null}},
+								// {$noOfRatings: {$gte: 30}}
+							]
+
 						  }
 						}
 					  },

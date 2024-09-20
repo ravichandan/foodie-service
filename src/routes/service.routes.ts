@@ -485,7 +485,7 @@ export default [
 			// No errors, pass req and res on to your controller
 			log.debug('in post /places route handler, processing request');
 			if(!!duplicateOnly){
-			await placeController.deleteDuplicatePlaces(req, res);
+			await placeController.doCorrectPlaceRecords(req, res);
 			log.debug('Done deleting duplicate Places');} else{
 				res.sendStatus(204);
 			}
