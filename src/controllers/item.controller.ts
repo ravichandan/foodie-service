@@ -3,14 +3,10 @@ import { Request, Response } from 'express';
 import { Cuisine, IItem, ItemCourse } from '../entities/item';
 import { mediaService } from '../services/media.service';
 import { IMedia } from '../entities/media';
-import { getLogger, itemsToItemModels } from '../utils/Utils';
+import { getLogger } from '../utils/Utils';
 import { Logger } from 'log4js';
-import { IPlaceItem } from '../entities/placeItem';
 import { placeService } from '../services/place.service';
-import { IPlace } from '../entities/place';
 import { placeItemService } from '../services/placeItem.service';
-import { HTTP404Error } from '../utils/error4xx';
-import { ItemResponse } from '../models/itemModel';
 import { PlaceResponse } from '../models/placeModel';
 
 const log: Logger = getLogger('item.controller');

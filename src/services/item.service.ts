@@ -130,8 +130,7 @@ export class ItemService {
 				// , $options: 'i' };
 				;
 		}
-		log.trace('qqqqq:: ', q);
-		log.trace('qqqqq:: ', JSON.stringify([...Object.entries(q).map(entry => ({ $eq: entry }))]));
+		
 		try {
 			const items: ItemModel[] = await Item.aggregate([
 

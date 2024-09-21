@@ -677,7 +677,7 @@ export class PlaceItemService {
 			dietMatch = { $match: { diet: {$in : args.diets} } }
 		}
 		try {
-			const popularItemsWithPlaces: any[] = await PlaceItem.aggregate([
+			let popularItemsWithPlaces: any[] = await PlaceItem.aggregate([
 				dietMatch,
 				{
 				  $lookup: {
@@ -746,37 +746,21 @@ export class PlaceItemService {
 				}
 			  ]);
 			
-			const popularPlaces: any[] = await PlaceItem.aggregate([
+			const popularPlaces: any[] = await Place.aggregate([
 				{
-				  $lookup: {
-					  from: "places",
-					  localField: "place",
-					  foreignField: "_id",
-					  as: "place",
-					  pipeline: [
-						{
-						  $match: {"address.city": {
-							$regex: "sydney",
-							$options: "i"
-							}},
-						},
-						{
-						  $unset: "openingTimes._id"
-						}
-					  ]
+				  $match: {
+					"address.city": {
+					  $regex: "sydney",
+					  $options: "i"
 					}
+				  }
 				},
-				{
-				  $unwind: {
-					  path: "$place",
-					  preserveNullAndEmptyArrays: false
-					}
-				},
+				{ $unset: "openingTimes._id" },
 				{
 				  $lookup: {
 					from: "place_item_ratings",
 					localField: "_id",
-					foreignField: "placeItem",
+					foreignField: "place",
 					pipeline: [
 					  {
 						$match: {
@@ -786,9 +770,7 @@ export class PlaceItemService {
 						}
 					  },
 					  {
-						$project: {
-						  _id: 0
-						}
+						$project: {  _id: 0 }
 					  }
 					],
 					as: "ratingInfo"
@@ -806,11 +788,9 @@ export class PlaceItemService {
 					"ratingInfo.ambience": -1
 				  }
 				},
-				{
-				  $limit: 2
-				}
+				{ $limit: 2 }
 			  ]);
-			popularItemsWithPlaces.push(...popularPlaces);
+			  popularItemsWithPlaces = popularItemsWithPlaces.concat(...popularPlaces);
 			return popularItemsWithPlaces;
 		} catch (error) {
 			log.error('Error while getting popular places. Error: ', error);

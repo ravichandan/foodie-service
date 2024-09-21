@@ -12,11 +12,8 @@ import { customerController } from '../controllers/customer.controller';
 import { r2Provider } from '../bucketers/r2.provider';
 import { mediaService } from '../services/media.service';
 import { HTTP400Error, HTTP404Error } from '../utils/error4xx';
-// import { getPopularPlacesAndItems } from '../config/field.config';
 import { HTTPClientError } from '../utils/errorHttp';
-import { getItemInPlaceByPlaceItemIdSchemaConfig, getItemsByNameSchemaConfig } from '../config/field.config';
-import { ItemResponse } from '../models/itemModel';
-import { PlaceModel, PlaceResponse } from '../models/placeModel';
+import { PlaceResponse } from '../models/placeModel';
 import { config } from '../config/config';
 import { suburbController } from '../controllers/suburb.controller';
 

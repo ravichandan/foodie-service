@@ -1,22 +1,19 @@
 //import modules
 import { placeService } from '../services/place.service';
 import { Request, Response } from 'express';
-import { IPlace, Place } from '../entities/place';
+import { IPlace } from '../entities/place';
 import { mediaService } from '../services/media.service';
 import { IMedia } from '../entities/media';
 import * as Utils from '../utils/Utils';
 import { Logger } from 'log4js';
 import { PlaceModel, PlaceResponse } from '../models/placeModel';
-import { Cuisine, IItem, ItemCourse } from '../entities/item';
+import { IItem } from '../entities/item';
 import { itemService } from '../services/item.service';
 import { IPlaceItem } from '../entities/placeItem';
 import { placeItemService } from '../services/placeItem.service';
-import { placeToPlaceModel } from '../utils/Utils';
 import { HTTP400Error, HTTP404Error, HTTP500Error } from '../utils/error4xx';
-import { ItemModel } from '../models/itemModel';
 import { suburbController } from './suburb.controller';
 import { ICitySuburb } from '../entities/suburb';
-import { config } from '../config/config';
 import { suburbService } from '../services/suburb.service';
 import { street_types } from '../config/street_types';
 

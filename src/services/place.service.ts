@@ -6,8 +6,6 @@ import { PlaceModel } from '../models/placeModel';
 import { Customer } from '../entities/customer';
 import { HTTP404Error } from '../utils/error4xx';
 import { config } from '../config/config';
-import { PlaceItem } from '../entities/placeItem';
-import { Suburb } from '../entities/suburb';
 import { suburbService } from './suburb.service';
 
 
