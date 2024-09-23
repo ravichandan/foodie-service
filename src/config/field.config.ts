@@ -76,6 +76,19 @@ export const getItemInPlaceByIdSchemaConfig: Schema = {
     errorMessage: 'an item id has to be provided as a path param in the url .../places/:placeId/items/:itemId',
   },
 };
+
+export const getPlaceItemByNameAndPlaceIdSchemaConfig: Schema = {
+  placeId: {
+    in: ['params'],
+    optional: false,
+    errorMessage: 'a place id has to be provided as a path param in the url .../places/:placeId/items/:itemId',
+  },
+  itemName: {
+    in: ['query'],
+    optional: false,
+    errorMessage: 'an item name has to be provided as a query param in the url .../places/:placeId/items/?itemName=:itemName',
+  },
+};
 export const getItemInPlaceByPlaceItemIdSchemaConfig: Schema = {
   itemId: {
     in: ['params'],

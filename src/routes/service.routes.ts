@@ -352,6 +352,44 @@ export default [
 		},
 	},
 	{
+		path: '/places/:placeId/items', // get an item/dish by name in a given placeId.
+		method: 'get',
+		validators: [checkSchema(FieldConfigs.getPlaceItemByNameAndPlaceIdSchemaConfig)],
+		handler: async (req: Request, res: Response) => {
+			const err = validationResult(req);
+			if (!err.isEmpty()) {
+				log.error('Bad Request', err.mapped());
+				res.status(400).send(err.mapped());
+			} else {
+				// No errors, pass req and res on to your controller
+				log.debug('in POST /places/:placeId/items route handler, processing request, req.body:: ', req.body);
+				log.trace('Populate the placeId in the request body, placeId:: ', req.params.placeId);
+				const placeId= req.params.placeId;
+				const itemName: string= req.query.itemName as string;
+
+				try {
+					const item = await itemController.getPlaceItemByNameAndPlaceId({ placeId, itemName });
+					// res.send({...req.params,...req.query});
+					log.debug('Returning the fetched item: ', item);
+					res.send(item);
+				} catch (error: any) {
+					log.error('creating an item in place resulted in Error', error);
+					if (error instanceof HTTPClientError) {
+						// res.sendStatus(404);//.send('Item not found');
+						res.status(error.statusCode).send(error);
+
+					// } else if (error instanceof HTTP400Error) {
+					// 	res.status(400).send(error);
+					} else {
+						res.status(500).send({ message: error.message });
+					}
+				}
+				// await placeController.addItem(req, res);
+				
+			}
+		},
+	},
+	{
 		path: '/places/:placeId/items/:itemId', // get a single item details from a given place
 		method: 'get',
 		validators: [checkSchema(FieldConfigs.getItemInPlaceByIdSchemaConfig)],

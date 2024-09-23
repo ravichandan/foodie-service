@@ -90,6 +90,20 @@ class ItemController {
     // return item;
   };
 
+  //get a single item by name in a place
+  getPlaceItemByNameAndPlaceId = async (args : {placeId: string, itemName: string}) => {
+    
+    const { placeId, itemName } = { ...args };
+    const placeItem = await placeItemService.getPlaceItemByNameAndPlace({ placeId, itemName });
+
+    return placeItem;
+    // if(!items){
+    //   log.trace('Item not found');
+    //   throw new HTTP404Error(`Item not found in given place`);//: ${placeId}, item: ${itemId} `);
+    // }
+    // return items;
+  };
+  
   //get a single item
   getAnItemInAPlace = async (args : {placeId?: string, itemId?: string, placeItemId?: string}) => {
     //get id from the parameter
@@ -113,6 +127,7 @@ class ItemController {
   //update item
   updateItem = async (req: Request, res: Response) => {
     const id = +req.params.id;
+    // const existingItem = itemService.getAnItemInAPlace({placeId: })
     const item = await itemService.updateItem(id, req.body);
     res.send(item);
   };

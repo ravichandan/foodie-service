@@ -334,7 +334,7 @@ class PlaceController {
       if (place && item) {
         // first check if the placeItem already exists for this place
         log.trace('Checking if the placeItem is already existing');
-        const existingRecord = await placeItemService.getPlaceItemByNameAndPlace(args.item.name, place._id);
+        const existingRecord = await placeItemService.getPlaceItemByNameAndPlace({itemName: args.item.name, placeId: place._id});
         if (existingRecord) {
           log.trace('A placeItem already exists for this place, returning it');
           item = existingRecord;

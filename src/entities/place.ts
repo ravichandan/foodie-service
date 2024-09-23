@@ -64,6 +64,10 @@ export type IPlace = Document & {
 
   openingTimes: OpeningTimes;
 
+  uberEatsUrl: string;
+  menuLogUrl: string;
+  doorDashUrl: string;
+
   address: IAddress;
   formattedAddress: string;
   priceLevel: PRICE_LEVEL;
@@ -98,6 +102,15 @@ const placeSchema: Schema<IPlace> = new Schema<IPlace>(
       type: String,
     },
     websiteUri: {
+      type: String,
+    },
+    uberEatsUrl: {
+      type: String,
+    },
+    menuLogUrl: {
+      type: String,
+    },
+    doorDashUrl: {
       type: String,
     },
     googleMapsUri: {

@@ -392,20 +392,36 @@ export class PlaceItemService {
 		}
 	}
 
-		//get a single placeItem
-	// not yet used
-	async getPlaceItemByNameAndPlace(itemName: string, placeId: string): Promise<IPlaceItem | undefined | null> {
-		log.debug('Received request to get a placeItem by name: %s and placeId: %s', itemName, placeId);
+	//get a single placeItem
+	async getPlaceItemByNameAndPlace(args:{itemName: string, placeId: string}): Promise<IPlaceItem | undefined | null> {
+		log.debug('Received request to get a placeItem by name: %s and placeId: %s', args.itemName, args.placeId);
 		try {
-			const placeItem: IPlaceItem|null = await PlaceItem.findOne({ name: itemName, place:  placeId }).lean();
+			const placeItem: IPlaceItem|null = await PlaceItem.findOne(
+				{ $or: 
+					[
+						{ name: {$regex: args.itemName, $options:'i'}},
+						{ simpleName: {$regex: args.itemName, $options:'i'}},
+					]
+				,
+				
+				 place:  args.placeId }).lean();
+			const placeItem2: IPlaceItem|null = await PlaceItem.findOne(
+				// { $or: 
+					// [
+						{ name: {$regex: args.itemName, $options:'i'}},
+					//  { simpleName: {$regex: args.itemName, $options:'i'}}
+					// ]
+				// }, 
+				{place:  args.placeId }).lean();
+				
 			if (!placeItem) {
-				log.trace('PlaceItem not found by name: %s and placeId: %s', itemName, placeId);
+				log.trace('PlaceItem not found by name: %s and placeId: %s', args.itemName, args.placeId);
 				return undefined;
 			}
 			log.trace('Fetched a placeItem: ', placeItem);
 			return placeItem;
 		} catch (error) {
-			log.error('Error while doing getPlaceItem  name: '+itemName+' and placeId: '+ placeId+'. Error: ', error);
+			log.error('Error while doing getPlaceItem  name: '+args.itemName+' and placeId: '+ args.placeId+'. Error: ', error);
 		}
 	}
 

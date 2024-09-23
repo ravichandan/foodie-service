@@ -124,16 +124,18 @@ export class PlaceService {
 			});
 		// }
 
+		// { name: { $regex: '\\b('+args.itemName+')\\b', $options: 'i' } },
+		// 						{ aliases: { $in: [new RegExp(`\\b(${args.itemName})\\b`, 'i')] } },
 		query.push({
 			$match: {
 				$or: !!params?.itemName ? [
 					{ simpleName: { $regex: params?.placeName, $options: 'i' } },
 					{
 						$or: [
-							{ 'placeItems.simpleName': { $regex: params.itemName, $options: 'i' } },
-							{ 'placeItems.aliases': { $in: [new RegExp(`${params.itemName}`, 'i')] } },
-							{ 'items.name': { $regex: params.itemName, $options: 'i' } },
-							{ 'items.aliases': { $in: [new RegExp(`${params.itemName}`, 'i')] } },
+							{ 'placeItems.simpleName': { $regex: '\\b('+params.itemName+')\\b', $options: 'i' } },
+							{ 'placeItems.aliases': { $in: [new RegExp(`\\b(${params.itemName})\\b`, 'i')] } },
+							{ 'items.name': { $regex: '\\b('+params.itemName+')\\b', $options: 'i' } },
+							{ 'items.aliases': { $in: [new RegExp(`\\b(${params.itemName})\\b`, 'i')] } },
 						],
 					},
 				] : [{ simpleName: { $regex: params?.placeName, $options: 'i' } }],
