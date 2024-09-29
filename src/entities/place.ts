@@ -48,6 +48,7 @@ export type IPlace = Document & {
   _id: string;
   correlationId: string;
   customerId: string;
+  aliases: string[]; // other names of the place
   // name of the place
   placeName: string; // max 100 chars
   simpleName: string; // max 100 chars
@@ -98,6 +99,10 @@ const placeSchema: Schema<IPlace> = new Schema<IPlace>(
       type: String,
     },
 
+    aliases: {
+      type: [String],
+      required: false,
+    },
     correlationId: {
       type: String,
     },

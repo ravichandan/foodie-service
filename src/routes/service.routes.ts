@@ -347,7 +347,6 @@ export default [
 					}
 				}
 				// await placeController.addItem(req, res);
-				log.debug('Done adding Place');
 			}
 		},
 	},
@@ -504,8 +503,18 @@ export default [
 			} else {
 				// No errors, pass req and res on to your controller
 				log.debug('in post /places route handler, processing request');
-				await placeController.addPlace(req, res);
-				log.debug('Done adding Place');
+				try{
+					await placeController.addPlace(req, res);
+					log.debug('Done adding Place');
+				} catch (error: any) {
+					log.error('creating place resulted in Error', error);
+					if (error instanceof HTTPClientError) {
+						res.status(error.statusCode).send(error);
+					} else {
+						res.status(500).send({ message: error.message });
+					}
+				}
+				
 			}
 		},
 	},
@@ -595,12 +604,13 @@ export default [
 			} else {
 				// No errors, pass req and res on to your controller
 				log.info('in GET /items/ route handler, processing request');
-				const { itemName, postcode, suburb, city } = {
+				const { itemName, postcode, suburbs, city, diets } = {
 					...req.params,
 					...req.query,
 				} as any;
+				log.debug('suburbs suburbs:: ', suburbs);
 				try {
-					const result = await itemController.getItemsByName({itemName, postcode, suburb, city});
+					const result = await itemController.getItemsByName({itemName, postcode, suburbs, city, diets});
 					res.send(result);
 				} catch (error: any) {
 					log.error('GET /items/ resulted in Error', error);

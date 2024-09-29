@@ -156,6 +156,7 @@ export const placeToPlaceModel = (place: any): PlaceModel => {
 			{} as any,
 		),
 		name: place.placeName,
+		aliases: place.aliases,
 		openingTimes: place.openingTimes,
 		reviews: reviewsToReviewModels(place.reviews),
 		medias: mediasToMediaModels(place.medias),

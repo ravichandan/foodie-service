@@ -7,13 +7,14 @@ import { Customer } from '../entities/customer';
 import { HTTP404Error } from '../utils/error4xx';
 import { config } from '../config/config';
 import { suburbService } from './suburb.service';
+import { IPlaceItemRating, PlaceItemRating } from '../entities/placeItemRating';
 
 
 const log: Logger = getLogger('place.service');
 
 export class PlaceService {
 	//create a place
-	async createPlace(placeData: IPlace): Promise<IPlace> {
+	async createPlace(placeData: IPlace, rating?: string, noOfRatings?: string): Promise<IPlace> {
 		log.debug('Received request to create a Place');
 		try {
 			placeData.createdAt = new Date();
@@ -26,6 +27,21 @@ export class PlaceService {
 			const newPlace: IPlace = await Place.create(placeData);
 			await Place.populate(newPlace, 'openingTime');
 			log.trace('Place created successfully, returning data');
+			if(rating){
+				const ratingData: any = {
+					place: newPlace,
+					noOfRatings: noOfRatings,
+					noOfReviewPhotos: 0,
+					taste: null,
+					presentation: null,
+					service: rating,
+					ambience: rating,
+					createdAt: new Date(),
+					modifiedAt: new Date(),
+				  } ;
+				await PlaceItemRating.create(ratingData);
+				log.trace('Added rating for the place');
+			}
 			return newPlace;
 		} catch (error) {
 			log.error('Error while create a Place: ', error);
@@ -33,17 +49,15 @@ export class PlaceService {
 		}
 	}
 
-	async getPlaces(params?:
-										{
-											placeName?: string;
-											itemName?: string;
-											postcode?: string;
-											city?: string;
-											suburbs: string[];
-											pageSize?: number;
-											pageNumber?: number;
-										}): Promise<PlaceModel[] | undefined>
-	{
+	async getPlaces(params?: {
+		placeName?: string;
+		itemName?: string;
+		postcode?: string;
+		city?: string;
+		suburbs: string[];
+		pageSize?: number;
+		pageNumber?: number;
+	}): Promise<PlaceModel[] | undefined> {
 		log.info('Received request to getPlaces, params: ', params);
 
 		const prams: { pageSize: number; pageNumber: number } = {
@@ -61,24 +75,8 @@ export class PlaceService {
 			query.push({ $match: { 'address.city': { $regex: params?.city, $options: "i" }}});
 		}
 		if (!!params?.suburbs) {
-			// {
-			// 	"address.suburb": {
-			// 		$regex: "Quakers Hill",
-			// 		$options: "i"
-			// 	}
-			// },
-			// orrrr
-			// $or: [
-			// 	{
-			// 		"address.suburb": /quakers hill/i
-			// 	},
-			// log.trace('debugging testtt ', params.suburbs.map(suburb => ({ 'address.suburb': {$regex: suburb, $options: 'i' } })));
 			log.trace('debugging testtt ', { 'address.suburb': new RegExp(`(${params.suburbs.join('|')})`, 'i') });
 			query.push({ $match: { 'address.suburb': new RegExp(`(${params.suburbs.join('|')})`, 'i')
-					// 		$or: [
-			// 			params.suburbs.map(suburb => ({ $in: [new RegExp(`${params.suburbs}`, 'i')] }))
-			// // { $in: [new RegExp(`${params.suburbs}`, 'i')] }
-			// ]}
 			}});
 		}
 		log.trace('debuggingggg:: query:: ', query.toString());
@@ -129,7 +127,13 @@ export class PlaceService {
 		query.push({
 			$match: {
 				$or: !!params?.itemName ? [
-					{ simpleName: { $regex: params?.placeName, $options: 'i' } },
+					{ 
+						$or: [
+							{ 'simpleName': { $regex: '\\b('+params.placeName+')\\b', $options: 'i' } },
+							{ 'placeName': { $regex: '\\b('+params.placeName+')\\b', $options: 'i' } },
+							{ 'aliases': { $in: [new RegExp(`\\b(${params.placeName})\\b`, 'i')] } },
+						]
+					},
 					{
 						$or: [
 							{ 'placeItems.simpleName': { $regex: '\\b('+params.itemName+')\\b', $options: 'i' } },
@@ -138,7 +142,11 @@ export class PlaceService {
 							{ 'items.aliases': { $in: [new RegExp(`\\b(${params.itemName})\\b`, 'i')] } },
 						],
 					},
-				] : [{ simpleName: { $regex: params?.placeName, $options: 'i' } }],
+				] : [
+					{ 'simpleName': { $regex: '\\b('+params?.placeName+')\\b', $options: 'i' } },
+					{ 'placeName': { $regex: '\\b('+params?.placeName+')\\b', $options: 'i' } },
+					{ 'aliases': { $in: [new RegExp(`\\b(${params?.placeName})\\b`, 'i')] } },
+				],
 			},
 		});
 

@@ -62,20 +62,46 @@ class PlaceController {
       }
 
       log.trace('Verify if the place is already existing');
-      const existingPlace = await placeService.getPlaceByNameAndGeoLocation({
+      let existingPlace: any = await placeService.getPlaceByNameAndGeoLocation({
         name: data.placeName,
         latitude: data.address.location.latitude,
         longitude: data.address.location.longitude,
       });
 
-      if (existingPlace) {
+      if(!existingPlace){
+        let q: any;
+        if(data.address.city){   
+          if(q==null) q= {};
+          q.city = data.address.city;
+        }
+
+        if(data.address.suburb){
+          if(q==null) q= {};
+          q.suburbs = [data.address.suburb];
+        }
+        if(data.address.postcode){
+          if(q==null) q= {};
+          q.postcode = data.address.postcode;
+        }
+        const places = await placeService.getPlaces({
+          placeName: data.placeName,
+          ...q,
+          latitude: data.address.location.latitude,
+          longitude: data.address.location.longitude,
+        });
+        if(places !=null && places.length>0){
+          existingPlace = places[0];
+        }
+      }
+      if (existingPlace && existingPlace._id !=null) {
         log.trace('Place already exists with same name and geo-location');
         res.status(200).send(existingPlace);
         return;
       }
 
+      const {rating, noOfRatings, ...placeData}:any= data;
       log.trace('Creating a new Place');
-      let place: IPlace | null | undefined = await placeService.createPlace(data);
+      let place: IPlace | null | undefined = await placeService.createPlace(placeData, rating, noOfRatings);
       if (place.medias.length < 1) {
         try {
           // update Media document if it exists.
@@ -112,7 +138,7 @@ class PlaceController {
       }
     } catch (error: any) {
       log.error('Error while creating place with given data. Error: ', error);
-      res.send(error.message);
+      res.status(error.statusCode ?? 500).send(error.message);
     }
   };
 

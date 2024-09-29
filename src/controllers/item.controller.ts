@@ -53,7 +53,7 @@ class ItemController {
   };
 
   //get all items by a matching name
-  getItemsByName = async (args : {itemName: string, postcode?: string, city?: string, suburb?: string}, ) => {
+  getItemsByName = async (args : {itemName: string, postcode?: string, city?: string, suburbs?: string, diets?: string}, ) => {
     const items = await itemService.getItemsByName2(args);
     const itemResponse = {
       page: 1,

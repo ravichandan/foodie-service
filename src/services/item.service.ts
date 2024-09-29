@@ -105,35 +105,48 @@ export class ItemService {
 		}
 	}
 
-	// remove this if 3 works
-	async getItemsByName2(args: { itemName: string, postcode?: string; city?: string, suburb?: string }) {
+	// remove this if 3 works, 
+	// as of 28-sep-24, we are using this.
+	async getItemsByName2(args: { itemName: string, postcode?: string; city?: string, suburbs?: string, diets?: string|number[] }) {
 		log.debug('Received request to get all items with args: ', args);
-		if (!args.postcode && !args.city && !args.suburb) {
+		if (!args.postcode && !args.city && !args.suburbs) {
 			log.error('Either postcode or city or suburb is mandatory to search items by name');
 			return;
 		}
-		const q: any = {};
-		if (!!args.postcode) {
-			q['$address.postcode'] = +args.postcode;
+		args.diets = (args.diets as string)?.split(',').filter(Boolean).map(x => +x);
+
+		let dietMatch: any = {$skip:0};
+		if(args.diets?.length){
+			dietMatch = { $match: { diet: {$in : args.diets} } }
 		}
-		if (!!args.city) {
-			q['$address.city'] = 
-			// { $regex: 
-				args.city
-				// , $options: 'i' }
-				;
+
+		const q: any = [];//{};
+
+		if (!!args?.postcode) {
+			q.push(
+				// { $match:
+					 { 'address.postcode': +args?.postcode }
+					//  }
+					);
 		}
-		if (!!args.suburb) {
-			q['$address.suburb'] = 
-			// { $regex: 
-				args.suburb
-				// , $options: 'i' };
-				;
+		if (!!args?.city) {
+			q.push(
+				// { $match: 
+					{ 'address.city': { $regex: args?.city, $options: "i" }}
+				// }
+			);
 		}
-		
+		if (!!args?.suburbs) {
+			q.push(
+				// { $match: 
+					{ 
+					'address.suburb': new RegExp(`\\b(${args.suburbs.split(',').join('|')})\\b`, 'i')
+			}
+		// }
+		);
+		}
 		try {
 			const items: ItemModel[] = await Item.aggregate([
-
 					{
 						$match: {
 							$or: [
@@ -149,6 +162,7 @@ export class ItemService {
 							foreignField: 'item',
 							as: 'place_items',
 							pipeline: [
+								dietMatch,
 								{
 								  $lookup: {
 									from:'place_item_ratings',
@@ -172,7 +186,6 @@ export class ItemService {
 							  ]
 						},
 					},
-
 					{ $unwind: '$place_items' },
 					{
 						$lookup: {
@@ -182,33 +195,24 @@ export class ItemService {
 							pipeline: [
 								{
 									$match: {
-										$expr: { $or: [...Object.entries(q).map(entry => ({ $eq: entry }))] },
+										// $expr: { 
+											$and: q 
+										// }
+										,
 									},
 								},
 							],
 							as: 'places',
 						},
 					},
-					{ $unwind: '$places' },
+					{ $unwind: {path:'$places',
+								preserveNullAndEmptyArrays: false,} },
 					{
 						$addFields: {
 							'places.placeItem.description': '$place_items.description',
 							'places.placeItem.name': '$place_items.name',
 							'places.placeItem.id': '$place_items.id',
 							"places.placeItem.ratingInfo": "$place_items.ratingInfo"
-
-							// {
-							// $arrayElemAt: [
-							// 	'$place_items.name',
-							// 0
-							// ]
-							// },
-							// "items.itemColor": {
-							// 	$arrayElemAt: [
-							// 		"$itemColor.name",
-							// 		0
-							// 	]
-							// }
 						},
 					},
 					{

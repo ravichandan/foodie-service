@@ -29,7 +29,8 @@ const queryParamsHasPostcodeOrSuburb = (_: any, { req }: any) => {
   if (req.query?.postcode < 2000 || req.query?.postcode > 2899) {
     throw new Error('Not a valid postcode in this state');
   }
-  if (req.query?.suburb?.length < 5 || req.query?.suburb?.length > 50) {
+  if (req.query?.suburb && (req.query?.suburb?.length < 5 || req.query?.suburb?.length > 50) 
+    || (req.query?.suburbs && req.query?.suburbs?.length < 1)) {
     throw new Error('Not a valid suburb in this state');
   }
   return true;
@@ -45,7 +46,8 @@ const queryParamsHasSuburbOrPostcodeOrCity = (_: any, { req }: any) => {
   if (req.query?.city?.length < 3 || req.query?.city?.length > 50) {
     throw new Error('Not a valid city in this country');
   }
-  if (req.query?.suburb?.length < 5 || req.query?.suburb?.length > 50) {
+  if (req.query?.suburb && (req.query?.suburb?.length < 5 || req.query?.suburb?.length > 50) 
+  || (req.query?.suburbs && req.query?.suburbs?.length < 1)) {
     throw new Error('Not a valid suburb in this state');
   }
   return true;
@@ -186,7 +188,7 @@ export const getItemsByNameSchemaConfig: Schema = {
     // isInt: true,
     // toInt: true,
   },
-  suburb: {
+  suburbs: {
     custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
     // 	in: ['query'],
     // optional: false,

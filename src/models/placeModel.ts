@@ -18,6 +18,7 @@ export type PlaceModel = {
   name: string;
   address: AddressModel;
   description: string;
+  aliases: string[];
   // service: number;
   // ambience: number;
   // noOfReviews: number;
