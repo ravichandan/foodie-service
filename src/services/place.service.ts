@@ -102,6 +102,11 @@ export class PlaceService {
 								preserveNullAndEmptyArrays: true,
 							},
 						},
+						{
+							$set:{
+								'medias': '$media',
+							},
+						}
 					] : [],
 					as: 'placeItems',
 				},
