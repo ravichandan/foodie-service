@@ -9,10 +9,10 @@ import { config } from '../config/config';
 import { suburbService } from './suburb.service';
 import { IPlaceItemRating, PlaceItemRating } from '../entities/placeItemRating';
 
-
 const log: Logger = getLogger('place.service');
 
 export class PlaceService {
+
 	//create a place
 	async createPlace(placeData: IPlace, rating?: string, noOfRatings?: string): Promise<IPlace> {
 		log.debug('Received request to create a Place');

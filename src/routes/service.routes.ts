@@ -16,6 +16,7 @@ import { HTTPClientError } from '../utils/errorHttp';
 import { PlaceResponse } from '../models/placeModel';
 import { config } from '../config/config';
 import { suburbController } from '../controllers/suburb.controller';
+import { number } from 'joi';
 
 const log = getLogger('service.routes');
 export type UploadedFile = {
@@ -168,6 +169,9 @@ export default [
 					city:req.query.city as string,
 					postcode:  req.query.postcode as string,
 					diets: req.query.diets as string,
+					latitude: req.query.latitude ? +req.query.latitude : undefined,
+					longitude: req.query.longitude ? +req.query.longitude : undefined,
+					distance: req.query.distance ? +req.query.distance : undefined,
 				};
 				// const city: string| undefined =
 				// const

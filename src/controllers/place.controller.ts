@@ -94,8 +94,10 @@ class PlaceController {
         }
       }
       if (existingPlace && existingPlace._id !=null) {
-        log.trace('Place already exists with same name and geo-location');
-        res.status(200).send(existingPlace);
+        log.trace('Place already exists with same name and geo-location, update the details');
+        const place = {...existingPlace, data};
+        await placeService.updatePlace(existingPlace._id, place);
+        res.status(201).send(place);
         return;
       }
 
@@ -226,10 +228,13 @@ class PlaceController {
   /**
    * API Controller method for 'get top 10 searched places'. This takes one of city or postcode, with pagination params
    */
-  getPopulars = async (args: { city?: string; postcode?: string; diets?: string; }) => {
-    log.info('Received request in getTopPlaces');
+  getPopulars = async (args: { city?: string; postcode?: string; diets?: string;
+    	latitude?: number;
+		  longitude?: number;
+		  distance?: number; }) => {
+    log.info('Received request in getPopulars');
 
-    log.trace('Params to getTopPlaces: ', args);
+    log.trace('Params to getPopulars: ', args);
     const places: PlaceModel[] | undefined = await placeItemService.getPopulars(args);
     log.trace('Found the following popular results with given params', places);
     if (!!places) {
@@ -320,8 +325,8 @@ class PlaceController {
         throw new HTTP400Error('Invalid item reference in the request');
       }
     }
-    if (!item && !args.item.aliases) {
-      log.trace("Looking for known 'Item's from aliases: ", args.item.aliases);
+    if (!item && (args.item.name || args.item.aliases)) {
+      log.trace("Looking for known 'Item's from name & aliases: ");
       item = await itemService.getItemByNameOrAliases({ name: args.item.name, aliases: args.item.aliases });
     }
     let iItem: any = null;
@@ -337,15 +342,8 @@ class PlaceController {
         description: args.item.description,
         media: args.item.medias?.[0],
       };
-      // log.error('Item reference is mandatory');
-      // throw new HTTP400Error('Item reference is mandatory');
-      // res.status(400).send('Item reference is mandatory');
     }
 
-    // data.course= ItemCourse[req.body.course.toUpperCase() as ItemCourse];
-    // data.cuisines= [...req.body.cuisines.map((c: any) => Cuisine[c.toUpperCase() as Cuisine])];
-    // const { itemReferenceId, ...itemData } = { ...data };
-    // delete data.itemReferenceId;;
     //call the create item function in the service and pass the data from the request
     log.trace('Validating Item reference in the request ');
     try {
@@ -362,8 +360,12 @@ class PlaceController {
         log.trace('Checking if the placeItem is already existing');
         const existingRecord = await placeItemService.getPlaceItemByNameAndPlace({itemName: args.item.name, placeId: place._id});
         if (existingRecord) {
-          log.trace('A placeItem already exists for this place, returning it');
-          item = existingRecord;
+          log.trace('A placeItem already exists for this place, updating it');
+          // TODO instead of returning it, update it
+          item = {...existingRecord, ...args.item};
+          log.trace('Updating PlaceItem document with data: ', item);
+          item = await placeItemService.updatePlaceItem(item._id, item);
+          log.trace('Successfully updated PlaceItem document.');
         } else {
           // there is no placeItem with this name for this place, create a new one
           const placeItemData: IPlaceItem = {
@@ -374,6 +376,7 @@ class PlaceController {
             price: args.item.price ? Number(args.item.price.replace(/[^0-9.-]+/g, '')) : null,
             description: args.item.description,
             uberPopularity: args.item.uberPopularity,
+            calorieInfo: args.item.calorieInfo,
             media: args.item.media ? args.item.media : undefined,
           } as IPlaceItem;
           log.trace('Adding PlaceItem document with data: ', placeItemData);

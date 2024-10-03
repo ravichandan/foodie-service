@@ -17,6 +17,10 @@ import { AddressModel } from '../models/addressModel';
 import { config } from '../config/config';
 import { HTTP400Error } from './error4xx';
 import { street_types } from '../config/street_types';
+import NodeGeolocation from 'nodejs-geolocation';
+
+
+const geo = new NodeGeolocation('foodie-service');
 
 log4js.configure({
 	appenders: {
@@ -360,7 +364,6 @@ export const calculatePoints = (
 			return 3;
 		case 'video':
 			return 5;
-
 		default:
 			return 0;
 	}
@@ -409,4 +412,12 @@ export const cleanPlaceName = (name: string, suburbs: string[]) => {
 	logger.trace('cleanName:: ', cleanName);
 	return cleanName;
 
+}
+
+export const calculateDistance = (source: { latitude: string|number, longitude: string|number}, destination:  { latitude: string|number, longitude: string|number}): string|number => {
+	const pos1 = {latitude: +source.latitude, longitude: +source.longitude};
+	const pos2 = {latitude: +destination.latitude, longitude: +destination.longitude};
+	const distance = geo.calculateDistance(pos1, pos2);
+	logger.trace('Distance measured: ', distance); 
+	return distance;
 }

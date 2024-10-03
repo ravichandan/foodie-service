@@ -20,6 +20,8 @@ export const config = {
   PAGE_SIZE: 5,
   mapsq_six_nsw: "https://mapsq.six.nsw.gov.au/services/public/Address_Location",
   // mapsq_six_nsw: "https://mapsq.six.nsw.gov.au/services/public/Address_Location?roadName=Merriville&postCode=2155&projection=EPSG%3A4326,
+  locationiq: "https://us1.locationiq.com/v1/reverse?key=pk.f3e811971393c0e3c31bc6d4d0b0721a&format=json"
+  // locationiq: "https://us1.locationiq.com/v1/reverse?key=pk.f3e811971393c0e3c31bc6d4d0b0721a&lat=-33.71&lon=150.89&format=json"
 
 };
 //config connection

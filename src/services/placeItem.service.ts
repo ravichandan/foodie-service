@@ -403,16 +403,7 @@ export class PlaceItemService {
 						{ simpleName: {$regex: args.itemName, $options:'i'}},
 					]
 				,
-				
-				 place:  args.placeId }).lean();
-			const placeItem2: IPlaceItem|null = await PlaceItem.findOne(
-				// { $or: 
-					// [
-						{ name: {$regex: args.itemName, $options:'i'}},
-					//  { simpleName: {$regex: args.itemName, $options:'i'}}
-					// ]
-				// }, 
-				{place:  args.placeId }).lean();
+				place:  args.placeId }).lean();
 				
 			if (!placeItem) {
 				log.trace('PlaceItem not found by name: %s and placeId: %s', args.itemName, args.placeId);
@@ -682,15 +673,142 @@ export class PlaceItemService {
 		postcode?: string;
 		suburb?: string;
 		diets?: string|number[];
+		latitude?: number;
+		longitude?: number;
+		distance?: number;
 	}): Promise<PlaceModel[] | undefined> {
 		if (!args?.city) return undefined;
 		log.debug('Received request to get top places with args: ', args);
 
+		// create diets related match query
 		args.diets = (args.diets as string)?.split(',').filter(Boolean).map(x => +x);
 
 		let dietMatch: any = {$skip:0};
 		if(args.diets?.length){
 			dietMatch = { $match: { diet: {$in : args.diets} } }
+		}
+
+		// create address & location related match query
+		let addressMatch: any = [{skip:0}];
+		if(args.longitude && args.latitude){
+			addressMatch = [{
+					$set: {
+						distance: {
+						$let: {
+							vars: {
+							dlon: {
+								$degreesToRadians: {
+								$subtract: [
+									{
+									$toDouble:
+										"$address.location.latitude"
+									},
+									+args.latitude
+								]
+								}
+							},
+							dlat: {
+								$degreesToRadians: {
+								$subtract: [
+									{
+									$toDouble:
+										"$address.location.longitude"
+									},
+									+args.longitude
+								]
+								}
+							},
+							lat1: {
+								$degreesToRadians: {
+								$toDouble:
+									"$address.location.latitude"
+								}
+							},
+							lat2: {
+								$degreesToRadians: +args.latitude
+							}
+							},
+							in: {
+							// Haversine formula: sin²(dLat / 2) + sin²(dLon / 2)
+							// cos(lat1)
+							// cos(lat2);
+							$add: [
+								{
+								$pow: [
+									{
+									$sin: {
+										$divide: ["$$dlat", 2]
+									}
+									},
+									2
+								]
+								},
+								{
+								$multiply: [
+									{
+									$pow: [
+										{
+										$sin: {
+											$divide: ["$$dlon", 2]
+										}
+										},
+										2
+									]
+									},
+									{
+									$cos: "$$lat1"
+									},
+									{
+									$cos: "$$lat2"
+									}
+								]
+								}
+							]
+							}
+						}
+						}
+					}
+				},
+				{
+					$set: {
+					  distance: {
+						// Distance in Meters given by "6372.8
+						// 1000"
+						$multiply: [
+						  6372.8,
+						  1000,
+						  2,
+						  {
+							$asin: {
+							  $sqrt: "$distance"
+							}
+						  }
+						]
+					  }
+					}
+				}, {$match: {
+				 distance: {$gt: (!!args.distance ? +args.distance +1000 : 35000)}
+			   	}}];
+		} else {
+			addressMatch = [
+				{ $match: {"address.city": {
+					$regex: args.city ?? "sydney",
+					$options: "i"
+					}}
+				},
+				
+			];
+			if(args.suburb){
+				addressMatch.push({ $match: {"address.suburb": {
+					$regex: args.suburb,
+					$options: "i"
+					}}
+				});
+			}
+
+			if(args.postcode){
+				addressMatch.push({ $match: {"address.postcode": args.postcode}});
+			}
 		}
 		try {
 			let popularItemsWithPlaces: any[] = await PlaceItem.aggregate([
@@ -702,11 +820,7 @@ export class PlaceItemService {
 					  foreignField: "_id",
 					  as: "place",
 					  pipeline: [
-						{ $match: {"address.city": {
-							$regex: "sydney",
-							$options: "i"
-							}}
-						},
+						...addressMatch,
 						{ $unset: "openingTimes._id" }
 					  ]
 					}
@@ -763,14 +877,7 @@ export class PlaceItemService {
 			  ]);
 			
 			const popularPlaces: any[] = await Place.aggregate([
-				{
-				  $match: {
-					"address.city": {
-					  $regex: "sydney",
-					  $options: "i"
-					}
-				  }
-				},
+				...addressMatch,
 				{ $unset: "openingTimes._id" },
 				{
 				  $lookup: {
