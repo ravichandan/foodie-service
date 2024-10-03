@@ -755,12 +755,8 @@ export class PlaceItemService {
 										2
 									]
 									},
-									{
-									$cos: "$$lat1"
-									},
-									{
-									$cos: "$$lat2"
-									}
+									{ $cos: "$$lat1" },
+									{ $cos: "$$lat2" }
 								]
 								}
 							]
@@ -787,7 +783,7 @@ export class PlaceItemService {
 					  }
 					}
 				}, {$match: {
-				 distance: {$gt: (!!args.distance ? +args.distance +1000 : 35000)}
+				 distance: {$lte: (!!args.distance ? +args.distance +1000 : 35000)}
 			   	}}];
 		} else {
 			addressMatch = [
