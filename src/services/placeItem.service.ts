@@ -709,24 +709,16 @@ export class PlaceItemService {
 							},
 							dlat: {
 								$degreesToRadians: {
-								$subtract: [
-									{
-									$toDouble:
-										"$address.location.longitude"
-									},
-									+args.longitude
-								]
+									$subtract: [
+										{ $toDouble: "$address.location.longitude" },
+										+args.longitude
+									]
 								}
 							},
 							lat1: {
-								$degreesToRadians: {
-								$toDouble:
-									"$address.location.latitude"
-								}
+								$degreesToRadians: { $toDouble: "$address.location.latitude" }
 							},
-							lat2: {
-								$degreesToRadians: +args.latitude
-							}
+							lat2: { $degreesToRadians: +args.latitude }
 							},
 							in: {
 							// Haversine formula: sin²(dLat / 2) + sin²(dLon / 2)
@@ -734,26 +726,18 @@ export class PlaceItemService {
 							// cos(lat2);
 							$add: [
 								{
-								$pow: [
-									{
-									$sin: {
-										$divide: ["$$dlat", 2]
-									}
-									},
-									2
-								]
+									$pow: [
+										{ $sin: { $divide: ["$$dlat", 2] } },
+										2
+									]
 								},
 								{
 								$multiply: [
 									{
-									$pow: [
-										{
-										$sin: {
-											$divide: ["$$dlon", 2]
-										}
-										},
-										2
-									]
+										$pow: [
+											{ $sin: { $divide: ["$$dlon", 2] } },
+											2
+										]
 									},
 									{ $cos: "$$lat1" },
 									{ $cos: "$$lat2" }
@@ -783,7 +767,7 @@ export class PlaceItemService {
 					  }
 					}
 				}, {$match: {
-				 distance: {$lte: (!!args.distance ? +args.distance +1000 : 35000)}
+				 distance: {$lte: (!!args.distance ? ((+args.distance+1) * 1000 ) : 35000)}
 			   	}}];
 		} else {
 			addressMatch = [
