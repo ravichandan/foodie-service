@@ -291,7 +291,10 @@ export default [
 			} else {
 				// No errors, pass req and res on to your controller
 				log.debug('in get /places/?placeName=<xyz>&itemName=<abc> route handler, processing request, req.params:', req.params);
-				const { placeName, itemName, postcode, suburbs, city } = {
+				const { placeName, itemName, postcode, suburbs, city, 
+					latitude,
+					longitude,
+					distance, } = {
 					...req.params,
 					...req.query,
 				} as any;
@@ -301,7 +304,9 @@ export default [
 							itemName: simplify(itemName),
 							postcode,
 							suburbs: suburbs?.split(','),
-							city
+							city, latitude,
+							longitude,
+							distance
 						});
 					res.send(response);
 				} catch (error: any){

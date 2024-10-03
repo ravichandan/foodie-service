@@ -57,6 +57,9 @@ export class PlaceService {
 		suburbs: string[];
 		pageSize?: number;
 		pageNumber?: number;
+		latitude?: number;
+		longitude?: number;
+		distance?: number;
 	}): Promise<PlaceModel[] | undefined> {
 		log.info('Received request to getPlaces, params: ', params);
 
@@ -67,19 +70,120 @@ export class PlaceService {
 		};
 		log.trace('Received request to getPlaces, prams: ', prams);
 
-		let query = [];
-		if (!!params?.postcode) {
-			query.push({ $match: { 'address.postcode': +params?.postcode } });
+		let query: any[] = [];
+
+
+		// create address & location related match query
+		let addressMatch: any = [{skip:0}];
+		if(params?.longitude && params?.latitude){
+			addressMatch = [{
+					$set: {
+						distance: {
+						$let: {
+							vars: {
+							dlon: {
+								$degreesToRadians: {
+								$subtract: [
+									{
+									$toDouble:
+										"$address.location.latitude"
+									},
+									+params?.latitude
+								]
+								}
+							},
+							dlat: {
+								$degreesToRadians: {
+									$subtract: [
+										{ $toDouble: "$address.location.longitude" },
+										+params?.longitude
+									]
+								}
+							},
+							lat1: {
+								$degreesToRadians: { $toDouble: "$address.location.latitude" }
+							},
+							lat2: { $degreesToRadians: +params?.latitude }
+							},
+							in: {
+							// Haversine formula: sin²(dLat / 2) + sin²(dLon / 2)
+							// cos(lat1)
+							// cos(lat2);
+							$add: [
+								{
+									$pow: [
+										{ $sin: { $divide: ["$$dlat", 2] } },
+										2
+									]
+								},
+								{
+								$multiply: [
+									{
+										$pow: [
+											{ $sin: { $divide: ["$$dlon", 2] } },
+											2
+										]
+									},
+									{ $cos: "$$lat1" },
+									{ $cos: "$$lat2" }
+								]
+								}
+							]
+							}
+						}
+						}
+					}
+				},
+				{
+					$set: {
+					  distance: {
+						// Distance in Meters given by "6372.8
+						// 1000"
+						$multiply: [
+						  6372.8,
+						  1000,
+						  2,
+						  {
+							$asin: {
+							  $sqrt: "$distance"
+							}
+						  }
+						]
+					  }
+					}
+				}, {$match: {
+				 distance: {$lte: (!!params?.distance ? ((+params?.distance+1) * 1000 ) : 35000)}
+			   	}}];
+		} else {
+			addressMatch = [
+				{ $match: {"address.city": {
+					$regex: params?.city ?? "sydney",
+					$options: "i"
+					}}
+				},
+				
+			];
+			if(params?.suburbs){
+				addressMatch.push({ $match: { 'address.suburb': new RegExp(`(${params.suburbs.join('|')})`, 'i')}});
+			}
+
+			if(params?.postcode){
+				addressMatch.push({ $match: {"address.postcode": params?.postcode}});
+			}
 		}
-		if (!!params?.city) {
-			query.push({ $match: { 'address.city': { $regex: params?.city, $options: "i" }}});
-		}
-		if (!!params?.suburbs) {
-			log.trace('debugging testtt ', { 'address.suburb': new RegExp(`(${params.suburbs.join('|')})`, 'i') });
-			query.push({ $match: { 'address.suburb': new RegExp(`(${params.suburbs.join('|')})`, 'i')
-			}});
-		}
-		log.trace('debuggingggg:: query:: ', query.toString());
+		// if (!!params?.postcode) {
+		// 	query.push({ $match: { 'address.postcode': +params?.postcode } });
+		// }
+		// if (!!params?.city) {
+		// 	query.push({ $match: { 'address.city': { $regex: params?.city, $options: "i" }}});
+		// }
+		// if (!!params?.suburbs) {
+		// 	log.trace('debugging testtt ', { 'address.suburb': new RegExp(`(${params.suburbs.join('|')})`, 'i') });
+		// 	query.push({ $match: { 'address.suburb': new RegExp(`(${params.suburbs.join('|')})`, 'i')
+		// 	}});
+		// }
+		query.push(...addressMatch);
+		log.trace('debuggingggg:: query:: ', JSON.stringify(query));
 		// if(!!params?.itemName) {
 		query.push(
 			{
@@ -87,7 +191,7 @@ export class PlaceService {
 					from: 'place_items',
 					localField: '_id',
 					foreignField: 'place',
-					pipeline: !!params?.itemName ? [
+					pipeline: !!params?.itemName ? [   
 						{
 							$lookup: {
 								from: 'place_item_ratings',

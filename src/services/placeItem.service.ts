@@ -854,7 +854,7 @@ export class PlaceItemService {
 				{
 				  $limit: 6
 				}
-			  ]);
+			]);
 			
 			const popularPlaces: any[] = await Place.aggregate([
 				...addressMatch,

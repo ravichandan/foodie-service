@@ -164,22 +164,19 @@ class PlaceController {
     postcode: string;
     suburbs: string[];
     city: string;
+		latitude?: number;
+		longitude?: number;
+		distance?: number;
   }) => {
     log.info('Received request in getPlaces');
-    const { placeName, itemName, postcode, suburbs, city } = {
+    // const { placeName, itemName, postcode, suburbs, city } = {
       // ...req.params,
       // ...req.query,
-      ...args,
-    } as any;
+    //   ...args,
+    // } as any;
 
-    log.trace('Params to getPlaces: ', { placeName, itemName, postcode, city });
-    const places: PlaceModel[] | undefined = await placeService.getPlaces({
-      placeName,
-      itemName,
-      postcode,
-      suburbs,
-      city,
-    });
+    // log.trace('Params to getPlaces: ', { placeName, itemName, postcode, city });
+    const places: PlaceModel[] | undefined = await placeService.getPlaces(args);
     log.trace('Found the following places with given params', places);
     if (!places) {
       throw new HTTP404Error('Place not found with given id');
