@@ -233,7 +233,7 @@ class PlaceController {
 
     log.trace('Params to getPopulars: ', args);
     const places: PlaceModel[] | undefined = await placeItemService.getPopulars(args);
-    log.trace('Found the following popular results with given params', places);
+    log.trace('Found the following popular results with given params', places?.length);
     if (!!places) {
       const placeResponse: PlaceResponse = {
         places: places,

@@ -613,13 +613,14 @@ export default [
 			} else {
 				// No errors, pass req and res on to your controller
 				log.info('in GET /items/ route handler, processing request');
-				const { itemName, postcode, suburbs, city, diets } = {
+				const { itemName, postcode, suburbs, city,
+					diets, latitude, longitude, distance, } = {
 					...req.params,
 					...req.query,
 				} as any;
 				log.debug('suburbs suburbs:: ', suburbs);
 				try {
-					const result = await itemController.getItemsByName({itemName, postcode, suburbs, city, diets});
+					const result = await itemController.getItemsByName({itemName, postcode, suburbs, city, diets, latitude, longitude, distance});
 					res.send(result);
 				} catch (error: any) {
 					log.error('GET /items/ resulted in Error', error);

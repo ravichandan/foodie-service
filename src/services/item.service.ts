@@ -107,7 +107,11 @@ export class ItemService {
 
 	// remove this if 3 works, 
 	// as of 28-sep-24, we are using this.
-	async getItemsByName2(args: { itemName: string, postcode?: string; city?: string, suburbs?: string, diets?: string|number[] }) {
+	async getItemsByName2(args: { itemName: string, postcode?: string; city?: string, suburbs?: string,
+		 diets?: string|number[],
+		 latitude?: number;
+		 longitude?: number;
+		 distance?: number; }) {
 		log.debug('Received request to get all items with args: ', args);
 		if (!args.postcode && !args.city && !args.suburbs) {
 			log.error('Either postcode or city or suburb is mandatory to search items by name');
@@ -120,31 +124,105 @@ export class ItemService {
 			dietMatch = { $match: { diet: {$in : args.diets} } }
 		}
 
-		const q: any = [];//{};
-
-		if (!!args?.postcode) {
-			q.push(
-				// { $match:
-					 { 'address.postcode': +args?.postcode }
-					//  }
-					);
-		}
-		if (!!args?.city) {
-			q.push(
-				// { $match: 
-					{ 'address.city': { $regex: args?.city, $options: "i" }}
-				// }
-			);
-		}
-		if (!!args?.suburbs) {
-			q.push(
-				// { $match: 
-					{ 
-					'address.suburb': new RegExp(`\\b(${args.suburbs.split(',').join('|')})\\b`, 'i')
+		// create address & location related match query
+		let addressMatch: any = [{skip:0}];
+		if(args?.longitude && args?.latitude){
+			addressMatch = [{
+					$set: {
+						distance: {
+						$let: {
+							vars: {
+							dlon: {
+								$degreesToRadians: {
+								$subtract: [
+									{
+									$toDouble:
+										"$address.location.latitude"
+									},
+									+args?.latitude
+								]
+								}
+							},
+							dlat: {
+								$degreesToRadians: {
+									$subtract: [
+										{ $toDouble: "$address.location.longitude" },
+										+args?.longitude
+									]
+								}
+							},
+							lat1: {
+								$degreesToRadians: { $toDouble: "$address.location.latitude" }
+							},
+							lat2: { $degreesToRadians: +args?.latitude }
+							},
+							in: {
+							// Haversine formula: sin²(dLat / 2) + sin²(dLon / 2)
+							// cos(lat1)
+							// cos(lat2);
+							$add: [
+								{
+									$pow: [
+										{ $sin: { $divide: ["$$dlat", 2] } },
+										2
+									]
+								},
+								{
+								$multiply: [
+									{
+										$pow: [
+											{ $sin: { $divide: ["$$dlon", 2] } },
+											2
+										]
+									},
+									{ $cos: "$$lat1" },
+									{ $cos: "$$lat2" }
+								]
+								}
+							]
+							}
+						}
+						}
+					}
+				},
+				{
+					$set: {
+					  distance: {
+						// Distance in Meters given by "6372.8
+						// 1000"
+						$multiply: [
+						  6372.8,
+						  1000,
+						  2,
+						  {
+							$asin: {
+							  $sqrt: "$distance"
+							}
+						  }
+						]
+					  }
+					}
+				}, {$match: {
+				 distance: {$lte: (!!args?.distance ? ((+args?.distance+1) * 1000 ) : 35000)}
+			   	}}];
+		} else {
+			addressMatch = [
+				{ $match: {"address.city": {
+					$regex: args?.city ?? "sydney",
+					$options: "i"
+					}}
+				},
+				
+			];
+			if(args?.suburbs){
+				addressMatch.push({ $match: { 'address.suburb': new RegExp(`(${args.suburbs.split(',').join('|')})`, 'i')}});
 			}
-		// }
-		);
+
+			if(args?.postcode){
+				addressMatch.push({ $match: {"address.postcode": args?.postcode}});
+			}
 		}
+
 		try {
 			const items: ItemModel[] = await Item.aggregate([
 					{
@@ -192,16 +270,7 @@ export class ItemService {
 							from: Place.collection.collectionName,
 							localField: 'place_items.place', // field of reference to Place schema
 							foreignField: '_id',
-							pipeline: [
-								{
-									$match: {
-										// $expr: { 
-											$and: q 
-										// }
-										,
-									},
-								},
-							],
+							pipeline: [...addressMatch],
 							as: 'places',
 						},
 					},
