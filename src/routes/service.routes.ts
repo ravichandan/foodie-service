@@ -168,6 +168,7 @@ export default [
 				const args = {
 					city:req.query.city as string,
 					postcode:  req.query.postcode as string,
+					suburb:  req.query.suburb as string,
 					diets: req.query.diets as string,
 					latitude: req.query.latitude ? +req.query.latitude : undefined,
 					longitude: req.query.longitude ? +req.query.longitude : undefined,

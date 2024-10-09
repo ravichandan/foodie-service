@@ -689,16 +689,16 @@ export class PlaceItemService {
 		}
 
 		// create address & location related match query
-		let addressMatch: any = [{skip:0}];
+		let addressMatch: any = [
+			{ $match: {"address.city": {
+				$regex: args.city ?? "sydney",
+				$options: "i"
+				}}
+			},
+			
+		];
 		if(args.suburb || args.postcode) {
-			addressMatch = [
-				{ $match: {"address.city": {
-					$regex: args.city ?? "sydney",
-					$options: "i"
-					}}
-				},
-				
-			];
+		
 			if(args.suburb){
 				addressMatch.push({ $match: {"address.suburb": {
 					$regex: args.suburb,
@@ -707,7 +707,7 @@ export class PlaceItemService {
 				});
 			}
 			if(args.postcode){
-				addressMatch.push({ $match: {"address.postcode": args.postcode}});
+				addressMatch.push({ $match: {"address.postcode": +args.postcode}});
 			}
 		} else if(args.latitude && args.longitude){
 			addressMatch = [{

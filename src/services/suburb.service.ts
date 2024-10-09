@@ -222,7 +222,7 @@ names.forEach(function(opt){
         };
         const response: any = await axios.get(apiPath, { params: params, ...ax_config });
   
-        log.trace('Got response from locationiq.com: ', response);
+        log.trace('Got response from locationiq.com: ', response.data);
         const suburbName = response.data.address?.city;
         if(suburbName){
           log.trace('Found suburb from locationiq.com, suburb:: ', suburbName);
