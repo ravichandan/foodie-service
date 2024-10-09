@@ -690,7 +690,26 @@ export class PlaceItemService {
 
 		// create address & location related match query
 		let addressMatch: any = [{skip:0}];
-		if(args.longitude && args.latitude){
+		if(args.suburb || args.postcode) {
+			addressMatch = [
+				{ $match: {"address.city": {
+					$regex: args.city ?? "sydney",
+					$options: "i"
+					}}
+				},
+				
+			];
+			if(args.suburb){
+				addressMatch.push({ $match: {"address.suburb": {
+					$regex: args.suburb,
+					$options: "i"
+					}}
+				});
+			}
+			if(args.postcode){
+				addressMatch.push({ $match: {"address.postcode": args.postcode}});
+			}
+		} else if(args.latitude && args.longitude){
 			addressMatch = [{
 					$set: {
 						distance: {
@@ -769,26 +788,6 @@ export class PlaceItemService {
 				}, {$match: {
 				 distance: {$lte: (!!args.distance ? ((+args.distance+1) * 1000 ) : 35000)}
 			   	}}];
-		} else {
-			addressMatch = [
-				{ $match: {"address.city": {
-					$regex: args.city ?? "sydney",
-					$options: "i"
-					}}
-				},
-				
-			];
-			if(args.suburb){
-				addressMatch.push({ $match: {"address.suburb": {
-					$regex: args.suburb,
-					$options: "i"
-					}}
-				});
-			}
-
-			if(args.postcode){
-				addressMatch.push({ $match: {"address.postcode": args.postcode}});
-			}
 		}
 		try {
 			let popularItemsWithPlaces: any[] = await PlaceItem.aggregate([

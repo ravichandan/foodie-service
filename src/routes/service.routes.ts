@@ -937,4 +937,18 @@ export default [
 			}
 		},
 	},
+
+
+	{
+		path: '/suburbName/',
+		method: 'get',
+		validators: [],
+		handler: async (req: Request, res: Response) => {
+
+				// No errors, pass req and res on to your controller
+				log.debug('in get /suburb/ route handler, processing request');
+				await suburbController.getSuburbNameFromLocationIQ(req,res);
+				log.debug('Fetching completed');
+		},
+	},
 ];

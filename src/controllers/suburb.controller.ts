@@ -74,6 +74,16 @@ class SuburbController {
 		return suburbs;
 	};
 
+	async getSuburbNameFromLocationIQ(req: Request, res: Response): Promise<string|undefined> {
+		const {latitude, longitude} ={...req.query} as any;
+		if(!latitude || !longitude){
+			res.status(400).send('latitude and longitude are mandatory for this request');
+			return;
+		}
+		const suburbName = await suburbService.getSuburbNameFromLocationIQ(+latitude, +longitude);
+		res.send({name: suburbName});
+	}
+
 	//update suburb
 	updateSuburb = async (req: Request, res: Response) => {
 		const id: string = req.params.id;
