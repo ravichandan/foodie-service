@@ -161,6 +161,26 @@ class ReviewController {
     res.send(reviews);
   };
 
+  //get all reviewMedias
+  getReviewMedias = async (req: Request, res: Response) => {
+    const {
+      placeId,
+      itemId,
+      pageNumber = 1,
+      pageSize = 10,
+    }: {
+      placeId: string;
+      itemId: string;
+      pageNumber: number;
+      pageSize: number;
+    } = {
+      ...req.params,
+      ...req.query,
+    } as any;
+    const reviews = await reviewService.getReviewMedias({ placeId, itemId, pageNumber, pageSize });
+    res.send(reviews);
+  };
+
   //get a single review
   getAReview = async (req: Request, res: Response) => {
     //get id from the parameter

@@ -62,6 +62,86 @@ export class ReviewService {
     }
   }
 
+  //get all reviews
+  async getReviewMedias(params: {
+    placeId: string;
+    itemId: string;
+    pageNumber: number;
+    pageSize: number;
+  }): Promise<IReview[] | undefined> {
+    if(!params.placeId || !params.itemId) return;
+    params.pageNumber=params.pageNumber? +params.pageNumber : 1;
+    params.pageSize=params.pageSize? +params.pageSize : 30;
+    log.debug('Received request to getReviewMedias, params:: ', params);
+    try {
+      const reviews = Review.aggregate([
+        {
+          $lookup: {
+              from: "place_items",
+              localField: "placeItem",
+              foreignField: "_id",
+              as: "pi",
+              pipeline: [{
+                $match:{
+                  $expr:{
+                    $and:[
+                      {$eq: [{ $toObjectId: params.placeId }, '$place']},
+                      {$eq: [{ $toObjectId: params.itemId }, '$item']}
+                    ]
+                  }
+                  
+                }
+              }]
+            }
+        },
+        {
+          $unwind: {
+              path: "$pi",
+              preserveNullAndEmptyArrays: false
+            }
+        },
+        {
+          $match: {
+            $expr: {
+              $eq: ["$placeItem", "$pi._id"]
+            }
+          }
+        },
+        {
+          $unwind: {
+            path: "$medias",
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $unset: ["children", "pi", "parent", "place"]
+        },
+        {
+          $lookup: {
+              from: "customers",
+              localField: "customer",
+              foreignField: "_id",
+              as: "customer",
+              pipeline: [{ $unset: ["reviews"] }]
+            }
+        },
+        {
+          $unwind: {
+              path: "$customer",
+              preserveNullAndEmptyArrays: true
+            }
+        },
+        { $sort: { createdAt: -1 } },
+        { $skip: ((params.pageNumber ?? 1) - 1) * (params.pageSize ?? 30) },
+        { $limit: (params.pageSize ?? 30) },
+      ])
+      log.trace('Returning fetched reviews with reviewMedias');
+      return reviews;
+    } catch (error) {
+      log.error('Error while doing getReviewMedias', error);
+    }
+  }
+
   //get a single review
   async getReview(query: { id?: string; correlationId?: string }): Promise<IReview | null> {
     if (!query.id && !query.correlationId) {

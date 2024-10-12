@@ -502,6 +502,28 @@ export default [
 		},
 	},
 	{
+		path: '/places/:placeId/items/:itemId/review-medias', // get review-medias of an item in a given place
+		method: 'get',
+		validators: [
+			// checkSchema(FieldConfigs.getPlaceSchemaConfig)
+		],
+		handler: async (req: Request, res: Response) => {
+			const err = validationResult(req);
+			if (!err.isEmpty()) {
+				log.error('Bad Request', err.mapped());
+				res.status(401).send(err.mapped());
+			} else {
+				// No errors, pass req and res on to your controller
+				log.debug(
+					'in get /places/:placeId/items/:itemId/review-medias route handler, processing request, req.params:',
+					req.params,
+				);
+				await reviewController.getReviewMedias(req, res);
+				log.debug('Returning the fetched review-medias');
+			}
+		},
+	},
+	{
 		path: '/places', // add a new place
 		method: 'post',
 		validators: [checkSchema(FieldConfigs.addPlaceSchemaConfig), checkSchema(FieldConfigs.validateAuth)],
@@ -732,7 +754,6 @@ export default [
 			}
 		},
 	},
-
 	// routes for medias
 	{
 		path: '/medias/upload',
