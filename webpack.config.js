@@ -1,4 +1,5 @@
 const path = require('path');
+const Dotenv = require('dotenv-webpack');
 
 module.exports = {
   entry: './src/server/app.ts',
@@ -24,7 +25,9 @@ module.exports = {
   node: {
     __dirname: true,
   },
-  plugins: [],
+  plugins: [
+    new Dotenv()
+  ],
   externals: {
     snappy: 'commonjs snappy',
   },

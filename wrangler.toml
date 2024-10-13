@@ -1,0 +1,42 @@
+
+name = "foodie-service"
+type="javascript"
+
+node_compat = true
+#compatibility_flags = ["nodejs_compat", "node_compat"]
+
+
+account_id="S.ravichandan@gmail.com"
+
+workers_dev = true
+compatibility_date = "2024-06-10"
+
+
+
+#[build]
+#command = ""
+#command = "npm run wrangler-dev"
+#[build.upload]
+main = "./src/index.ts"
+
+[vars]
+LOG_LEVEL = "trace"
+# [vars]
+# MY_VAR = "my-variable"
+
+# [[kv_namespaces]]
+# binding = "MY_KV_NAMESPACE"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+[[r2_buckets]]
+binding = "MY_BUCKET"
+bucket_name = "test-buckets"
+
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "my-database"
+# database_id = ""
+
+# [ai]
+# binding = "AI"
+

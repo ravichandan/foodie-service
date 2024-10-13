@@ -1,6 +1,6 @@
 import {
   DeleteObjectCommand,
-  DeleteObjectsCommand,
+  DeleteObjectsCommand, GetObjectCommand,
   ListBucketsCommand,
   PutObjectCommand,
   S3Client,
@@ -10,7 +10,9 @@ import * as Utils from '../utils/Utils';
 import { Upload } from '@aws-sdk/lib-storage';
 
 import { readFileSync } from 'node:fs';
-// import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { Stream } from 'node:stream';
+import { Readable } from 'stream';
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const log: Logger = Utils.getLogger('r2.provider');
 
@@ -54,12 +56,22 @@ export class R2Provider {
   }
 
   async removeFile(key: string) {
-    const deleteObjectCommand = new DeleteObjectCommand({
-      Bucket: this.S3_BUCKET_NAME,
-      Key: key,
+    log.info(' in r2.provider, removeFile(), key:: ', key);
+    const url = await getSignedUrl(
+      this.client,
+      new DeleteObjectCommand({ Bucket: this.S3_BUCKET_NAME, Key: key }),
+      { expiresIn: 3600 }
+    );
+    await fetch(url, {
+      method: 'DELETE',
     });
 
-    this.client.send(deleteObjectCommand);
+    // const deleteObjectCommand = new DeleteObjectCommand({
+    //   Bucket: this.S3_BUCKET_NAME,
+    //   Key: key,
+    // });
+
+    // await this.client.send(deleteObjectCommand);
   }
 
   async uploadToR2(passThroughStream: any) {
@@ -74,6 +86,11 @@ export class R2Provider {
     });
   }
 
+  async getSignedUrl(key: string){
+    // console.log(
+      return await getSignedUrl(this.client, new GetObjectCommand({Bucket: this.S3_BUCKET_NAME, Key: key}), { expiresIn: 3600 })
+    // )
+  }
   async uploadFileForCustomer(customerId: string, fileStream: any) {
     let key = '';
     // const fileName = filePath.split('\\').pop().split('/').pop();
@@ -102,7 +119,7 @@ export class R2Provider {
     return uploadedResult;
   }
 
-  async uploadV3(key: any, fileStream: any) {
+  async uploadV3(key: any, fileStream: ReadableStream) {
     log.trace('in uploadv3');
     const target = {
       Bucket: this.S3_BUCKET_NAME,
@@ -122,6 +139,7 @@ export class R2Provider {
         console.log(progress);
       });
 
+      console.log('this.getSignedUrl(key)', await this.getSignedUrl(key));
       return await parallelUploads3.done();
     } catch (e) {
       console.log(e);

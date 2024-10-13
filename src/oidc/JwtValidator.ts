@@ -18,5 +18,5 @@ export const googleJwtValidator = async (token: string) => {
     // If the request specified a Google Workspace domain:
     // const domain = payload['hd'];
   }
-  return await verify().catch((_) => undefined);
+  return await verify().catch((r) => console.log('Error while verifying token with google-auth-library, error:: ', r));
 };

@@ -3,6 +3,10 @@ import mongoose from 'mongoose';
 import { Document, Schema, model, Model } from 'mongoose';
 import Inc from 'mongoose-sequence';
 
+export type Location = {
+  latitude: string;
+  longitude: string;
+}
 // creating interfaces for entities
 export type IAddress = Document & {
   // includes door no, street name, etc
@@ -23,6 +27,10 @@ export type IAddress = Document & {
   // country
   country: string; // only australia as of now
 
+  location: Location;
+
+  googleMapsUri: string;
+
   // createdAt: Date;
   // modifiedAt: Date;
 };
@@ -30,7 +38,7 @@ export type IAddress = Document & {
 // Model schemas
 export const addressSchema: Schema<IAddress> = new mongoose.Schema<IAddress>(
   {
-    _id: Number,
+    // _id: Number,
 
     // includes door no, street name, etc
     line: {
@@ -66,6 +74,28 @@ export const addressSchema: Schema<IAddress> = new mongoose.Schema<IAddress>(
       type: String,
     }, // only australia as of now
 
+    // country
+    location: {
+      type: new mongoose.Schema<Location>(
+        {
+          // _id: Number,
+
+          // includes door no, street name, etc
+          latitude: {
+            type: String,
+          },
+
+          // Suburb
+          longitude: {
+            type: String,
+          }})
+    }, // only australia as of now
+
+    // country
+    googleMapsUri: {
+      type: String,
+    }, // only australia as of now
+
     // createdAt: {
     //   type: Date,
     //   required: true,
@@ -76,13 +106,13 @@ export const addressSchema: Schema<IAddress> = new mongoose.Schema<IAddress>(
     //   required: true,
     // },
   },
-  { _id: false },
+  { },
 );
 
 // @ts-ignore
-const AutoIncrement = Inc(mongoose);
+// const AutoIncrement = Inc(mongoose);
 // @ts-ignore
-addressSchema.plugin(AutoIncrement, { id: 'address_id_counter' });
+// addressSchema.plugin(AutoIncrement, { id: 'address_id_counter' });
 
 //creating the Place model by passing placeSchema
 export const Address: Model<IAddress> = model<IAddress>('Address', addressSchema);

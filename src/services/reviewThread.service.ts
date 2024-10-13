@@ -2,6 +2,8 @@ import { Review } from '../entities/review';
 import { Logger } from 'log4js';
 import { getLogger } from '../utils/Utils';
 import { IReviewThread, ReviewThread } from '../entities/reviewThread';
+import mongoose from 'mongoose';
+
 
 const log: Logger = getLogger('reviewThread.service');
 
@@ -32,7 +34,7 @@ export class ReviewThreadService {
     try {
       data.createdAt = new Date();
       data.modifiedAt = new Date();
-      const parent = await this.getThreadByReviewId(+params.reviewId);
+      const parent = await this.getThreadByReviewId(params.reviewId);
       data.repliedOn = parent;
       const newThread: IReviewThread = await ReviewThread.create(data);
       log.debug('Thread created successfully, setting this reference to parent document. new thread: ', newThread);
@@ -67,7 +69,7 @@ export class ReviewThreadService {
   }
 
   //get a single review
-  async getThreadByReviewId(reviewId: number, populate: boolean = false): Promise<IReviewThread | null> {
+  async getThreadByReviewId(reviewId: string, populate: boolean = false): Promise<IReviewThread | null> {
     if (!reviewId) {
       log.error('reviewId has to be provided to query a Review document ');
       throw new Error('reviewId has to be provided to query a Review document');
@@ -77,7 +79,7 @@ export class ReviewThreadService {
         // ?
         // await ReviewThread.find({ review: reviewId }).populate('replies')
         // 	:
-        await ReviewThread.findOne({ review: reviewId });
+        await ReviewThread.findOne({ review: new mongoose.Types.ObjectId(reviewId) });
 
       log.trace('Found review: ', result);
       return result;

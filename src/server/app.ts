@@ -26,11 +26,14 @@ process.on('unhandledRejection', (e) => {
 });
 
 const router = express();
+router.use(express.urlencoded({extended: false}));
+router.use(express.json());
 
 applyMiddleware(controllers, router);
 applyRoutes(routes, router);
 applyMiddleware(errorHandlers, router);
 
+// router.us
 const { PORT = 3000 } = process.env;
 const server = http.createServer(router).on('connection', function (socket: any) {
   if (!socket.errorFunctionTagged) {
@@ -45,6 +48,7 @@ const server = http.createServer(router).on('connection', function (socket: any)
 db.then(() => {
   const runningServer = server.listen(PORT, () => logger.info(`Server is running http://localhost:${PORT}`));
 
+  console.log('Before setting runningServer.keepAliveTimeout:: ', runningServer.keepAliveTimeout);
   logger.trace('Before setting runningServer.keepAliveTimeout:: ', runningServer.keepAliveTimeout);
   logger.trace('Before setting runningServer.headersTimeout:: ', runningServer.headersTimeout);
 
@@ -56,3 +60,5 @@ db.then(() => {
   logger.trace('After setting runningServer.keepAliveTimeout:: ', runningServer.keepAliveTimeout);
   logger.trace('After setting runningServer.headersTimeout:: ', runningServer.headersTimeout);
 });
+
+module.exports = router;

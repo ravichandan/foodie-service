@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import cors from 'cors';
 import parser from 'body-parser';
 import compression from 'compression';
@@ -11,12 +11,13 @@ const correlationIdHeaderName = process.env.CORRELATION_ID_HEADER_NAME;
 export const handleCors = (router: Router) => {
   log.trace('Adding cors() to router');
   router.use(cors({ credentials: true, origin: true }));
+  router.options('*', cors());
 };
 
 export const handleBodyRequestParsing = (router: Router) => {
   log.trace('Adding parser.json()) to router');
-  router.use(parser.urlencoded({ extended: true }));
-  router.use(parser.json());
+  router.use(express.json());
+  router.use(express.urlencoded({ extended: false  }));
 };
 
 export const handleCompression = (router: Router) => {
@@ -30,12 +31,13 @@ export const responseTime = (router: Router) => {
       return next();
     }
 
+    const url = req.path;
     const start = Date.now();
-    log.trace('Request timestamp:: ', new Date(start));
+    // log.trace('Request timestamp:: ', new Date(start));
     res.on('finish', function () {
-      log.trace('Response timestamp:: ', new Date());
+      // log.trace('Response timestamp:: ', new Date());
       const duration = Date.now() - start;
-      log.debug('Turnaround time (response sent in): ', duration, 'ms');
+      log.debug('Turnaround time (response sent in) for request', url, 'is: ',duration, 'ms');
     });
     next();
   });

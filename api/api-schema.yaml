@@ -683,7 +683,7 @@ components:
         name:
           type: string
           example: 'Cheese Burger'
-        category:
+        course:
           type: string
           enum:
             - 'MAINS'

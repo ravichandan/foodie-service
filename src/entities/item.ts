@@ -1,19 +1,23 @@
 import mongoose, { Document, Model, model, Schema } from 'mongoose';
-import Inc from 'mongoose-sequence';
+// import Inc from 'mongoose-sequence';
 import { IMedia, mediaSchema } from './media';
 import { IPlace } from './place';
 
 const uc = <T extends string>(x: T) => x.toUpperCase() as Uppercase<T>;
 
 const x: 'FOO' = uc('foo'); // okay
-type ItemCategoryKeys = keyof typeof ItemCategory;
+type ItemCourseKeys = keyof typeof ItemCourse;
 type CuisineKeys = keyof typeof Cuisine;
 
-const getCategory = (key: string) => {
-  const c: ItemCategory = ItemCategory[key.toUpperCase() as ItemCategory];
+const getCourse = (key: string) => {
+  const c: ItemCourse = ItemCourse[key.toUpperCase() as ItemCourse];
+};
+export const getCuisine = (key: string): Cuisine => {
+  const c: Cuisine = Cuisine[key.toUpperCase() as Cuisine];
+  return c;
 };
 
-export enum ItemCategory {
+export enum ItemCourse {
   MAINS = 'MAINS',
   STARTER = 'STARTER',
   DRINKS = 'DRINKS',
@@ -35,7 +39,7 @@ export enum Cuisine {
 
 // creating interfaces for entities
 export type IItem = Document & {
-  _id: number;
+  // _id: number;
   correlationId: string;
 
   // under which cuisines this item falls in
@@ -45,7 +49,8 @@ export type IItem = Document & {
   /**
    * Indicates whether is a starter or drinks or main course, etc
    */
-  category: ItemCategory;
+  course: ItemCourse;
+
 
   // name of the item
   name: string; // max 100 chars
@@ -56,6 +61,19 @@ export type IItem = Document & {
   // medias of the place given by that Place
   media: IMedia;
 
+  /**
+   * vegan <=1,
+   * vegetarian <=2
+   * eggitarian <= 3
+   * pescatarian <=4
+   * pollotarian <=5
+   * lambitarian <=6
+   * halal <=7
+   * carnivore <=10
+   */
+  diet: number;
+
+
   createdAt: Date;
   modifiedAt: Date;
 };
@@ -63,7 +81,7 @@ export type IItem = Document & {
 // Model schemas
 const itemSchema: Schema<IItem> = new Schema<IItem>(
   {
-    _id: Number,
+    // _id: Number,
 
     // correlationId: {
     // 	type: String,
@@ -80,18 +98,35 @@ const itemSchema: Schema<IItem> = new Schema<IItem>(
     },
     description: {
       type: String,
-      required: true,
+      required: false,
     },
     cuisines: {
       type: [String],
       enum: Object.values(Cuisine),
       validate: (c: Cuisine) => Array.isArray(c) && c.length > 0,
     },
-    category: {
+    course: {
       type: String,
-      enum: Object.values(ItemCategory), //['MAINS', 'STARTER', 'DRINKS'],
-      required: true,
+      enum: Object.values(ItemCourse), //['MAINS', 'STARTER', 'DRINKS'],
+      required: false,
     },
+
+      /**
+   * vegan <=1,
+   * vegetarian <=2
+   * eggitarian <= 3
+   * pescatarian <=4
+   * pollotarian <=5
+   * lambitarian <=6
+   * halal <=7
+   * carnivore <=10
+   */
+    diet: Number,
+    // vegetarian: Boolean,
+    // eggitarian: Boolean,
+    // pollotarian: Boolean,
+    // pescatarian: Boolean,
+
     media: {
       type: mediaSchema,
     },
@@ -106,16 +141,8 @@ const itemSchema: Schema<IItem> = new Schema<IItem>(
       required: true,
     },
   },
-  { _id: false },
+  {},
 );
-
-// @ts-ignore
-const AutoIncrement = Inc(mongoose);
-// @ts-ignore
-itemSchema.plugin(AutoIncrement, { id: 'item_id_counter', inc_field: '_id' });
 
 //creating the Place model by passing placeSchema
 export const Item: Model<IItem> = model<IItem>('Item', itemSchema);
-
-// var mongoose = require('mongoose');
-// var Schema = mongoose.Schema;

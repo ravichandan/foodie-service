@@ -2,8 +2,8 @@
 import mongoose, { Document, Model, model, Schema } from 'mongoose';
 import { IPlace } from './place';
 import { IMedia, mediaSchema } from './media';
-import { IItem } from './item';
-import Inc from 'mongoose-sequence';
+import { Cuisine, IItem, ItemCourse } from './item';
+// import Inc from 'mongoose-sequence';
 import { IReview } from './review';
 import { IPlaceItemRating } from './placeItemRating';
 
@@ -43,15 +43,24 @@ export type CalorieInfo = {
   unit: CalorieUnit;
 };
 export type IPlaceItem = Document & {
-  _id: number;
+  // _id: number;
   correlationId: string;
   // itemReferenceId: string;
   place: IPlace;
   item: IItem;
-
+  aliases:string[];
   // customised name of the Item in this Place
   name: string;
+  simpleName: string;
 
+  course: ItemCourse;
+
+  /**
+   * Indicates vendor specific category
+   */
+  category: string;
+
+  cuisines: Cuisine[];
   // contains calorie related info
   calorieInfo: CalorieInfo;
 
@@ -66,11 +75,27 @@ export type IPlaceItem = Document & {
 
   // customised description of the Item in this Place
   description: string;
+
+  uberPopularity: string; 
+
+  /**
+   * vegan <=1,
+   * vegetarian <=2
+   * eggitarian <= 3
+   * pescatarian <=4
+   * pollotarian <=5
+   * lambitarian <=6
+   * halal <=7
+   * carnivore <=10
+   */
+  diet: number;
+
   // cuisines: Cuisine[];
-  // category: ItemCategory;
+  // course: ItemCourse;
+  media: IMedia;
   medias: IMedia[];
   reviews: IReview[];
-  ratings: IPlaceItemRating[];
+  rating: IPlaceItemRating;
 
   createdAt: Date;
   modifiedAt: Date;
@@ -78,24 +103,47 @@ export type IPlaceItem = Document & {
 
 const placeItemSchema: Schema<IPlaceItem> = new Schema<IPlaceItem>(
   {
-    _id: Number,
+    // _id: Number,
     correlationId: {
       type: String,
     },
     place: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Place',
     },
     item: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Item',
     },
+    simpleName: String,
     name: String,
+    price: String,
+    aliases: [String],
+    uberPopularity: String,
     description: String,
+
+  /**
+   * vegan <=1,
+   * vegetarian <=2
+   * eggitarian <= 3
+   * pescatarian <=4
+   * pollotarian <=5
+   * lambitarian <=6
+   * halal <=7
+   * carnivore <=10
+   */
+    diet: Number,
+
+    // vegetarian: Boolean,
+    // eggitarian: Boolean,
+    // pollotarian: Boolean,
+    // pescatarian: Boolean,
+
+    category: String,
     calorieInfo: new Schema<CalorieInfo>({ count: { type: Number }, unit: { type: String } }),
     ingredients: {
       type: [String],
@@ -105,18 +153,18 @@ const placeItemSchema: Schema<IPlaceItem> = new Schema<IPlaceItem>(
     // 	enum: Object.values(Cuisine),
     // 	validate: (c: Cuisine) => Array.isArray(c) && c.length > 0,
     // },
-    // category: {
+    // course: {
     // 	type: String,
-    // 	enum: Object.values(ItemCategory), //['MAINS', 'STARTER', 'DRINKS'],
+    // 	enum: Object.values(ItemCourse), //['MAINS', 'STARTER', 'DRINKS'],
     // 	required: true,
     // },
-    medias: {
+    media: {
       type: [mediaSchema],
       validate: (v: IMedia) => Array.isArray(v), // && v.length > 0,
     },
   },
   {
-    _id: false,
+    // _id: false,
     toJSON: { virtuals: true }, // So `res.json()` and other `JSON.stringify()` functions include virtuals
     toObject: { virtuals: true },
   },
@@ -124,23 +172,23 @@ const placeItemSchema: Schema<IPlaceItem> = new Schema<IPlaceItem>(
 
 placeItemSchema.virtual('reviews', {
   ref: 'Review',
-  localField: 'item',
-  foreignField: 'item',
+  localField: '_id',
+  foreignField: 'placeItem',
   match: (pi: IPlaceItem) => ({ place: pi.place }),
 });
 
-placeItemSchema.virtual('ratings', {
+placeItemSchema.virtual('rating', {
   ref: 'Place_Item_Rating',
   localField: 'item',
-  foreignField: 'item',
+  foreignField: 'placeItem',
   match: (pi: IPlaceItem) => ({ place: pi.place }),
 
   // match: { archived: false } // match option with basic query selector
 });
 
 // @ts-ignore
-const AutoIncrement = Inc(mongoose);
+// const AutoIncrement = Inc(mongoose);
 
 // @ts-ignore
-placeItemSchema.plugin(AutoIncrement, { id: 'place_item_id_counter', inc_field: '_id' });
+// placeItemSchema.plugin(AutoIncrement, { id: 'place_item_id_counter', inc_field: '_id' });
 export const PlaceItem: Model<IPlaceItem> = model<IPlaceItem>('Place_Item', placeItemSchema);

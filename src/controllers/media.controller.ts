@@ -10,6 +10,7 @@ import { CustomerIdHeaderNotFoundError } from '../utils/error4xx';
 import { config } from '../config/config';
 import { createFileBuffer } from '../utils/MemoryFileStorage';
 import { handleSingleUploadFile } from '../utils/LocalFileStorage';
+import { placeItemService } from '../services/placeItem.service';
 
 const log: Logger = getLogger('media.controller');
 
@@ -24,7 +25,7 @@ class MediaController {
     }
 
     //call the addMedia function in the service and pass the data from the request
-    log.trace(`bucker_provider is ${config.bucket_provider}`);
+    log.trace(`bucket_provider is ${config.bucket_provider}`);
     let result;
     if (config.bucket_provider === 'R2') {
       log.trace('Creating file buffers');
@@ -38,15 +39,16 @@ class MediaController {
 
     log.trace('In media.controller-> uploadMultipleMedias(), result:: ', result);
 
-    res.status(201).send(result);
+    // res.status(201).send(result);
+    return result;
   };
 
-  removeUploadedMedias = async (req: Request) => {
+  removeUploadedMedias = async (keys: string[]) => {
     log.info('media.controller->removeUploadedMedias');
-
+    // [{ key: req.params.key}]
     if (config.bucket_provider === 'R2') {
       log.trace('Removing files in R2 file buffers');
-      await mediaService.removeMediaFromR2(req.files);
+      await mediaService.removeMediaFromR2(keys);
     } else {
       log.trace('Removing files in local file storage');
       // result = await handleSingleUploadFile(req, res);
@@ -54,17 +56,18 @@ class MediaController {
     }
   };
   // middleware to add a media
-  addMultipleMedias = async (req: Request, res: Response, files: UploadedFile[]) => {
+  addMultipleMedias = async (body: any, files: any[]) => {
     //data to be saved in database
-    log.trace('Creating multiple media objects with given data');
+    log.debug('In media.controller -> addMultipleMedias()');
     // uploadedResult.
     const medias = [];
     for (const file of files) {
       const data = {
-        url: file.path,
+        url: file.Location,
+        key: file.Key,
         createdAt: new Date(),
         modifiedAt: new Date(),
-        ...req.body,
+         ...(body),
       };
 
       //call the addMedia function in the service and pass the data from the request
@@ -73,10 +76,14 @@ class MediaController {
       if (data.placeId && !!media) {
         const place = await placeService.updatePlaceMedias(data.placeId, media as IMedia);
       }
+      if (data.placeItemId && !!media) {
+        const placeItem = await placeItemService.updatePlaceItemMedias(data.placeItemId, media as IMedia);
+      }
       media && medias.push(media);
     }
 
-    res.status(201).send(medias);
+    // res.status(201).send(medias);
+    return medias;
     // }
   };
   // middleware to add a media

@@ -1,36 +1,16 @@
-import mongoose from 'mongoose';
+import mongoose, { ObjectId } from 'mongoose';
 
 import { Document, Schema, Model, model } from 'mongoose';
-import Inc from 'mongoose-sequence';
-// import Joi from 'joi';
-
-// export const MediaSchemaValidate = Joi.object({
-//   // id of the media
-//   // mediaId: Joi.string().required(),
-//
-//   // url of the media
-//   url: Joi.string().required(),
-//   type: Joi.string(),
-//
-//   placeId: Joi.string(),
-//   itemId: Joi.string(),
-//   reviewId: Joi.string(),
-//   customerId: Joi.string(),
-//   correlationId: Joi.string(),
-//   createdAt: Joi.date(),
-//   modifiedAt: Joi.date(),
-// });
+// import Inc from 'mongoose-sequence';
 
 export type IMedia = Document & {
-  // _id: any;
-  // mediaId: number;
   url: string;
   type: 'image' | 'video' | undefined;
-  place: number;
-  item: number;
-  review: number;
-  customer: number;
-  // correlationId: string;
+  key: string;
+  place: ObjectId;
+  placeItem: ObjectId;
+  review: ObjectId;
+  customer: ObjectId;
   createdAt: Date;
   modifiedAt: Date;
 };
@@ -38,7 +18,7 @@ export type IMedia = Document & {
 // Model schemas
 export const mediaSchema: Schema<IMedia> = new mongoose.Schema<IMedia>(
   {
-    _id: Number,
+    // _id: Number, // Don't use _id explicitly, let mongoose create it
 
     // includes url of the storage location like s3 bucket
     url: {
@@ -51,30 +31,36 @@ export const mediaSchema: Schema<IMedia> = new mongoose.Schema<IMedia>(
       type: String,
     },
 
+    // indicates the key in s3 buckets.
+    key: {
+      type: String,
+    },
+
     place: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Place',
     },
-    item: {
+
+    placeItem: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Place_Item',
     },
 
     review: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Review',
     },
 
     customer: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Customer',
     },
 
@@ -96,18 +82,16 @@ export const mediaSchema: Schema<IMedia> = new mongoose.Schema<IMedia>(
       // required: true,
     },
   },
-  { _id: false },
 );
 
 // @ts-ignore
-const AutoIncrement = Inc(mongoose);
+// const AutoIncrement = Inc(mongoose);
 // @ts-ignore
-mediaSchema.plugin(AutoIncrement, {
-  id: 'media_id_counter',
-  inc_field: '_id',
-  seq: 1,
-});
-// mediaSchema.index({ _id: 1, seq: 1 }, { unique: true })
+// mediaSchema.plugin(AutoIncrement, {
+//   id: 'media_id_counter',
+//   inc_field: '_id',
+//   seq: 1,
+// });
 
 //creating the Place model by passing placeSchema
-export const Media: Model<IMedia> = model<IMedia>('Media', mediaSchema);
+export const Media: Model<IMedia> = model<IMedia>('Medias', mediaSchema);

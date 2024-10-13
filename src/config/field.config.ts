@@ -1,14 +1,18 @@
-import { Cuisine, ItemCategory } from '../entities/item';
+import { Cuisine, ItemCourse } from '../entities/item';
 import { Schema } from 'express-validator';
 import { CustomerModel } from '../models/customerModel';
 import { googleJwtValidator } from '../oidc/JwtValidator';
 import { HTTP401Error } from '../utils/error4xx';
 
 const validatePostcodeAndSururb = (_: any, { req }: any) => {
-  if (!req.body?.address?.postcode) {
-    throw new Error('Postcode is required for the address');
-  } else if (req.body?.address?.postcode < 2000 || req.body?.address?.postcode > 2899) {
-    throw new Error('Not a valid postcode in this state');
+
+  if (req.body?.address?.postcode && req.body?.address?.postcode !==0 ) {
+
+    if (!req.body?.address?.postcode) {
+      throw new Error('Postcode is required for the address');
+    } else if (req.body?.address?.postcode < 2000 || req.body?.address?.postcode > 2899) {
+      throw new Error('Not a valid postcode in this state');
+    }
   }
   if (!req.body?.address?.suburb) {
     throw new Error('Sururb is required for the address');
@@ -19,23 +23,75 @@ const validatePostcodeAndSururb = (_: any, { req }: any) => {
 };
 
 const queryParamsHasPostcodeOrSuburb = (_: any, { req }: any) => {
-  if (!req.query?.postcode && !req.query?.suburb) {
+  if (!req.query?.postcode && !req.query?.suburb ) {
     throw new Error('Either postcode or suburb has to be provided in the query parameters');
   }
   if (req.query?.postcode < 2000 || req.query?.postcode > 2899) {
     throw new Error('Not a valid postcode in this state');
   }
-  if (req.query?.suburb?.length < 5 || req.query?.suburb?.length > 50) {
+  if (req.query?.suburb && (req.query?.suburb?.length < 5 || req.query?.suburb?.length > 50) 
+    || (req.query?.suburbs && req.query?.suburbs?.length < 1)) {
     throw new Error('Not a valid suburb in this state');
   }
   return true;
 };
+
+const queryParamsHasSuburbOrPostcodeOrCity = (_: any, { req }: any) => {
+  if (!req.query?.postcode && !req.query?.suburb && !req.query?.city) {
+    throw new Error('Either suburb or postcode or city has to be provided in the query parameters');
+  }
+  if (req.query?.postcode < 2000 || req.query?.postcode > 2899) {
+    throw new Error('Not a valid postcode in this state');
+  }
+  if (req.query?.city?.length < 3 || req.query?.city?.length > 50) {
+    throw new Error('Not a valid city in this country');
+  }
+  if (req.query?.suburb && (req.query?.suburb?.length < 5 || req.query?.suburb?.length > 50) 
+  || (req.query?.suburbs && req.query?.suburbs?.length < 1)) {
+    throw new Error('Not a valid suburb in this state');
+  }
+  return true;
+};
+
+const queryParamsHasPostcodeOrCity = (_: any, { req }: any) => {
+  if (!req.query?.postcode && !req.query?.city) {
+    throw new Error('Either postcode or city has to be provided in the query parameters');
+  }
+  if (req.query?.postcode < 2000 || req.query?.postcode > 2899) {
+    throw new Error('Not a valid postcode in this state');
+  }
+  if (req.query?.city?.length < 3 || req.query?.city?.length > 50) {
+    throw new Error('Not a valid city in this country');
+  }
+  return true;
+};
+
 export const getItemInPlaceByIdSchemaConfig: Schema = {
   placeId: {
     in: ['params'],
     optional: false,
     errorMessage: 'a place id has to be provided as a path param in the url .../places/:placeId/items/:itemId',
   },
+  itemId: {
+    in: ['params'],
+    optional: false,
+    errorMessage: 'an item id has to be provided as a path param in the url .../places/:placeId/items/:itemId',
+  },
+};
+
+export const getPlaceItemByNameAndPlaceIdSchemaConfig: Schema = {
+  placeId: {
+    in: ['params'],
+    optional: false,
+    errorMessage: 'a place id has to be provided as a path param in the url .../places/:placeId/items/:itemId',
+  },
+  itemName: {
+    in: ['query'],
+    optional: false,
+    errorMessage: 'an item name has to be provided as a query param in the url .../places/:placeId/items/?itemName=:itemName',
+  },
+};
+export const getItemInPlaceByPlaceItemIdSchemaConfig: Schema = {
   itemId: {
     in: ['params'],
     optional: false,
@@ -49,7 +105,14 @@ export const getPlaceByIdSchemaConfig: Schema = {
     errorMessage: 'a place id has to be provided as a path param in the url .../places/:placeId',
   },
 };
-
+export const getPopularPlacesAndItems: Schema = {
+  postcode: {
+    custom: { options: queryParamsHasPostcodeOrCity }
+  },
+  city: {
+    custom: { options: queryParamsHasPostcodeOrCity }
+  }
+}
 export const getPlaceByNameSchemaConfig: Schema = {
   placeName: {
     in: ['query'],
@@ -58,11 +121,20 @@ export const getPlaceByNameSchemaConfig: Schema = {
   },
   itemName: {
     in: ['query'],
-    optional: false,
+    optional: true,
     errorMessage: 'item name has to be provided as a query param in the url .../places/?itemName=<value>',
   },
   postcode: {
-    custom: { options: queryParamsHasPostcodeOrSuburb },
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
+    // 	in: ['query'],
+    // optional: false,
+    // errorMessage: 'postcode should be provided to search the place',
+    // isInt: true,
+    // toInt: true,
+  },
+
+  city: {
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
     // 	in: ['query'],
     // optional: false,
     // errorMessage: 'postcode should be provided to search the place',
@@ -71,7 +143,53 @@ export const getPlaceByNameSchemaConfig: Schema = {
   },
 
   suburb: {
-    custom: { options: queryParamsHasPostcodeOrSuburb },
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
+    // 	in: ['query'],
+    // optional: false,
+    // errorMessage: 'postcode should be provided to search the place',
+    // isInt: true,
+    // toInt: true,
+  },
+  pageNumber: {
+    in: ['query'],
+    optional: true,
+    isInt: true,
+    toInt: true,
+    errorMessage: 'pageNumber in query parameter has to be a number',
+  },
+  pageSize: {
+    in: ['query'],
+    optional: true,
+    errorMessage: 'pageSize in query parameter has to be a number',
+    toInt: true,
+  },
+};
+
+
+export const getItemsByNameSchemaConfig: Schema = {
+  itemName: {
+    in: ['query'],
+    optional: true,
+    errorMessage: 'item name has to be provided as a query param in the url .../places/?itemName=<value>',
+  },
+  postcode: {
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
+    // 	in: ['query'],
+    // optional: false,
+    // errorMessage: 'postcode should be provided to search the place',
+    // isInt: true,
+    // toInt: true,
+  },
+  city: {
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
+    // 	in: ['query'],
+    // optional: false,
+    // errorMessage: 'postcode should be provided to search the place',
+    // isInt: true,
+    // toInt: true,
+  },
+  suburbs: {
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
     // 	in: ['query'],
     // optional: false,
     // errorMessage: 'postcode should be provided to search the place',
@@ -98,7 +216,46 @@ export const getItemSchemaConfig: Schema = {
     in: ['params'],
     optional: false,
     errorMessage: 'an itemId has to be provided as a path param in the url .../items/:itemId',
-    isLength: { options: { min: 3, max: 20 } },
+    isLength: { options: { min: 3 } },
+  },
+
+  postcode: {
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
+    // 	in: ['query'],
+    // optional: false,
+    // errorMessage: 'postcode should be provided to search the place',
+    // isInt: true,
+    // toInt: true,
+  },
+
+  city: {
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
+    // 	in: ['query'],
+    // optional: false,
+    // errorMessage: 'postcode should be provided to search the place',
+    // isInt: true,
+    // toInt: true,
+  },
+  suburb: {
+    custom: { options: queryParamsHasSuburbOrPostcodeOrCity },
+    // 	in: ['query'],
+    // optional: false,
+    // errorMessage: 'postcode should be provided to search the place',
+    // isInt: true,
+    // toInt: true,
+  },
+  pageNumber: {
+    in: ['query'],
+    optional: true,
+    isInt: true,
+    toInt: true,
+    errorMessage: 'pageNumber in query parameter has to be a number',
+  },
+  pageSize: {
+    in: ['query'],
+    optional: true,
+    errorMessage: 'pageSize in query parameter has to be a number',
+    toInt: true,
   },
 };
 
@@ -131,18 +288,18 @@ export const addItemSchemaConfig: Schema = {
   name: { isLength: { options: { min: 3, max: 100 } } },
   description: { optional: true, isLength: { options: { max: 300 } } },
   medias: {
-    custom: { options: (arr: any[]) => !arr || arr.every((a) => !!a?._id && !!a?.url) },
-    errorMessage: 'If a media file is provided, the id and url should be provided',
+    custom: { options: (arr: any[]) => !arr || arr.every((a) => !a?._id || !a?.url) },
+    errorMessage: 'If a media file is provided, it should have an id and url',
   },
 };
 
 export const createItemSchemaConfig: Schema = {
   name: { isLength: { options: { min: 3, max: 100 } } },
   description: { optional: true, isLength: { options: { max: 300 } } },
-  category: {
+  course: {
     custom: {
-      options: (val: string, _: any) => !val || Object.keys(ItemCategory).includes(val.toUpperCase()),
-      errorMessage: 'Invalid Category',
+      options: (val: string, _: any) => !val || Object.keys(ItemCourse).includes(val.toUpperCase()),
+      errorMessage: 'Invalid course',
     },
   },
   cuisines: {
@@ -153,8 +310,8 @@ export const createItemSchemaConfig: Schema = {
     },
   },
   medias: {
-    custom: { options: (arr: any[]) => !arr || arr.every((a) => !!a?._id && !!a?.url) },
-    errorMessage: 'If a media file is provided, the id and url should be provided',
+    custom: { options: (arr: any[]) => !arr || arr.every((a) => !a?._id || !a?.url) },
+    errorMessage: 'If a media file is provided, it should have an id and url',
   },
 };
 
@@ -165,19 +322,20 @@ export const postReviewSchemaConfig: Schema = {
   taste: { optional: true, isFloat: { options: { min: 1, max: 5 } } },
   presentation: { optional: true, isFloat: { options: { min: 1, max: 5 } } },
   medias: {
-    custom: { options: (arr: any[]) => !arr || arr.every((a) => !!a?._id && !!a?.url) },
-    errorMessage: 'If a media file is provided, the id and url should be provided',
+    custom: { options: (arr: any[]) => !arr || arr.every((a) => !a?._id || !a?.url) },
+    errorMessage: 'If a media file is provided, it should have an id and url',
   },
-  customerInfo: {
-    optional: false,
-    custom: {
-      options: (val: any, _: any) => {
-        console.log('Hello22222', val);
-        console.log('Hello33333', !val || !(val as CustomerModel).id);
-        return !!val || !!(val as CustomerModel).id;
-      },
-    },
-  },
+  // customerInfo: {
+  //   optional: false,
+  //   custom: {
+  //     options: (val: any, _: any) => {
+  //       // console.log('postReviewSchemaConfig, val: ', val);
+  //       // console.log('postReviewSchemaConfig, (val as CustomerModel).id: ', (val as CustomerModel).id);
+  //       // console.log('postReviewSchemaConfig, !!(val as CustomerModel).id: ', !!(val as CustomerModel).id);
+  //       return !!val && !!(val as CustomerModel).id;
+  //     },
+  //   },
+  // },
   placeId: { optional: false },
   itemId: { optional: true },
 };
@@ -235,13 +393,20 @@ export const addCustomerSchemaConfig: Schema = {
     },
   },
 };
+export const loginOrSignupOidcCustomerSchemaConfig: Schema = {
+  userInfo: {
+    in: ['body'],
+    optional: false,
+    errorMessage: 'userInfo has to be sent along the request',
+  },
+};
 
 export const getOrPutCustomerByIdSchemaConfig: Schema = {
   customerId: {
     in: ['params'],
     optional: false,
     errorMessage: 'customerId has to be provided as a path param in the url .../customers/:customerId',
-    isLength: { options: { min: 3, max: 20 } },
+    isLength: { options: { min: 3, max: 30 } },
   },
 };
 export const getReviewByIdSchemaConfig: Schema = {
@@ -262,14 +427,25 @@ export const getCustomerByNameSchemaConfig: Schema = {
   },
 };
 
-const verifyAuthToken = async (token: string, { req, res }: any) => {
-  const admin = req.headers['x-admin'];
-  const isAuthenticated = admin === 'admin' ? true : await googleJwtValidator(token);
+const verifyAuthToken = async (_: string, { req, res }: any) => {
+  const admin = req.headers['x-admin-name'];
+  const token = req.headers['x-token'];
+  const isAuthenticated = admin === 'admin' ? true : await googleJwtValidator(token??req.body.userInfo.token);
   if (!isAuthenticated) {
-    console.log('throwing 401:', req);
     throw new HTTP401Error();
   }
   return true;
+};
+
+
+export const verifyCustomerIdHeader: Schema = {
+
+  CUSTOMER_ID: {
+    in: ['headers'],
+    optional: false,
+    errorMessage: 'Provide a valid CUSTOMER_ID header',
+    isMongoId: true,
+  },
 };
 
 export const validateAuth: Schema = {

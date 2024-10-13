@@ -1,11 +1,15 @@
-import mongoose, { Document, Model, model, Schema } from 'mongoose';
-import Inc from 'mongoose-sequence';
+import mongoose, { Document, Model, model, ObjectId, Schema } from 'mongoose';
+// import Inc from 'mongoose-sequence';
 import { IMedia, mediaSchema } from './media';
 import { customerSchema, ICustomer } from './customer';
 
+
+//@ts-ignore
+mongoose.ObjectId.set(v => !v ? null : v);
+
 // creating interfaces for entities
 export type IReview = Document & {
-  _id: number;
+  // _id: number;
 
   /**
    * correlationId to match requests
@@ -15,17 +19,17 @@ export type IReview = Document & {
   /**
    * Reference of Place entity
    */
-  place: number;
+  place: ObjectId;
 
   /**
    * Reference of Item entity
    */
-  item: number;
+  placeItem: ObjectId;
 
   /**
    * Reference of Customer entity
    */
-  customer: number;
+  customer: ObjectId;
 
   /**
    * The review description given by the customer
@@ -61,6 +65,10 @@ export type IReview = Document & {
   notHelpful: number;
 
   /**
+   * Indicates how many total replies on this and its children threads
+   */
+  noOfReplies: number;
+  /**
    * List of customers that liked this review3
    */
   // likedBy: ICustomer[]
@@ -93,7 +101,7 @@ export type IReview = Document & {
 // Model schemas
 export const reviewSchema: Schema<IReview> = new Schema<IReview>(
   {
-    _id: Number,
+    // _id: Number,
 
     correlationId: {
       type: String,
@@ -101,26 +109,30 @@ export const reviewSchema: Schema<IReview> = new Schema<IReview>(
 
     place: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Place',
     },
-    item: {
+    placeItem: {
+      required: false,
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Place_Item',
+      default: null,
+      set: (v: any) => !v ? null : v
+
     },
     customer: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Customer',
     },
 
     description: {
       type: String,
-      required: true,
+      required: false,
     },
 
     taste: Number,
@@ -130,6 +142,7 @@ export const reviewSchema: Schema<IReview> = new Schema<IReview>(
 
     helpful: Number,
     notHelpful: Number,
+    noOfReplies: Number,
 
     medias: {
       type: [mediaSchema],
@@ -139,8 +152,8 @@ export const reviewSchema: Schema<IReview> = new Schema<IReview>(
     // 	type: [customerSchema],
     // 	validate: (v: ICustomer) => Array.isArray(v), // && v.length > 0,
     // },
-    children: [{ type: Number, ref: 'Review' }],
-    parent: { type: Number, ref: 'IReview', required: false, default: null },
+    children: [{ type: Schema.Types.ObjectId, ref: 'Review' }],
+    parent: { type: Schema.Types.ObjectId, ref: 'IReview', required: false, default: null },
 
     createdAt: {
       type: Date,
@@ -153,7 +166,7 @@ export const reviewSchema: Schema<IReview> = new Schema<IReview>(
     },
   },
   {
-    _id: false,
+    // _id: false,
     toJSON: { virtuals: true }, // So `res.json()` and other `JSON.stringify()` functions include virtuals
     toObject: { virtuals: true },
   },
@@ -166,9 +179,9 @@ reviewSchema.virtual('info', {
 });
 
 // @ts-ignore
-const AutoIncrement = Inc(mongoose);
+// const AutoIncrement = Inc(mongoose);
 // @ts-ignore
-reviewSchema.plugin(AutoIncrement, { id: 'review_id_counter', inc_field: '_id' });
+// reviewSchema.plugin(AutoIncrement, { id: 'review_id_counter', inc_field: '_id' });
 
 //creating the Review model by passing reviewSchema
 export const Review: Model<IReview> = model<IReview>('Review', reviewSchema);

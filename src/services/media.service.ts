@@ -11,9 +11,9 @@ const log: Logger = getLogger('media.service');
 export class MediaService {
   // async addMediaToR2(req: Request, res: Response) {
   async addMediaToR2(customerId: string, files: any) {
-    log.trace('In addMediaNew');
-    log.trace('req.files', files);
+    log.trace('In addMediaToR2');
     if (!files) {
+      log.trace('In addMediaToR2, no files found, returning...');
       return;
     }
 
@@ -32,24 +32,27 @@ export class MediaService {
     // working ends;
 
     return await Promise.all(
-      (files as any).map(async (file: Express.Multer.File) => {
+      (files as any).map(async (file: Express.Multer.File | Readable) => {
         // Write your buffer
-        const bufferStream = Readable.from(file.buffer);
+        let bufferStream = file;
+        if(!(file instanceof Readable)) {
+          bufferStream = Readable.from(file.buffer);
+        }
         return await r2Provider.uploadFileForCustomer(customerId, bufferStream);
       }),
     );
   }
 
-  async removeMediaFromR2(files: any) {
-    log.info('In removeMediaFromR2');
-    if (!files) {
+  async removeMediaFromR2(keys: string[]) {
+    log.info('In removeMediaFromR2, ', keys);
+    if (keys?.length<1) {
       return;
     }
 
     return await Promise.all(
-      (files as any).map(async (file: any) => {
-        // Write your buffer
-        return await r2Provider.removeFile(file.Key);
+      keys.filter(Boolean).map(async (key: string) => {
+        // log.info('in key: ',key);
+        return r2Provider.removeFile(key);
       }),
     );
   }
@@ -65,7 +68,7 @@ export class MediaService {
       return newMedia;
     } catch (error) {
       log.error('Error while adding a media. Error: ', error);
-      return error;
+      throw error;
     }
   }
 

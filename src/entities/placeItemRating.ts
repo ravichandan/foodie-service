@@ -8,14 +8,16 @@ import { IPlaceItem } from './placeItem';
  * Stores ratings for Place and Item for the last 3 months
  */
 export type IPlaceItemRating = Document & {
-  _id: number;
+  // _id: number;
   place: IPlace;
-  item: IPlaceItem;
+  placeItem: IPlaceItem;
   taste: number;
   presentation: number;
   service: number;
   ambience: number;
   noOfReviews: number;
+  noOfRatings: number;
+  noOfReviewPhotos: number;
   createdAt: Date;
   modifiedAt: Date;
 };
@@ -25,34 +27,36 @@ export type IPlaceItemRating = Document & {
  */
 const placeItemRatingSchema: Schema<IPlaceItemRating> = new Schema<IPlaceItemRating>(
   {
-    _id: Number,
+    // _id: Number,
     place: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Place',
     },
-    item: {
+    placeItem: {
       type:
-        // Schema.Types.ObjectId
-        Number,
+        Schema.Types.ObjectId,
+        // Number,
       ref: 'Place_Item',
     },
     noOfReviews: Number,
+    noOfRatings: Number,
+    noOfReviewPhotos: Number,
     taste: Number,
     presentation: Number,
     service: Number,
     ambience: Number,
   },
   {
-    _id: false,
+    // _id: false,
   },
 );
 
 // @ts-ignore
-const AutoIncrement = Inc(mongoose);
+// const AutoIncrement = Inc(mongoose);
 // @ts-ignore
-placeItemRatingSchema.plugin(AutoIncrement, { id: 'place_item_rating_id_counter', inc_field: '_id' });
+// placeItemRatingSchema.plugin(AutoIncrement, { id: 'place_item_rating_id_counter', inc_field: '_id' });
 
 //creating the Place model by passing placeSchema
 export const PlaceItemRating: Model<IPlaceItemRating> = model<IPlaceItemRating>(
