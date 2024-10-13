@@ -107,12 +107,12 @@ export class ReviewService {
             }
           }
         },
-        {
-          $unwind: {
-            path: "$medias",
-            preserveNullAndEmptyArrays: true
-          }
-        },
+        // {
+        //   $unwind: {
+        //     path: "$medias",
+        //     preserveNullAndEmptyArrays: true
+        //   }
+        // },
         {
           $unset: ["children", "pi", "parent", "place"]
         },
