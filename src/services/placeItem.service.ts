@@ -155,6 +155,7 @@ export class PlaceItemService {
 					},
 				},
 				{ $unwind: { path: '$item', preserveNullAndEmptyArrays: true } },
+				{ $unwind: { path: '$media', preserveNullAndEmptyArrays: true } },
 
 				{
 						$group:
@@ -173,6 +174,9 @@ export class PlaceItemService {
 								},
 								name: {
 									$first: '$name',
+								},
+								media: {
+									$first: '$media',
 								},
 								ingredients: {
 									$first: '$ingredients',
@@ -244,6 +248,8 @@ export class PlaceItemService {
 							price: 1,
 							cuisines: 1,
 							course: 1,
+							media: 1,
+							medias: 1,
 							noOfReviews: 1,
 							totalNoOfReviews: 1,
 							noOfReviewPhotos: 1,
@@ -257,10 +263,10 @@ export class PlaceItemService {
 					},
 				],
 			);
-			log.trace('getItemsByName3:: , items:: ', JSON.stringify(items));
+			log.trace('getPlacesOfAnItem2:: , items:: ', JSON.stringify(items));
 			return items;
 		} catch (error: any) {
-			log.error('in error in getItemsbyName3, err:: ', error);
+			log.error('in error in getPlacesOfAnItem2, err:: ', error);
 		}
 	}
 
