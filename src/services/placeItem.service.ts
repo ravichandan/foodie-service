@@ -910,6 +910,12 @@ export class PlaceItemService {
 				  }
 				},
 				{
+					$unwind: {
+					path: "$media",
+					preserveNullAndEmptyArrays: true
+					}
+				},
+				{
 				  $sort: {
 					  "ratingInfo.taste": -1,
 					  "ratingInfo.presentation": -1
