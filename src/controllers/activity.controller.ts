@@ -26,6 +26,21 @@ class ActivityController {
     res.status(201).send(activity);
   };
 
+  addNewSpendActivity = (review: IReview, points: number) => {
+    log.debug('Making a spend entry in the Activity');
+    const activityData: IActivity = {
+      customer: review.customer,
+      review: review.id,
+      pointsEarned: -points,
+    } as IActivity;
+
+    activityService
+      .addActivity(activityData)
+      .then((data) => log.debug('Successfully added, activity: ', data))
+      .catch((err) => log.error('Error while adding activity. Error:: ', err))
+      .finally(() => log.debug('In finally of addNewSpendActivity'));
+  };
+
   addNewReviewActivity = (review: IReview, points: number) => {
     log.debug('Making an entry in the Activity');
     const activityData: IActivity = {
@@ -38,7 +53,7 @@ class ActivityController {
       .addActivity(activityData)
       .then((data) => log.debug('Successfully added, activity: ', data))
       .catch((err) => log.error('Error while adding activity. Error:: ', err))
-      .finally(() => log.debug('In finally of addActivity'));
+      .finally(() => log.debug('In finally of addNewReviewActivity'));
   };
 
   //get all activitys

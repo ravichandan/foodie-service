@@ -348,25 +348,56 @@ export const safeObj = (obj: any) => {
 	}
 };
 
+/** Look at the RewardPointsAllocation.md */
 export const calculatePoints = (
-	action: 'react' | 'rate' | 'review' | 'comment' | 'image' | 'video' | string | undefined,
+	// action: 'react' | 'rate' | 'review' | 'comment' | 'image' | 'video' | string | undefined,
+	review: ReviewModel
 ): number => {
-	switch (action) {
-		case 'react':
-			return 1;
-		case 'rate':
-			return 1;
-		case 'comment':
-			return 1;
-		case 'review':
-			return 2;
-		case 'image':
-			return 3;
-		case 'video':
-			return 5;
-		default:
-			return 0;
+	let points = 0;
+	let rating: boolean = false;
+	let smallText: boolean = false;
+	let bigText: boolean = false;
+	let image: boolean = false;
+	let video: boolean = false;
+	if(review.taste || review.service || review.presentation || review.ambience) {
+		rating=true;
 	}
+	const desc = review.description;
+	const descSplits = desc.split(' ');
+	if(descSplits.length<=50) {
+		points += 5;
+		smallText = true;
+	} else if(descSplits.length>50) {
+		points += 10;
+		bigText = true;
+	}
+	if (review.medias?.length > 0) {
+		for (const m of review.medias) {
+			if(m.type==='image'){
+				image= true;
+			} else if(m.type==='video'){
+				video= true;
+			} 
+		}
+	}
+	if(rating){
+		points += 2;
+	}
+	if(smallText){
+		// points += rating ? 6 : 5;
+		points += 5;
+	} else if(bigText){
+		// points += rating ? 11 : 10;
+		points += 10;
+	}
+	if(image){
+		points+=10;
+	}
+	if(video){
+		points+=15;
+	}
+
+	return points;
 };
 
 export const simplify = (str: string) => str?.replace(/[^a-zA-Z ]/g, "");

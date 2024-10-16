@@ -1,8 +1,8 @@
-# foodie-service
+# Reward Points Calculation
 
 ## 1. Points Allocation System
 
-### Text-only Reviews:
+### Text-only Reviews (not applicable individually):
 - Brief (50-100 words): 5 points
 - Detailed (100+ words): 10 points
 
@@ -10,17 +10,15 @@
 - Ratings (1-5 stars) without text: 2 points
 
 ### Ratings + Text Review:
-- Add 3 bonus points to the above text points.
+- Brief (50-100 words): 5 points + Ratings 2 points = 7 points
+- Detailed (100+ words): 10 points  + Ratings 2 points = 12 points
 
 ### Image Review:
 - Single image: 10 points
 - Multiple images (up to 3): 15 points
-- Each additional image beyond 3: +2 points
 
 ### Video Review:
 - Video under 30 seconds: 15 points
-- Video between 30-60 seconds: 20 points
-- Videos longer than 60 seconds: 25 points
 
 ### Combination Reviews:
 - Ratings + Text + Image: 20 points
@@ -29,11 +27,26 @@
 
 
 ## 2. Special Bonus Points
-Early Adopter Bonus: Give 20% more points for reviews of newly listed restaurants or food items.
-Milestone Rewards: Extra points for certain milestones (e.g., 50 points after 5 reviews, 100 points after 10 reviews).
-Seasonal/Promotional Bonuses: Periodic promotions (e.g., double points for reviews in a specific week/month).
+### Early Adopter Bonus: 
+Give 20% more points for reviews of newly listed restaurants or food items.
+If a restaurant or food item is less than 15 days old, then the calculation goes like this:
+- the points as given above + 20% extra. 
 
-## 3. Review Quality Control
+### Milestone Rewards:
+Extra points for certain milestones -
+- 20 points after every 5 reviews
+
+### Rules & Conditions
+- A user can give a maximum of 2 reviews per day and 7 reviews in a week. 
+- A user, in a week, cannot give more than 2 reviews consecutively to a same restaurant. 
+- A user, in a consecutive 2 days, cannot give reviews to a same restaurant and same dish. 
+
+### Idea: Seasonal/Promotional Bonuses:
+Periodic promotions (e.g., double points for reviews in a specific week/month).
+
+
+# Not yet implmented
+## 3. Review Quality Control 
 Minimum Review Requirements: Only reviews with genuine content (e.g., at least 50 words or relevant images) are eligible for points.
 Moderation: Implement a system where reviews are verified by a moderator or AI to ensure authenticity and quality.
 

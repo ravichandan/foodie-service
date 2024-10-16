@@ -27,7 +27,7 @@ class ReviewController {
     log.debug('Adding correlationId into the request body');
 
     // Presuming review would always have a rating.
-    let points = calculatePoints('rate');
+    // let points = calculatePoints('rate');
 
     let data = {
       correlationId: req.header('correlationId'),
@@ -36,7 +36,7 @@ class ReviewController {
       
       // cuisines: [...req.body.cuisines.map((c: any) => Cuisine[c.toUpperCase() as Cuisine])],
     };
-    points += calculatePoints(data.description ? 'review' : undefined);
+    let points = calculatePoints(data);//data.description ? 'review' : undefined);
     data = reviewModelToReviewEntity(data);
     //call the add review function in the service and pass the data from the request
     try {
@@ -66,7 +66,7 @@ class ReviewController {
             if(!placeItem) {log.error('PlaceItem not found for given place and item'); throw new Error('PlaceItem not found for given place and item')}
             child.placeItem = placeItem?._id;
           }
-          points += calculatePoints(child.description ? 'review' : undefined);
+          
           try {
             const childRecord = await reviewService.addReview(child);
             parent.children.push(childRecord);
@@ -74,19 +74,20 @@ class ReviewController {
             log.error('Failed to add Review for child item, data.item: ' + data.item, error);
           }
           for (const m of child.medias) {
-            points += calculatePoints('rate');
+            // points += calculatePoints('rate');
             m.item = child.item;
             m.place = child.place;
             m.customerId = child.customer;
             m.type = isImage(m.url) ? 'image' : isVideo(m.url) ? 'video' : undefined;
             // m.type = ;
-            points += calculatePoints(m.type);
+            // points += calculatePoints(m.type);
             try {
               await mediaService.updateMedia(m.id, m);
             } catch (error: any) {
               log.error('Failed to update media record with media.id: ' + m.id, error);
             }
           }
+          points += calculatePoints(child);
 
           // update PlaceReviewRating mapping
           log.trace('Updating rating table for place and item, item: ', child.item?.id);
@@ -102,7 +103,7 @@ class ReviewController {
         m.customer = parent.customer;
         m.type = isImage(m.url) ? 'image' : isVideo(m.url) ? 'video' : undefined;
         // m.type = ;
-        points += calculatePoints(m.type);
+        // points += calculatePoints(m.type);
         try {
           await mediaService.updateMedia(m.id, m);
         } catch (error: any) {

@@ -700,15 +700,80 @@ export class PlaceItemService {
 		if(args.suburb || args.postcode) {
 		
 			if(args.suburb){
-				addressMatch.push({ $match: {"address.suburb": {
-					$regex: args.suburb,
-					$options: "i"
-					}}
-				});
+				addressMatch.push({
+					$lookup: {
+					  from: "suburbs",
+					  let: {
+						suburbName: "$address.suburb"
+					  },
+					  localField: "name",
+					  foreignField: "address.suburb",
+					//   as: "place",
+					  pipeline: [
+						{
+						  $match: {
+							name: {
+								$regex: args.suburb,
+								$options: "i"
+							}
+						  }
+						},
+						{
+						  $match: {
+							$expr: {
+							  $in: [
+								"$$suburbName",
+								"$surroundingSuburbs"
+							  ]
+							}
+						  }
+						}
+					  ],
+					  as: "matchedSuburbs"
+					}
+				  });
+
+
+				// addressMatch.push({ $match: {"address.suburb": {
+				// 	$regex: args.suburb,
+				// 	$options: "i"
+				// 	}}
+				// });
+			} else if(args.postcode){
+				addressMatch.push({
+					$lookup: {
+					  from: "suburbs",
+					  let: {
+						suburbName: "$address.suburb"
+					  },
+					  pipeline: [
+						{
+						  $match: {
+							"address.postcode": +args.postcode
+						  }
+						},
+						{
+						  $match: {
+							$expr: {
+							  $in: [
+								"$$suburbName",
+								"$surroundingSuburbs"
+							  ]
+							}
+						  }
+						}
+					  ],
+					  as: "matchedSuburbs"
+					}
+				  });
+				// addressMatch.push({ $match: {"address.postcode": +args.postcode}});
 			}
-			if(args.postcode){
-				addressMatch.push({ $match: {"address.postcode": +args.postcode}});
-			}
+			addressMatch.push({
+				$unwind: {
+					path: "$matchedSuburbs",
+					preserveNullAndEmptyArrays: false
+				}
+			});
 		} else if(args.latitude && args.longitude){
 			addressMatch = [{
 					$set: {
@@ -881,7 +946,7 @@ export class PlaceItemService {
 				{
 				  $unwind: {
 					path: "$ratingInfo",
-					preserveNullAndEmptyArrays: false
+					preserveNullAndEmptyArrays: true
 				  }
 				},
 				{
