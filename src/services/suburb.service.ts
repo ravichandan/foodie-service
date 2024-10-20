@@ -92,6 +92,20 @@ names.forEach(function(opt){
     }
   }
 
+
+  //get suburb from postcode
+  async getSuburbFromPostcode(postcode: string): Promise<ICitySuburb[] | undefined> {
+    log.debug('Received request to getSuburbFromPostcode');
+    try {
+      
+      const suburbs = await Suburb.find({ postcode: postcode });
+      log.trace('Returning fetched suburbs, length: ', suburbs.length);
+      return suburbs ?? undefined;
+    } catch (error) {
+      log.error('Error while doing getSuburbsByNames', error);
+    }
+  }
+
   //get a single suburb
   async getSuburb(id: any): Promise<ICitySuburb | null> {
     if (!id) {

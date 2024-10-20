@@ -30,7 +30,11 @@ class PlaceController {
     };
     //call the create place function in the service and pass the data from the request
     try {
-      const suburbName = data.address?.suburb;
+      let suburbName: string | undefined = data.address?.suburb;
+      if(!suburbName?.trim()){
+        let suburb=await suburbController.getSuburbFromPostcode(data?.address?.postcode?.toString());
+        suburbName = suburb?.name;
+      }
       if (suburbName) {
         // Check if the suburb is a known one
         log.trace('Check if the suburb is a known one');
@@ -298,6 +302,7 @@ class PlaceController {
   };
 
   addItem = async (args: { placeId: string; item: any }) => {
+    
     log.info('Received request in PlaceController->addItem() to add the given Item to the given place');
     //data to be saved in database
     // log.debug('Adding correlationId into the request body');

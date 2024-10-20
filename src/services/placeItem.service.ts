@@ -395,6 +395,7 @@ export class PlaceItemService {
 			return placeItem;
 		} catch (error) {
 			log.error('Error while doing getPlaceItem with id: ' + id + '. Error: ', error);
+			throw error;
 		}
 	}
 
@@ -419,12 +420,13 @@ export class PlaceItemService {
 			return placeItem;
 		} catch (error) {
 			log.error('Error while doing getPlaceItem  name: '+args.itemName+' and placeId: '+ args.placeId+'. Error: ', error);
+			throw error;
 		}
 	}
 
 	//update a placeItem
 	// not yet used
-	async updatePlaceItem(id: number, data: any): Promise<IPlaceItem | null | undefined> {
+	async updatePlaceItem(id: string, data: any): Promise<IPlaceItem | null | undefined> {
 		log.debug('Received request to update a placeItem with id: ', id);
 
 		try {
@@ -432,13 +434,14 @@ export class PlaceItemService {
 			//data is for the new body you are updating the old one with
 			//new:true, so the dats being returned, is the update one
 			log.trace('Updating a placeItem id: ' + id + ' with data: ', data);
-			const itemz = await PlaceItem.findByIdAndUpdate({ _id: id }, data, {
+			const itemz = await PlaceItem.findByIdAndUpdate( id , data, {
 				new: true,
 			});
 			log.debug('Successfully updated the PlaceItem: ', itemz);
 			return itemz;
 		} catch (error) {
-			log.error('Error while updating PlaceItem with id: ' + id + '. Error: ', error);
+			log.error('In updatePlaceItem(), Error while updating PlaceItem with id: ' + id + '. Error: ', error);
+			throw error;
 		}
 	}
 
@@ -457,6 +460,7 @@ export class PlaceItemService {
 			return placeItem;
 		} catch (error) {
 			log.error('Error while deleting PlaceItem with id: ' + id + '. Error: ', error);
+			throw error;
 		}
 	}
 
@@ -482,7 +486,7 @@ export class PlaceItemService {
 			log.debug('Successfully updated the PlaceItem: ', placez);
 			return placez;
 		} catch (error) {
-			log.error('Error while updating PlaceItem with id: ' + id + '. Error: ', error);
+			log.error('In updatePlaceItemMedias(), Error while updating PlaceItem with id: ' + id + '. Error: ', error);
 			throw error;
 		}
 	}
@@ -892,11 +896,10 @@ export class PlaceItemService {
 						  $expr: {
 							$and:[
 								{$ne: ["$placeItem", null]},
-								{$gte: ["$noOfRatings", 30]}
+								{$gte: ["$noOfRatings", 31]}
 								// {$placeItem: {$ne: null}},
 								// {$noOfRatings: {$gte: 30}}
 							]
-
 						  }
 						}
 					  },

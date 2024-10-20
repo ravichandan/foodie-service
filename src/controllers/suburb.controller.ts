@@ -46,6 +46,17 @@ class SuburbController {
 		// }
 	};
 
+	  //get suburb from postcode
+	  async getSuburbFromPostcode(postcode: string): Promise<ICitySuburb | undefined> {
+		log.trace('suburb.controller-> received request to getSuburbFromPostcode');
+		try {
+			const suburbs = await suburbService.getSuburbFromPostcode(postcode);
+			log.trace('Returning fetched suburbs');
+			return suburbs?.[0];
+		} catch (error) {
+			log.error('Error while doing getSuburbFromPostcode', error);
+		}
+	  }
 
 	//get all suburbs
 	async getSuburbsByNames(names: string[]): Promise<ICitySuburb[] | undefined> {

@@ -336,9 +336,7 @@ export default [
 				// No errors, pass req and res on to your controller
 				log.debug('in POST /places/:placeId/items route handler, processing request, req.body:: ', req.body);
 				log.trace('Populate the placeId in the request body, placeId:: ', req.params.placeId);
-				req.body.place={
-					id: req.params.placeId
-				}
+				req.body.place=req.params.placeId;
 				try {
 					const item = await placeController.addItem({ placeId: req.params.placeId, item: req.body });
 					// res.send({...req.params,...req.query});
