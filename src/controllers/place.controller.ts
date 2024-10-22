@@ -66,13 +66,14 @@ class PlaceController {
       }
 
       log.trace('Verify if the place is already existing');
-      let existingPlace: any = await placeService.getPlaceByNameAndGeoLocation({
-        name: data.placeName,
-        latitude: data.address.location.latitude,
-        longitude: data.address.location.longitude,
-      });
-
-      if(!existingPlace){
+      let existingPlace: any
+      if(data.address.location?.latitude && data.address.location?.longitude) {
+          existingPlace = await placeService.getPlaceByNameAndGeoLocation({
+          name: data.placeName,
+          latitude: data.address.location.latitude,
+          longitude: data.address.location.longitude,
+        });
+      }else if(!existingPlace){
         let q: any;
         if(data.address.city){   
           if(q==null) q= {};
@@ -90,8 +91,8 @@ class PlaceController {
         const places = await placeService.getPlaces({
           placeName: data.placeName,
           ...q,
-          latitude: data.address.location.latitude,
-          longitude: data.address.location.longitude,
+          latitude: data.address.location?.latitude,
+          longitude: data.address.location?.longitude,
         });
         if(places !=null && places.length>0){
           existingPlace = places[0];

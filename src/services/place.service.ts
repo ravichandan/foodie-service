@@ -68,6 +68,9 @@ export class PlaceService {
 			pageNumber: params?.pageNumber ?? 1,
 			pageSize: params?.pageSize ?? 3,
 		};
+		if(params?.placeName){
+			params.placeName = simplify(params.placeName);
+		}
 		log.trace('Received request to getPlaces, prams: ', prams);
 
 		let query: any[] = [];
@@ -161,10 +164,10 @@ export class PlaceService {
 					$options: "i"
 					}}
 				},
-				
 			];
 			if(params?.suburbs){
-				addressMatch.push({ $match: { 'address.suburb': new RegExp(`(${params.suburbs.join('|')})`, 'i')}});
+				// addressMatch.push({ $match: { 'address.suburb': new RegExp(`(${params.suburbs.join('|')})`, 'i')}});
+				addressMatch.push({ $match: { 'address.suburb': {$regex: `(${params.suburbs.join('|')})` , $options: 'i'}}});
 			}
 
 			if(params?.postcode){
@@ -363,7 +366,7 @@ export class PlaceService {
 			},
 			{ $project: { 'fieldType2': 0, fieldType1: 0 } },
 		);
-		log.trace('In getPlaces, query:: ', query.toString());
+		log.trace('In getPlaces, query:: ', JSON.stringify(	query));
 		let places;
 		try {
 
@@ -446,11 +449,7 @@ export class PlaceService {
 		const places: any[] = await Place.aggregate([
 			{
 				$match: {
-					'placeName': { $regex: 
-						// encodeURIComponent(
-							args.name
-						// )
-						, $options: 'i' },
+					'placeName': { $regex: args.name, $options: 'i' },
 					"address.location.longitude": { $regex: args.longitude.substring(0, args.longitude.indexOf('.') + 4), $options: 'i' },
 					"address.location.latitude": { $regex: args.latitude.substring(0, args.latitude.indexOf('.') + 4), $options: 'i' },
 				}

@@ -400,7 +400,7 @@ export const calculatePoints = (
 	return points;
 };
 
-export const simplify = (str: string) => str?.replace(/[^a-zA-Z ]/g, "");
+export const simplify = (str?: string) => str?.replace(/[^a-zA-Z ]/g, "") ?? '';
 export const deduceCityName = (address: AddressModel) => {
 	if (!!address.postcode) {
 		const pc = address.postcode;

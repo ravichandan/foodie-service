@@ -81,9 +81,9 @@ export class SuburbService {
     log.debug('Received request to getSuburbsByNames');
     try {
       const optRegexp: RegExp[] = [];
-names.forEach(function(opt){
-        optRegexp.push(  new RegExp(opt, "i") );
-});
+      names.forEach(function(opt){
+              optRegexp.push(  new RegExp(opt, "i") );
+      });
       const suburbs = await Suburb.find({ name: { $in: optRegexp } });
       log.trace('Returning fetched suburbs, length: ', suburbs.length);
       return suburbs ?? undefined;
@@ -213,42 +213,42 @@ names.forEach(function(opt){
     }
   }
 
-    //get a single suburb
-    async getSuburbNameFromLocationIQ(latitude: number, longitude: number): Promise<string|undefined> {
-      if (!latitude || !longitude) {
-        log.error('Need latitude & longitude to query suburb/city from locationiq.com');
-        // throw new Error('Need roadName, postCode, state to query Suburb from mapssq.six.nsw.gov.au');
-        return;
-      }
-      log.trace('suburb.service-> using locationiq.com, fetching suburb from latitude: %s, longitude', latitude, longitude);
-      try {
-        // https://us1.locationiq.com/v1/reverse?key=pk.f3e811971393c0e3c31bc6d4d0b0721a&lat=-33.71&lon=150.89&format=json
-  
-        const apiPath = config.locationiq;//'https://jsonplaceholder.typicode.com/posts';
-  
-        latitude = +latitude.toFixed(3);
-        longitude = +longitude.toFixed(3);
-        const params = {
-          // ...ax_config,
-          // projection: 'EPSG%3A4326',
-          lat: latitude,
-          lon: longitude
-        };
-        const response: any = await axios.get(apiPath, { params: params, ...ax_config });
-  
-        log.trace('Got response from locationiq.com: ', response.data);
-        const suburbName = response.data.address?.city;
-        if(suburbName){
-          log.trace('Found suburb from locationiq.com, suburb:: ', suburbName);
-        }
-        return suburbName
-        // return response;
-      } catch (error) {
-        log.error('Error while fetching Suburb name from locationiq.com.', error);
-        return ;
-        // throw error;
-      }
+  //get a single suburb
+  async getSuburbNameFromLocationIQ(latitude: number, longitude: number): Promise<string|undefined> {
+    if (!latitude || !longitude) {
+      log.error('Need latitude & longitude to query suburb/city from locationiq.com');
+      // throw new Error('Need roadName, postCode, state to query Suburb from mapssq.six.nsw.gov.au');
+      return;
     }
+    log.trace('suburb.service-> using locationiq.com, fetching suburb from latitude: %s, longitude', latitude, longitude);
+    try {
+      // https://us1.locationiq.com/v1/reverse?key=pk.f3e811971393c0e3c31bc6d4d0b0721a&lat=-33.71&lon=150.89&format=json
+
+      const apiPath = config.locationiq;//'https://jsonplaceholder.typicode.com/posts';
+
+      latitude = +latitude.toFixed(3);
+      longitude = +longitude.toFixed(3);
+      const params = {
+        // ...ax_config,
+        // projection: 'EPSG%3A4326',
+        lat: latitude,
+        lon: longitude
+      };
+      const response: any = await axios.get(apiPath, { params: params, ...ax_config });
+
+      log.trace('Got response from locationiq.com: ', response.data);
+      const suburbName = response.data.address?.city;
+      if(suburbName){
+        log.trace('Found suburb from locationiq.com, suburb:: ', suburbName);
+      }
+      return suburbName
+      // return response;
+    } catch (error) {
+      log.error('Error while fetching Suburb name from locationiq.com.', error);
+      return ;
+      // throw error;
+    }
+  }
   
 }
 
